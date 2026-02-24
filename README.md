@@ -120,15 +120,16 @@ Example questions include:
 
 
 ```
-/pages
-    index.html
-    example1.html
-    example2.html
-    example3.html
-/css
-    styles.css
-/js
-    script.js
+/frontend
+    /pages
+        index.html
+        example1.html
+        example2.html
+        example3.html
+    /css
+        styles.css
+    /js
+        script.js
 ```
 
 
@@ -169,7 +170,7 @@ Clone the repository:
 
 Open the website by opening:
 
-`pages/index.html`
+`frontend/pages/index.html`
 
 in a web browser.
 
@@ -179,7 +180,7 @@ in a web browser.
 
 The website is deployed using **GitHub Pages**.
 
-The site is served from the `/docs` directory.
+The site is served from the `/frontend` directory.
 
 ---
 
