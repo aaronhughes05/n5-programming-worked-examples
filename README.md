@@ -120,12 +120,14 @@ Example questions include:
 
 
 ```
-/docs
+/pages
     index.html
     example1.html
     example2.html
     example3.html
+/css
     styles.css
+/js
     script.js
 ```
 
@@ -167,7 +169,7 @@ Clone the repository:
 
 Open the website by opening:
 
-`docs/index.html`
+`pages/index.html`
 
 in a web browser.
 
