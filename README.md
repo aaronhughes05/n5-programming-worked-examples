@@ -121,8 +121,8 @@ Example questions include:
 
 ```
 /frontend
+    index.html
     /pages
-        index.html
         example1.html
         example2.html
         example3.html
@@ -170,7 +170,7 @@ Clone the repository:
 
 Open the website by opening:
 
-`frontend/pages/index.html`
+`frontend/index.html`
 
 in a web browser.
 
