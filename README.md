@@ -119,13 +119,15 @@ Example questions include:
 ## Website Structure
 
 
+```
 /docs
-index.html
-example1.html
-example2.html
-example3.html
-styles.css
-script.js
+    index.html
+    example1.html
+    example2.html
+    example3.html
+    styles.css
+    script.js
+```
 
 
 ### Pages
@@ -161,11 +163,11 @@ No external libraries or frameworks are required.
 
 Clone the repository:
 
-git clone https://github.com/YOUR-USERNAME/n5-programming-worked-examples.git
+`git clone https://github.com/YOUR-USERNAME/n5-programming-worked-examples.git`
 
 Open the website by opening:
 
-docs/index.html
+`docs/index.html`
 
 in a web browser.
 
@@ -185,16 +187,19 @@ The site is served from the `/docs` directory.
 
 Pull the latest version:
 
+```
 git pull
-
+```
 
 ### After making changes
 
 Commit and push:
 
+```
 git add .
 git commit -m "Describe changes"
 git push
+```
 
 ---
 
