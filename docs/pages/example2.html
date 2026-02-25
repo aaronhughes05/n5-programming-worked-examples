@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Example 2 - Running Total</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+        .hidden { display: none; }
+        .step-box { padding: var(--space-3); background: var(--slate-50); border-radius: var(--radius-1); border-left: 4px solid var(--accent-600); }
+        .parsons-container { background: var(--slate-100); padding: var(--space-2); min-height: 150px; border-radius: var(--radius-1); border: 2px dashed var(--ink-300); }
+        .draggable { background: var(--paper); padding: var(--space-2); margin-bottom: var(--space-1); border: 1px solid var(--ink-300); cursor: grab; border-radius: 4px; font-family: monospace; }
+        button { background: var(--accent-600); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-1); cursor: pointer; font-weight: 600; margin-top: var(--space-2); }
+        input[type="text"] { padding: 8px; border-radius: var(--radius-1); border: 1px solid var(--ink-300); margin-top: var(--space-1); }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="topbar"><span>Example 2</span></div>
+        <h1 class="hero-title">Running Total</h1>
+    </header>
+
+    <main class="content">
+        <section class="card">
+            <h2>1. Problem Description</h2>
+            <p>Calculate the total cost of 5 items entered by a user.</p>
+        </section>
+
+        <section class="card">
+            <h2>2. Prediction Activity</h2>
+            <p>How many times will the loop repeat? 
+                <input type="text" id="pred1" style="width: 60px;">
+                <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
+                <span id="tick1" style="font-weight: bold; color: var(--teal-500);"></span>
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>3. Step-by-Step Implementation</h2>
+            <div id="step1" class="step-box">
+                <p><strong>Step 1:</strong> Initialize the total.</p>
+                <code>total = 0</code><br>
+                <button onclick="nextStep(1, 2)">Next Step</button>
+            </div>
+            <div id="step2" class="step-box hidden">
+                <p><strong>Step 2:</strong> Create a loop for 5 items.</p>
+                <code>for counter in range(5):</code><br>
+                <button onclick="nextStep(2, 3)">Next Step</button>
+            </div>
+            <div id="step3" class="step-box hidden">
+                <p><strong>Step 3:</strong> Add input to total.</p>
+                <code>&nbsp;&nbsp;price = float(input())<br>&nbsp;&nbsp;total = total + price</code><br>
+                <button onclick="nextStep(3, 'full')">Show Full Code</button>
+            </div>
+            <div id="fullCode" class="step-box hidden">
+                <pre><code>total = 0
+for counter in range(5):
+    price = float(input("Price: "))
+    total = total + price
+print(total)</code></pre>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>4. Parsons Puzzle</h2>
+            <p>Drag the lines into the correct logical order:</p>
+            <div id="parsons-area" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="p3" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
+                <div id="p1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
+                <div id="p4" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
+                <div id="p2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(5):</div>
+            </div>
+            <button onclick="verifyParsons('parsons-area', ['p1', 'p2', 'p3', 'p4'], 'parsonsFeedback')">Verify Logic</button>
+            <p id="parsonsFeedback"></p>
+        </section>
+
+        <section class="card">
+            <h2>6. Modify Task</h2>
+            <p>Change the code to ask for 10 items. What would the loop line look like?</p>
+            <input type="text" id="modAns" placeholder="for counter in range..." style="width: 100%;">
+            <button onclick="checkAnswer('modAns', 'for counter in range(10):', 'tick2')">Check Answer</button>
+            <span id="tick2" style="font-weight: bold; color: var(--teal-500);"></span>
+        </section>
+    </main>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>
