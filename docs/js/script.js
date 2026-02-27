@@ -428,6 +428,34 @@ const restartStepper = () => {
     localStorage.removeItem(STORAGE_KEY);
 };
 
+const resetAssessment = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll("[data-correct='true']").forEach((el) => {
+        delete el.dataset.correct;
+    });
+    document.querySelectorAll(".tick-mark").forEach((tick) => {
+        tick.style.display = "none";
+        tick.textContent = "";
+    });
+    document.querySelectorAll("input[type='text']").forEach((input) => {
+        input.value = "";
+    });
+    const programEl = document.getElementById("makeProgram");
+    if (programEl) programEl.value = "";
+    const caseSelect = document.getElementById("makeCase");
+    if (caseSelect) {
+        caseSelect.value = "case1";
+        updateExpectedOutput();
+    }
+    const actualEl = document.getElementById("makeActual");
+    if (actualEl) actualEl.textContent = "Run your program to see the output here.";
+    enableRunButton();
+    const completion = document.getElementById("completionScreen");
+    if (completion) completion.classList.remove("is-visible");
+    document.body.classList.remove("is-complete");
+    showStep(0);
+};
+
 const getMakeInputs = (caseValue) => {
     if (caseValue === "case1") return ["2", "3", "4", "5", "6", "7"];
     if (caseValue === "case2") return ["0", "10", "20", "30", "40", "50"];
