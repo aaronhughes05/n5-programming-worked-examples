@@ -362,31 +362,37 @@ a:focus-visible {
   min-width: 44px;
   height: 36px;
   padding: 0 12px;
+  background: var(--accent-200);
+  color: var(--ink-800);
+  border: 1px solid rgba(31, 102, 209, 0.35);
 }
 
 .mc-buttons .check-btn {
   min-width: 90px;
+  background: var(--accent-600);
+  color: #ffffff;
+  border: none;
 }
 
 .mc-buttons button.selected,
 .code-line.selected {
-  background: var(--accent-500);
+  background: var(--accent-600);
+  color: #ffffff;
 }
 
 .code-select {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  margin-top: var(--space-1);
 }
 
 .code-line {
   text-align: left;
-  border: 1px solid var(--accent-200);
-  border-radius: var(--radius-1);
+  border: 1px solid #e3e6dd;
   padding: 10px 12px;
   font-family: "Courier New", Courier, monospace;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--ink-900);
   background: #fbfbf6;
   cursor: pointer;
 }
@@ -554,6 +560,7 @@ button {
 
 button:hover {
   background: var(--accent-500);
+  color: #ffffff;
 }
 
 button:active {
