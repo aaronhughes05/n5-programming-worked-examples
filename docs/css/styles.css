@@ -702,6 +702,17 @@ button:hover {
   color: #ffffff;
 }
 
+.reset-btn {
+  background: linear-gradient(90deg, rgba(31, 102, 209, 0.18), rgba(31, 183, 166, 0.18));
+  color: var(--accent-600);
+  border: 1px solid rgba(31, 102, 209, 0.25);
+}
+
+.reset-btn:hover {
+  background: linear-gradient(90deg, rgba(31, 102, 209, 0.28), rgba(31, 183, 166, 0.28));
+  color: var(--accent-600);
+}
+
 button:active {
   transform: translateY(1px);
 }
