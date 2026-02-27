@@ -419,6 +419,7 @@ a:focus-visible {
   color: var(--ink-700);
 }
 
+
 .tick-mark {
   font-weight: 700;
   color: var(--teal-500);
@@ -580,6 +581,34 @@ input[type="number"] {
 
 input:focus {
   border-color: var(--accent-200);
+}
+
+select {
+  padding: 10px 12px;
+  border: 2px solid var(--slate-100);
+  border-radius: var(--radius-1);
+  font-family: var(--font-body);
+  color: var(--ink-800);
+  background: #ffffff;
+}
+
+.code-area,
+.output-area {
+  width: 100%;
+  border: 1px solid #e3e6dd;
+  border-radius: var(--radius-1);
+  padding: var(--space-2);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-weight: 600;
+  color: var(--ink-900);
+  background: #fbfbf6;
+  background-image:
+    linear-gradient(transparent 31px, rgba(17, 27, 46, 0.03) 32px),
+    linear-gradient(90deg, transparent 31px, rgba(17, 27, 46, 0.02) 32px);
+  background-size: 32px 32px;
+  margin-top: var(--space-2);
 }
 
 @keyframes fadeIn {
