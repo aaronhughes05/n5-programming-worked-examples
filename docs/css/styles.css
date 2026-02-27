@@ -143,6 +143,97 @@ p {
   padding-bottom: var(--space-7);
 }
 
+.stepper-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-2);
+  border: 1px solid var(--slate-100);
+  background: #ffffff;
+  box-shadow: var(--shadow-1);
+}
+
+.stepper-progress {
+  font-weight: 700;
+  color: var(--ink-800);
+}
+
+.stepper-progress-note {
+  color: var(--ink-500);
+  font-size: 0.95rem;
+}
+
+.step-section {
+  display: none;
+}
+
+.step-section.active {
+  display: block;
+}
+
+.stepper-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.completion-screen {
+  display: none;
+  padding: var(--space-7) 0;
+}
+
+.completion-screen.is-visible {
+  display: block;
+}
+
+body.is-complete main.content {
+  display: none;
+}
+
+.completion-card {
+  width: min(100% - 32px, var(--max-width));
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.completion-eyebrow {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--accent-600);
+  margin-bottom: var(--space-2);
+}
+
+.completion-note {
+  color: var(--ink-500);
+  font-size: 0.95rem;
+  margin-top: var(--space-2);
+}
+
+.completion-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.completion-actions .check-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 .card {
   background: var(--paper);
   padding: var(--space-5);
@@ -290,26 +381,6 @@ a:focus-visible {
 
 .example-item a:active {
   color: var(--ink-900);
-}
-
-.hidden {
-  display: none;
-}
-
-.step-box {
-  padding: var(--space-3);
-  background: #fbfbf6;
-  border-radius: var(--radius-1);
-  border: 1px solid #e3e6dd;
-  box-shadow: inset 0 0 0 1px rgba(17, 27, 46, 0.03);
-  background-image:
-    linear-gradient(transparent 31px, rgba(17, 27, 46, 0.03) 32px),
-    linear-gradient(90deg, transparent 31px, rgba(17, 27, 46, 0.02) 32px);
-  background-size: 32px 32px;
-}
-
-.step-box:first-of-type {
-  margin-top: 0;
 }
 
 .step-box code {

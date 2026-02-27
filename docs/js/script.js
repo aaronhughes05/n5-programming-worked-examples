@@ -3,7 +3,35 @@ const nextStep = (current, next) => {
     const nextEl = document.getElementById(next === 'full' ? 'fullCode' : `step${next}`);
     
     if (currentStep) currentStep.classList.add('hidden');
-    if (nextEl) nextEl.classList.remove('hidden');
+    if (nextEl) {
+        nextEl.classList.remove('hidden');
+        if (nextEl.id === "fullCode") {
+            nextEl.dataset.correct = "true";
+            updateStepperState();
+        }
+    }
+};
+
+let stepperState = {
+    sections: [],
+    index: 0
+};
+
+const setTickState = (tick, correct) => {
+    if (!tick) return;
+    tick.dataset.correct = correct ? "true" : "false";
+    tick.style.display = "inline";
+    tick.textContent = correct ? " ✔ Correct" : " ✖ Try again";
+    tick.style.color = correct ? "var(--teal-500)" : "#e63946";
+    updateStepperState();
+};
+
+const setFeedbackState = (el, correct, message) => {
+    if (!el) return;
+    el.dataset.correct = correct ? "true" : "false";
+    el.textContent = message;
+    el.style.color = correct ? "var(--teal-500)" : "#e63946";
+    updateStepperState();
 };
 
 const checkAnswer = (inputId, correctAnswer, tickId) => {
@@ -14,15 +42,7 @@ const checkAnswer = (inputId, correctAnswer, tickId) => {
     const cleanCorrect = correctAnswer.toLowerCase().replace(/\s/g, '');
     const cleanUser = userInput.replace(/\s/g, '');
 
-    if (cleanUser === cleanCorrect) {
-        tick.style.display = "inline";
-        tick.textContent = " ✔ Correct";
-        tick.style.color = "var(--teal-500)";
-    } else {
-        tick.style.display = "inline";
-        tick.textContent = " ✖ Try again";
-        tick.style.color = "#e63946";
-    }
+    setTickState(tick, cleanUser === cleanCorrect);
 };
 
 function allowDrop(ev) {
@@ -93,11 +113,9 @@ const verifyParsons = (containerId, correctIds, feedbackId) => {
     }
 
     if (isCorrect) {
-        feedback.textContent = "✔ Excellent! The logic is in the correct order.";
-        feedback.style.color = "var(--teal-500)";
+        setFeedbackState(feedback, true, "✔ Excellent! The logic is in the correct order.");
     } else {
-        feedback.textContent = "✖ Try again. Think: Initialize -> Loop -> Process -> Output.";
-        feedback.style.color = "#e63946";
+        setFeedbackState(feedback, false, "✖ Try again. Think: Initialize -> Loop -> Process -> Output.");
     }
 };
 
@@ -116,15 +134,7 @@ const checkChoice = (groupId, correctValue, tickId) => {
     const selected = (container.dataset.selected || "").trim().toLowerCase();
     const correct = correctValue.trim().toLowerCase();
     const tick = document.getElementById(tickId);
-    if (selected === correct) {
-        tick.style.display = "inline";
-        tick.textContent = " ✔ Correct";
-        tick.style.color = "var(--teal-500)";
-    } else {
-        tick.style.display = "inline";
-        tick.textContent = " ✖ Try again";
-        tick.style.color = "#e63946";
-    }
+    setTickState(tick, selected === correct);
 };
 
 const selectLine = (groupId, value, buttonEl) => {
@@ -142,15 +152,7 @@ const checkLineChoice = (groupId, correctValue, tickId) => {
     const selected = (container.dataset.selected || "").replace(/\s/g, "").toLowerCase();
     const correct = correctValue.replace(/\s/g, "").toLowerCase();
     const tick = document.getElementById(tickId);
-    if (selected === correct) {
-        tick.style.display = "inline";
-        tick.textContent = " ✔ Correct";
-        tick.style.color = "var(--teal-500)";
-    } else {
-        tick.style.display = "inline";
-        tick.textContent = " ✖ Try again";
-        tick.style.color = "#e63946";
-    }
+    setTickState(tick, selected === correct);
 };
 
 const checkTrace = (inputIds, expectedValues, tickId) => {
@@ -161,15 +163,7 @@ const checkTrace = (inputIds, expectedValues, tickId) => {
         return el.value.trim() === expectedValues[idx];
     });
 
-    if (isCorrect) {
-        tick.style.display = "inline";
-        tick.textContent = " ✔ Correct";
-        tick.style.color = "var(--teal-500)";
-    } else {
-        tick.style.display = "inline";
-        tick.textContent = " ✖ Try again";
-        tick.style.color = "#e63946";
-    }
+    setTickState(tick, isCorrect);
 };
 
 const normalizeOutput = (text) => {
@@ -237,15 +231,98 @@ const checkActualOutput = (caseSelectId, actualOutputId, tickId) => {
     const expected = expectedOutputs[caseSelect.value] || "";
     const actual = actualEl.textContent || "";
 
-    if (normalizeOutput(actual) === normalizeOutput(expected)) {
-        tick.style.display = "inline";
-        tick.textContent = " ✔ Correct";
-        tick.style.color = "var(--teal-500)";
-    } else {
-        tick.style.display = "inline";
-        tick.textContent = " ✖ Try again";
-        tick.style.color = "#e63946";
+    setTickState(tick, normalizeOutput(actual) === normalizeOutput(expected));
+};
+
+const markComplete = (tickId) => {
+    const tick = document.getElementById(tickId);
+    if (!tick) return;
+    tick.dataset.correct = "true";
+    tick.style.display = "inline";
+    tick.textContent = " ✔ Correct";
+    tick.style.color = "var(--teal-500)";
+    updateStepperState();
+};
+
+const isStepComplete = (section) => {
+    if (!section) return false;
+    const requires = section.dataset.requires;
+    if (!requires) return true;
+    const ids = requires.split(",").map((id) => id.trim()).filter(Boolean);
+    if (!ids.length) return true;
+    return ids.every((id) => {
+        const el = document.getElementById(id);
+        return el && el.dataset.correct === "true";
+    });
+};
+
+const updateStepperState = () => {
+    const current = stepperState.sections[stepperState.index];
+    const nextBtn = document.getElementById("stepNext");
+    const note = document.getElementById("stepperNote");
+    if (!current || !nextBtn || !note) return;
+    const complete = isStepComplete(current);
+    nextBtn.disabled = !complete;
+    note.textContent = complete ? "Ready to continue." : "Complete the activity to continue.";
+};
+
+const showStep = (index) => {
+    stepperState.sections.forEach((section, i) => {
+        section.classList.toggle("active", i === index);
+    });
+    stepperState.index = index;
+
+    const progress = document.getElementById("stepperProgress");
+    const prevBtn = document.getElementById("stepPrev");
+    const nextBtn = document.getElementById("stepNext");
+    const completion = document.getElementById("completionScreen");
+    if (progress) {
+        progress.textContent = `Step ${index + 1} of ${stepperState.sections.length}`;
     }
+    if (prevBtn) prevBtn.disabled = index === 0;
+    if (nextBtn) nextBtn.textContent = index === stepperState.sections.length - 1 ? "Finish" : "Next";
+    if (completion) completion.classList.remove("is-visible");
+    updateStepperState();
+};
+
+const initStepper = () => {
+    const sections = Array.from(document.querySelectorAll(".step-section"));
+    if (!sections.length) return;
+    stepperState.sections = sections;
+    showStep(0);
+
+    const prevBtn = document.getElementById("stepPrev");
+    const nextBtn = document.getElementById("stepNext");
+    if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+            if (stepperState.index > 0) {
+                showStep(stepperState.index - 1);
+            }
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+            if (!isStepComplete(stepperState.sections[stepperState.index])) return;
+            if (stepperState.index < stepperState.sections.length - 1) {
+                showStep(stepperState.index + 1);
+            } else {
+                const completion = document.getElementById("completionScreen");
+                if (completion) completion.classList.add("is-visible");
+                document.body.classList.add("is-complete");
+                const completionCard = document.querySelector("#completionScreen .completion-card");
+                if (completionCard) completionCard.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    }
+};
+
+const restartStepper = () => {
+    const completion = document.getElementById("completionScreen");
+    if (completion) completion.classList.remove("is-visible");
+    document.body.classList.remove("is-complete");
+    showStep(0);
+    const main = document.querySelector("main.content");
+    if (main) main.scrollIntoView({ behavior: "smooth" });
 };
 
 const getMakeInputs = (caseValue) => {
@@ -340,4 +417,5 @@ document.addEventListener("DOMContentLoaded", () => {
     if (statusEl) statusEl.textContent = "Python runtime ready when you run.";
     const spinner = document.querySelector(".spinner");
     if (spinner) spinner.classList.add("is-hidden");
+    initStepper();
 });

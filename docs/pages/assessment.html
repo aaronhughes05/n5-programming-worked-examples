@@ -21,7 +21,12 @@
     </header>
 
     <main class="content">
-      <section class="card">
+      <div class="stepper-header">
+        <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
+        <div class="stepper-progress-note" id="stepperNote">Complete the activity to continue.</div>
+      </div>
+
+      <section class="card step-section" data-step="1" data-step-id="step-1">
         <h2>1. Problem Description</h2>
         <p>
           Ask the user for the prices of 5 items. Reject negative values, store
@@ -30,7 +35,7 @@
         </p>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2,tick3,tick4">
         <h2>2. Prediction Activity</h2>
         <div class="question-block">
           <p>How many times will the main loop repeat?</p>
@@ -69,7 +74,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
         <h2>3. Step-by-Step Implementation</h2>
         <div id="step1" class="step-box">
           <p><strong>Step 1:</strong> Set up the total and a list to store valid prices.</p>
@@ -114,7 +119,7 @@ E: print("Total:", total)</code></pre>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="sgA1Tick">
         <h2>4. Subgoal A Activities</h2>
         <div class="question-block" data-choice-group="sgA">
           <p>Which subgoal does this line belong to? <strong>A: total = 0</strong></p>
@@ -130,7 +135,7 @@ E: print("Total:", total)</code></pre>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="sgB1Tick">
         <h2>5. Subgoal B Activities</h2>
         <div class="question-block" data-line-group="sgB">
           <p>Click the line that matches Subgoal B (the loop that repeats 5 times).</p>
@@ -144,7 +149,7 @@ E: print("Total:", total)</code></pre>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="sgC1Tick">
         <h2>6. Subgoal C Activities</h2>
         <div class="question-block">
           <p>Fill the blank to update the running total: <strong>total = total + ___</strong></p>
@@ -156,7 +161,7 @@ E: print("Total:", total)</code></pre>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="sgD1Tick">
         <h2>7. Subgoal D Activities</h2>
         <div class="question-block">
           <p>Identify the subgoal for: <strong>for value in items:</strong></p>
@@ -168,7 +173,7 @@ E: print("Total:", total)</code></pre>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="sgE1Tick">
         <h2>8. Subgoal E Activities</h2>
         <div class="question-block">
           <p>Trace the running total. Fill in the totals after each input.</p>
@@ -199,7 +204,7 @@ E: print("Total:", total)</code></pre>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="assessmentFeedback">
         <h2>9. Modify Activity</h2>
         <p>Rearrange the code lines to build a working program that:</p>
         <ul>
@@ -225,7 +230,7 @@ E: print("Total:", total)</code></pre>
         <p id="assessmentFeedback"></p>
       </section>
 
-      <section class="card">
+      <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
         <h2>10. Make Task</h2>
         <p>Write your own program below, select a test case, then run and check the output.</p>
 
@@ -260,7 +265,24 @@ Average: 4.5</code></pre>
         <span id="makeOutputTick" class="tick-mark"></span>
       </section>
 
+      <div class="stepper-controls">
+        <button class="check-btn" id="stepPrev">Back</button>
+        <button class="check-btn" id="stepNext">Next</button>
+      </div>
     </main>
+
+    <section class="completion-screen" id="completionScreen">
+      <div class="completion-card">
+        <p class="completion-eyebrow">Completed</p>
+        <h2>Final Assessment Finished</h2>
+        <p>You have completed all activities in this assessment.</p>
+        <p class="completion-note">You can restart the assessment or return to the homepage.</p>
+        <div class="completion-actions">
+          <a class="check-btn" href="../index.html">Back to Home</a>
+          <button class="check-btn" type="button" onclick="restartStepper()">Restart</button>
+        </div>
+      </div>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <script src="../js/script.js"></script>
