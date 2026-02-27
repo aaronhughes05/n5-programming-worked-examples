@@ -169,6 +169,19 @@ p {
   margin-top: var(--space-1);
 }
 
+.card > p {
+  margin-top: var(--space-2);
+}
+
+.card > p:first-of-type {
+  margin-top: var(--space-3);
+}
+
+.card > ul,
+.card > ol {
+  margin-top: var(--space-2);
+}
+
 ul,
 ol {
   margin: var(--space-2) 0 0;
@@ -293,6 +306,7 @@ a:focus-visible {
     linear-gradient(transparent 31px, rgba(17, 27, 46, 0.03) 32px),
     linear-gradient(90deg, transparent 31px, rgba(17, 27, 46, 0.02) 32px);
   background-size: 32px 32px;
+  margin-top: var(--space-2);
 }
 
 .step-box:first-of-type {
@@ -306,6 +320,10 @@ a:focus-visible {
   line-height: 1.6;
   color: var(--ink-900);
   font-weight: 600;
+}
+
+.step-box p {
+  margin: 0 0 var(--space-2);
 }
 
 .question-block {
@@ -421,6 +439,11 @@ a:focus-visible {
   color: var(--teal-500);
 }
 
+#assessmentFeedback {
+  font-weight: 700;
+  margin-top: 6px;
+}
+
 .site-footer {
   padding: var(--space-5) 0 var(--space-6);
   border-top: 1px solid var(--slate-100);
@@ -472,19 +495,6 @@ a:focus-visible {
     padding: var(--space-3);
   }
 
-}
-
-.hidden {
-  display: none !important;
-}
-
-.step-box {
-  padding: var(--space-4);
-  background: var(--slate-50);
-  border-radius: var(--radius-1);
-  border-left: 5px solid var(--accent-600);
-  margin: var(--space-3) 0;
-  animation: fadeIn 0.4s ease-out;
 }
 
 .parsons-container {
@@ -622,6 +632,26 @@ button[disabled] {
 .run-status {
   font-size: 0.95rem;
   color: var(--ink-500);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(31, 102, 209, 0.25);
+  border-top-color: var(--accent-600);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner.is-hidden {
+  display: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {

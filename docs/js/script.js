@@ -267,6 +267,7 @@ const runProgram = async () => {
     const caseSelect = document.getElementById("makeCase");
     const outputEl = document.getElementById("makeActual");
     const runBtn = document.getElementById("runProgramBtn");
+    const spinner = document.querySelector(".spinner");
 
     if (!programEl || !caseSelect || !outputEl || !runBtn) return;
     const statusEl = document.getElementById("runStatus");
@@ -277,6 +278,7 @@ const runProgram = async () => {
     runBtn.disabled = true;
     runBtn.textContent = "Running...";
     if (statusEl) statusEl.textContent = "Running Python...";
+    if (spinner) spinner.classList.remove("is-hidden");
 
     try {
         if (!window.loadPyodide) {
@@ -321,6 +323,7 @@ _buffer.getvalue()
     } finally {
         runBtn.textContent = "Run Program";
         runBtn.disabled = programEl.value.trim().length === 0;
+        if (spinner) spinner.classList.add("is-hidden");
     }
 };
 
@@ -335,4 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateExpectedOutput();
     const statusEl = document.getElementById("runStatus");
     if (statusEl) statusEl.textContent = "Python runtime ready when you run.";
+    const spinner = document.querySelector(".spinner");
+    if (spinner) spinner.classList.add("is-hidden");
 });
