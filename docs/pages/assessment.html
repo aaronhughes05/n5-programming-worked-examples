@@ -43,7 +43,7 @@
         <div class="question-block">
           <p>How many times will the main loop repeat?</p>
           <div class="question-input">
-            <input type="text" id="pred1" style="width: 80px;">
+            <input type="text" id="pred1" placeholder="Enter a number" style="width: 80px;">
             <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
             <span id="tick1" class="tick-mark"></span>
           </div>
@@ -52,7 +52,7 @@
         <div class="question-block">
           <p>Which loop would you use to reject negative prices?</p>
           <div class="question-input">
-            <input type="text" id="pred2" placeholder="for or while?" style="width: 140px;">
+            <input type="text" id="pred2" placeholder="while or for?" style="width: 140px;">
             <button onclick="checkAnswer('pred2', 'while', 'tick2')">Check</button>
             <span id="tick2" class="tick-mark"></span>
           </div>
@@ -61,16 +61,16 @@
         <div class="question-block">
           <p>What variable stores the running total?</p>
           <div class="question-input">
-            <input type="text" id="pred3" style="width: 140px;">
+            <input type="text" id="pred3" placeholder="Enter variable name" style="width: 140px;">
             <button onclick="checkAnswer('pred3', 'total', 'tick3')">Check</button>
             <span id="tick3" class="tick-mark"></span>
           </div>
         </div>
 
         <div class="question-block">
-          <p>Should the list store each valid price? (yes/no)</p>
+          <p>Should the list store each valid price?</p>
           <div class="question-input">
-            <input type="text" id="pred4" style="width: 100px;">
+            <input type="text" id="pred4" placeholder="yes or no" style="width: 100px;">
             <button onclick="checkAnswer('pred4', 'yes', 'tick4')">Check</button>
             <span id="tick4" class="tick-mark"></span>
           </div>
@@ -81,44 +81,54 @@
         <h2>3. Step-by-Step Implementation</h2>
         <div id="step1" class="step-box">
           <p><strong>Step 1:</strong> Set up the total and a list to store valid prices.</p>
-          <pre><code>A: total = 0
-A: items = []</code></pre>
+          <pre><code>
+            A: total = 0
+            A: items = []
+          </code></pre>
           <button onclick="nextStep(1, 2)">Next Step</button>
         </div>
         <div id="step2" class="step-box hidden">
           <p><strong>Step 2:</strong> Repeat exactly 5 times so each item is entered once.</p>
-          <pre><code>B: for counter in range(5):</code></pre>
+          <pre><code>
+            B: for counter in range(5):
+          </code></pre>
           <button onclick="nextStep(2, 3)">Next Step</button>
         </div>
         <div id="step3" class="step-box hidden">
           <p><strong>Step 3:</strong> Validate each price, store it, and update the running total.</p>
-          <pre><code>C:     price = float(input("Price: "))
-C:     while price &lt; 0:
-C:         price = float(input("Enter a valid price: "))
-C:     items.append(price)
-C:     total = total + price</code></pre>
+          <pre><code>
+            C:     price = float(input("Price: "))
+            C:     while price &lt; 0:
+            C:         price = float(input("Enter a valid price: "))
+            C:     items.append(price)
+            C:     total = total + price
+          </code></pre>
           <button onclick="nextStep(3, 4)">Next Step</button>
         </div>
         <div id="step4" class="step-box hidden">
           <p><strong>Step 4:</strong> Traverse the list and display each price, then show the total.</p>
-          <pre><code>D: for value in items:
-D:     print(value)
-E: print("Total:", total)</code></pre>
+          <pre><code>
+            D: for value in items:
+            D:     print(value)
+            E: print("Total:", total)
+          </code></pre>
           <button onclick="nextStep(4, 'full')">Show Full Code</button>
         </div>
         <div id="fullCode" class="step-box hidden">
           <p><strong>Full Solution:</strong> Combine all steps into one complete program with subgoal labels.</p>
-          <pre><code>A: total = 0
-A: items = []
-B: for counter in range(5):
-C:     price = float(input("Price: "))
-C:     while price &lt; 0:
-C:         price = float(input("Enter a valid price: "))
-C:     items.append(price)
-C:     total = total + price
-D: for value in items:
-D:     print(value)
-E: print("Total:", total)</code></pre>
+          <pre><code>
+            A: total = 0
+            A: items = []
+            B: for counter in range(5):
+            C:     price = float(input("Price: "))
+            C:     while price &lt; 0:
+            C:         price = float(input("Enter a valid price: "))
+            C:     items.append(price)
+            C:     total = total + price
+            D: for value in items:
+            D:     print(value)
+            E: print("Total:", total)
+          </code></pre>
         </div>
       </section>
 

@@ -652,8 +652,8 @@ button {
   background: var(--accent-600);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: var(--radius-1);
+  padding: 10px 22px;
+  border-radius: 999px;
   cursor: pointer;
   font-weight: 700;
   font-family: var(--font-body);
@@ -673,7 +673,7 @@ input[type="text"],
 input[type="number"] {
   padding: 10px;
   border: 2px solid var(--slate-100);
-  border-radius: var(--radius-1);
+  border-radius: 999px;
   font-family: var(--font-body);
   color: var(--ink-800);
   outline: none;
@@ -687,7 +687,7 @@ input:focus {
 select {
   padding: 10px 12px;
   border: 2px solid var(--slate-100);
-  border-radius: var(--radius-1);
+  border-radius: 999px;
   font-family: var(--font-body);
   color: var(--ink-800);
   background: #ffffff;
