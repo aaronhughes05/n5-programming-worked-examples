@@ -16,11 +16,12 @@ const checkAnswer = (inputId, correctAnswer, tickId) => {
 
     if (cleanUser === cleanCorrect) {
         tick.style.display = "inline";
-        tick.textContent = " ✔️ Correct!";
+        tick.textContent = " ✔ Correct";
         tick.style.color = "var(--teal-500)";
     } else {
-        alert("Not quite! Check your syntax or the problem description.");
-        tick.style.display = "none";
+        tick.style.display = "inline";
+        tick.textContent = " ✖ Try again";
+        tick.style.color = "#e63946";
     }
 };
 
@@ -67,10 +68,81 @@ const verifyParsons = (containerId, correctIds, feedbackId) => {
     }
 
     if (isCorrect) {
-        feedback.textContent = "✔️ Excellent! The logic is in the correct order.";
+        feedback.textContent = "✔ Excellent! The logic is in the correct order.";
         feedback.style.color = "var(--teal-500)";
     } else {
-        feedback.textContent = "❌ Incorrect. Think: Initialize -> Loop -> Process -> Output.";
+        feedback.textContent = "✖ Try again. Think: Initialize -> Loop -> Process -> Output.";
         feedback.style.color = "#e63946";
+    }
+};
+
+const setChoice = (groupId, value, buttonEl) => {
+    const container = document.querySelector(`[data-choice-group="${groupId}"]`);
+    if (!container) return;
+    container.dataset.selected = value;
+    const buttons = container.querySelectorAll(".mc-buttons button");
+    buttons.forEach((btn) => btn.classList.remove("selected"));
+    if (buttonEl) buttonEl.classList.add("selected");
+};
+
+const checkChoice = (groupId, correctValue, tickId) => {
+    const container = document.querySelector(`[data-choice-group="${groupId}"]`);
+    if (!container) return;
+    const selected = (container.dataset.selected || "").trim().toLowerCase();
+    const correct = correctValue.trim().toLowerCase();
+    const tick = document.getElementById(tickId);
+    if (selected === correct) {
+        tick.style.display = "inline";
+        tick.textContent = " ✔ Correct";
+        tick.style.color = "var(--teal-500)";
+    } else {
+        tick.style.display = "inline";
+        tick.textContent = " ✖ Try again";
+        tick.style.color = "#e63946";
+    }
+};
+
+const selectLine = (groupId, value, buttonEl) => {
+    const container = document.querySelector(`[data-line-group="${groupId}"]`);
+    if (!container) return;
+    container.dataset.selected = value;
+    const lines = container.querySelectorAll(".code-line");
+    lines.forEach((btn) => btn.classList.remove("selected"));
+    if (buttonEl) buttonEl.classList.add("selected");
+};
+
+const checkLineChoice = (groupId, correctValue, tickId) => {
+    const container = document.querySelector(`[data-line-group="${groupId}"]`);
+    if (!container) return;
+    const selected = (container.dataset.selected || "").replace(/\s/g, "").toLowerCase();
+    const correct = correctValue.replace(/\s/g, "").toLowerCase();
+    const tick = document.getElementById(tickId);
+    if (selected === correct) {
+        tick.style.display = "inline";
+        tick.textContent = " ✔ Correct";
+        tick.style.color = "var(--teal-500)";
+    } else {
+        tick.style.display = "inline";
+        tick.textContent = " ✖ Try again";
+        tick.style.color = "#e63946";
+    }
+};
+
+const checkTrace = (inputIds, expectedValues, tickId) => {
+    const tick = document.getElementById(tickId);
+    const isCorrect = inputIds.every((id, idx) => {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        return el.value.trim() === expectedValues[idx];
+    });
+
+    if (isCorrect) {
+        tick.style.display = "inline";
+        tick.textContent = " ✔ Correct";
+        tick.style.color = "var(--teal-500)";
+    } else {
+        tick.style.display = "inline";
+        tick.textContent = " ✖ Try again";
+        tick.style.color = "#e63946";
     }
 };
