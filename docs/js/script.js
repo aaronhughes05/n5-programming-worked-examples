@@ -171,3 +171,53 @@ const checkTrace = (inputIds, expectedValues, tickId) => {
         tick.style.color = "#e63946";
     }
 };
+
+const normalizeOutput = (text) => {
+    return text
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/,\s*/g, ",");
+};
+
+const checkOutput = (caseSelectId, outputId, tickId) => {
+    const caseSelect = document.getElementById(caseSelectId);
+    const outputEl = document.getElementById(outputId);
+    const tick = document.getElementById(tickId);
+
+    if (!caseSelect || !outputEl || !tick) return;
+
+    const expectedOutputs = {
+        case1: "Scores: 2, 3, 4, 5, 6, 7\nTotal: 27\nAverage: 4.5",
+        case2: "Scores: 0, 10, 20, 30, 40, 50\nTotal: 150\nAverage: 25",
+        case3: "Scores: 5, 5, 5, 5, 5, 5\nTotal: 30\nAverage: 5"
+    };
+
+    const selectedCase = caseSelect.value;
+    const expected = expectedOutputs[selectedCase] || "";
+    const userOutput = outputEl.value;
+
+    if (normalizeOutput(userOutput) === normalizeOutput(expected)) {
+        tick.style.display = "inline";
+        tick.textContent = " ✔ Correct";
+        tick.style.color = "var(--teal-500)";
+    } else {
+        tick.style.display = "inline";
+        tick.textContent = " ✖ Try again";
+        tick.style.color = "#e63946";
+    }
+};
+
+const updateExpectedOutput = () => {
+    const caseSelect = document.getElementById("makeCase");
+    const expectedEl = document.getElementById("makeExpected");
+    if (!caseSelect || !expectedEl) return;
+
+    const expectedOutputs = {
+        case1: "Scores: 2, 3, 4, 5, 6, 7\nTotal: 27\nAverage: 4.5",
+        case2: "Scores: 0, 10, 20, 30, 40, 50\nTotal: 150\nAverage: 25",
+        case3: "Scores: 5, 5, 5, 5, 5, 5\nTotal: 30\nAverage: 5"
+    };
+
+    expectedEl.textContent = expectedOutputs[caseSelect.value] || "";
+};
