@@ -17,6 +17,95 @@ let stepperState = {
     index: 0
 };
 
+const STORAGE_KEY = "assessmentStepperState";
+
+const saveStepperState = () => {
+    const completed = [];
+    document.querySelectorAll("[data-correct='true']").forEach((el) => {
+        if (el.id) completed.push(el.id);
+    });
+
+    const inputs = {};
+    document.querySelectorAll("input[type='text']").forEach((input) => {
+        if (input.id) {
+            inputs[input.id] = input.value;
+        }
+    });
+
+    const programEl = document.getElementById("makeProgram");
+    const caseSelect = document.getElementById("makeCase");
+    const actualEl = document.getElementById("makeActual");
+
+    const payload = {
+        index: stepperState.index,
+        completed,
+        inputs,
+        makeProgram: programEl ? programEl.value : "",
+        makeCase: caseSelect ? caseSelect.value : "case1",
+        makeActual: actualEl ? actualEl.textContent : ""
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+};
+
+const loadStepperState = () => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    let payload = null;
+    try {
+        payload = JSON.parse(raw);
+    } catch {
+        return false;
+    }
+    if (!payload) return false;
+
+    if (Array.isArray(payload.completed)) {
+        payload.completed.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.dataset.correct = "true";
+                if (el.classList.contains("tick-mark")) {
+                    el.style.display = "inline";
+                    if (!el.textContent) {
+                        el.textContent = " ✔ Correct";
+                    }
+                    el.style.color = "var(--teal-500)";
+                }
+            }
+        });
+    }
+
+    if (payload.inputs && typeof payload.inputs === "object") {
+        Object.entries(payload.inputs).forEach(([id, value]) => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.value = value;
+            }
+        });
+    }
+
+    const programEl = document.getElementById("makeProgram");
+    const caseSelect = document.getElementById("makeCase");
+    const actualEl = document.getElementById("makeActual");
+
+    if (programEl && typeof payload.makeProgram === "string") {
+        programEl.value = payload.makeProgram;
+    }
+    if (caseSelect && payload.makeCase) {
+        caseSelect.value = payload.makeCase;
+        updateExpectedOutput();
+    }
+    if (actualEl && typeof payload.makeActual === "string") {
+        actualEl.textContent = payload.makeActual;
+    }
+
+    if (typeof payload.index === "number") {
+        showStep(Math.min(payload.index, stepperState.sections.length - 1));
+        return true;
+    }
+    return false;
+};
+
 const setTickState = (tick, correct) => {
     if (!tick) return;
     tick.dataset.correct = correct ? "true" : "false";
@@ -24,6 +113,7 @@ const setTickState = (tick, correct) => {
     tick.textContent = correct ? " ✔ Correct" : " ✖ Try again";
     tick.style.color = correct ? "var(--teal-500)" : "#e63946";
     updateStepperState();
+    saveStepperState();
 };
 
 const setFeedbackState = (el, correct, message) => {
@@ -32,6 +122,7 @@ const setFeedbackState = (el, correct, message) => {
     el.textContent = message;
     el.style.color = correct ? "var(--teal-500)" : "#e63946";
     updateStepperState();
+    saveStepperState();
 };
 
 const checkAnswer = (inputId, correctAnswer, tickId) => {
@@ -242,6 +333,7 @@ const markComplete = (tickId) => {
     tick.textContent = " ✔ Correct";
     tick.style.color = "var(--teal-500)";
     updateStepperState();
+    saveStepperState();
 };
 
 const isStepComplete = (section) => {
@@ -288,13 +380,17 @@ const showStep = (index) => {
         barFill.style.width = `${pct}%`;
     }
     updateStepperState();
+    saveStepperState();
 };
 
 const initStepper = () => {
     const sections = Array.from(document.querySelectorAll(".step-section"));
     if (!sections.length) return;
     stepperState.sections = sections;
-    showStep(0);
+    const restored = loadStepperState();
+    if (!restored) {
+        showStep(0);
+    }
 
     const prevBtn = document.getElementById("stepPrev");
     const nextBtn = document.getElementById("stepNext");
@@ -317,6 +413,7 @@ const initStepper = () => {
                 const completionCard = document.querySelector("#completionScreen .completion-card");
                 if (completionCard) completionCard.scrollIntoView({ behavior: "smooth" });
             }
+            saveStepperState();
         });
     }
 };
@@ -328,6 +425,7 @@ const restartStepper = () => {
     showStep(0);
     const main = document.querySelector("main.content");
     if (main) main.scrollIntoView({ behavior: "smooth" });
+    localStorage.removeItem(STORAGE_KEY);
 };
 
 const getMakeInputs = (caseValue) => {
@@ -412,6 +510,9 @@ _buffer.getvalue()
 document.addEventListener("input", (event) => {
     if (event.target && event.target.id === "makeProgram") {
         enableRunButton();
+    }
+    if (event.target && (event.target.matches("input[type='text']") || event.target.id === "makeProgram")) {
+        saveStepperState();
     }
 });
 
