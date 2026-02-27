@@ -224,6 +224,36 @@ E: print("Total:", total)</code></pre>
         <button onclick="verifyParsons('assessment-parsons', ['a3','a2','a4','a1','a5','a6','a7','a9','a8','a10','a11'], 'assessmentFeedback')">Verify Logic</button>
         <p id="assessmentFeedback"></p>
       </section>
+
+      <section class="card">
+        <h2>10. Make Task</h2>
+        <p>Write your own program below, select a test case and check the output matches.</p>
+
+        <p><strong>Your Program</strong></p>
+        <textarea class="code-area" rows="12" placeholder="Write your program here..."></textarea>
+
+        <div class="question-block">
+          <p><strong>Test Case</strong></p>
+          <div class="question-input">
+            <select id="makeCase" onchange="updateExpectedOutput()">
+              <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+              <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+              <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+            </select>
+          </div>
+        </div>
+
+        <p><strong>Expected Output</strong></p>
+        <pre><code id="makeExpected">Scores: 2, 3, 4, 5, 6, 7
+Total: 27
+Average: 4.5</code></pre>
+
+        <p><strong>Your Output</strong></p>
+        <textarea class="output-area" id="makeOutput" rows="6" placeholder="Type the output you expect..."></textarea>
+        <button class="check-btn" onclick="checkOutput('makeCase', 'makeOutput', 'makeOutputTick')">Check Output</button>
+        <span id="makeOutputTick" class="tick-mark"></span>
+      </section>
+
     </main>
 
     <script src="../js/script.js"></script>
