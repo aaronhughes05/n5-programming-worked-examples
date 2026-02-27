@@ -351,6 +351,68 @@ a:focus-visible {
   line-height: 1;
 }
 
+.mc-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.mc-buttons button {
+  min-width: 44px;
+  height: 36px;
+  padding: 0 12px;
+}
+
+.mc-buttons .check-btn {
+  min-width: 90px;
+}
+
+.mc-buttons button.selected,
+.code-line.selected {
+  background: var(--accent-500);
+}
+
+.code-select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.code-line {
+  text-align: left;
+  border: 1px solid var(--accent-200);
+  border-radius: var(--radius-1);
+  padding: 10px 12px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: 600;
+  background: #fbfbf6;
+  cursor: pointer;
+}
+
+.trace-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-2) 0;
+  background: #fbfbf6;
+  border: 1px solid #e3e6dd;
+  border-radius: var(--radius-1);
+  overflow: hidden;
+}
+
+.trace-table th,
+.trace-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e3e6dd;
+  text-align: left;
+}
+
+.trace-table thead th {
+  background: #f5f2e9;
+  color: var(--ink-700);
+}
+
 .tick-mark {
   font-weight: 700;
   color: var(--teal-500);

@@ -113,6 +113,91 @@ D:     print(value)
 E: print("Total:", total)</code></pre>
         </div>
       </section>
+
+      <section class="card">
+        <h2>4. Subgoal A Activities</h2>
+        <div class="question-block" data-choice-group="sgA">
+          <p>Which subgoal does this line belong to? <strong>A: total = 0</strong></p>
+          <div class="mc-buttons">
+            <button type="button" onclick="setChoice('sgA', 'A', this)">A</button>
+            <button type="button" onclick="setChoice('sgA', 'B', this)">B</button>
+            <button type="button" onclick="setChoice('sgA', 'C', this)">C</button>
+            <button type="button" onclick="setChoice('sgA', 'D', this)">D</button>
+            <button type="button" onclick="setChoice('sgA', 'E', this)">E</button>
+            <button type="button" class="check-btn" onclick="checkChoice('sgA', 'A', 'sgA1Tick')">Check</button>
+            <span id="sgA1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>5. Subgoal B Activities</h2>
+        <div class="question-block" data-line-group="sgB">
+          <p>Click the line that matches Subgoal B (the loop that repeats 5 times).</p>
+          <div class="code-select">
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'total = 0', this)">total = 0</button>
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'for counter in range(5):', this)">for counter in range(5):</button>
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'total = total + price', this)">total = total + price</button>
+          </div>
+          <button type="button" class="check-btn" onclick="checkLineChoice('sgB', 'for counter in range(5):', 'sgB1Tick')">Check</button>
+          <span id="sgB1Tick" class="tick-mark"></span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>6. Subgoal C Activities</h2>
+        <div class="question-block">
+          <p>Fill the blank to update the running total: <strong>total = total + ___</strong></p>
+          <div class="question-input">
+            <input type="text" id="sgC1" style="width: 140px;">
+            <button onclick="checkAnswer('sgC1', 'price', 'sgC1Tick')">Check</button>
+            <span id="sgC1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>7. Subgoal D Activities</h2>
+        <div class="question-block">
+          <p>Identify the subgoal for: <strong>for value in items:</strong></p>
+          <div class="question-input">
+            <input type="text" id="sgD1" placeholder="A, B, C, D, or E" style="width: 160px;">
+            <button onclick="checkAnswer('sgD1', 'D', 'sgD1Tick')">Check</button>
+            <span id="sgD1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>8. Subgoal E Activities</h2>
+        <div class="question-block">
+          <p>Trace the running total. Fill in the totals after each input.</p>
+          <table class="trace-table">
+            <thead>
+              <tr>
+                <th>Input Price</th>
+                <th>Running Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2</td>
+                <td><input type="text" id="trace1" style="width: 80px;"></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><input type="text" id="trace2" style="width: 80px;"></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><input type="text" id="trace3" style="width: 80px;"></td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" class="check-btn" onclick="checkTrace(['trace1','trace2','trace3'], ['2','5','9'], 'sgE1Tick')">Check</button>
+          <span id="sgE1Tick" class="tick-mark"></span>
+        </div>
+      </section>
     </main>
 
     <script src="../js/script.js"></script>
