@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Example X - Title</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-meta">
+        <div class="hero-left">
+          <p class="eyebrow">National 5 Computing Science</p>
+          <div class="topbar">
+            <span>Example X</span>
+          </div>
+        </div>
+        <a class="check-btn back-home nav-btn back-btn" href="../index.html">Back to Home</a>
+      </div>
+      <h1 class="hero-title">Example X - Title</h1>
+      <p class="hero-summary">
+        One-sentence summary of what this example teaches.
+      </p>
+    </header>
+
+    <main class="content">
+      <div class="stepper-header">
+        <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
+        <div class="stepper-bar" aria-hidden="true">
+          <span class="stepper-bar-fill" id="stepperBarFill"></span>
+        </div>
+        <div class="stepper-progress-note" id="stepperNote">Complete the activity to continue.</div>
+      </div>
+
+      <section class="card step-section" data-step="1" data-step-id="step-1">
+        <h2>1. Problem Description</h2>
+        <p>Describe the problem in 2–3 sentences.</p>
+      </section>
+
+      <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2">
+        <h2>2. Prediction Activity</h2>
+        <div class="question-block">
+          <p>Prediction question 1?</p>
+          <div class="question-input">
+            <input type="text" id="pred1" style="width: 120px;">
+            <button onclick="checkAnswer('pred1', 'correct', 'tick1')">Check</button>
+            <span id="tick1" class="tick-mark"></span>
+          </div>
+        </div>
+        <div class="question-block">
+          <p>Prediction question 2?</p>
+          <div class="question-input">
+            <input type="text" id="pred2" style="width: 120px;">
+            <button onclick="checkAnswer('pred2', 'correct', 'tick2')">Check</button>
+            <span id="tick2" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
+        <h2>3. Step-by-Step Implementation</h2>
+        <div id="step1" class="step-box">
+          <p><strong>Step 1:</strong> Explain what happens here.</p>
+          <pre><code>A: line of code here</code></pre>
+          <button onclick="nextStep(1, 2)">Next Step</button>
+        </div>
+        <div id="step2" class="step-box hidden">
+          <p><strong>Step 2:</strong> Explain what happens here.</p>
+          <pre><code>B: line of code here</code></pre>
+          <button onclick="nextStep(2, 3)">Next Step</button>
+        </div>
+        <div id="step3" class="step-box hidden">
+          <p><strong>Step 3:</strong> Explain what happens here.</p>
+          <pre><code>C: line of code here</code></pre>
+          <button onclick="nextStep(3, 'full')">Show Full Code</button>
+        </div>
+        <div id="fullCode" class="step-box hidden">
+          <p><strong>Full Solution:</strong> Combine all steps with subgoal labels.</p>
+          <pre><code>A: ...
+B: ...
+C: ...
+D: ...</code></pre>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="sgA1Tick">
+        <h2>4. Subgoal A Activity</h2>
+        <div class="question-block" data-choice-group="sgA">
+          <p>Which subgoal matches this line? <strong>A: ...</strong></p>
+          <div class="mc-buttons">
+            <button type="button" onclick="setChoice('sgA', 'A', this)">A</button>
+            <button type="button" onclick="setChoice('sgA', 'B', this)">B</button>
+            <button type="button" onclick="setChoice('sgA', 'C', this)">C</button>
+            <button type="button" onclick="setChoice('sgA', 'D', this)">D</button>
+            <button type="button" class="check-btn" onclick="checkChoice('sgA', 'A', 'sgA1Tick')">Check</button>
+            <span id="sgA1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="sgB1Tick">
+        <h2>5. Subgoal B Activity</h2>
+        <div class="question-block" data-line-group="sgB">
+          <p>Click the line that matches Subgoal B.</p>
+          <div class="code-select">
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'line 1', this)">line 1</button>
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'line 2', this)">line 2</button>
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'line 3', this)">line 3</button>
+          </div>
+          <button type="button" class="check-btn" onclick="checkLineChoice('sgB', 'line 2', 'sgB1Tick')">Check</button>
+          <span id="sgB1Tick" class="tick-mark"></span>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="sgC1Tick">
+        <h2>6. Subgoal C Activity</h2>
+        <div class="question-block">
+          <p>Fill the blank: <strong>total = total + ___</strong></p>
+          <div class="question-input">
+            <input type="text" id="sgC1" style="width: 140px;">
+            <button onclick="checkAnswer('sgC1', 'value', 'sgC1Tick')">Check</button>
+            <span id="sgC1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="sgD1Tick">
+        <h2>7. Subgoal D Activity</h2>
+        <div class="question-block">
+          <p>Identify the subgoal for: <strong>print(total)</strong></p>
+          <div class="question-input">
+            <input type="text" id="sgD1" style="width: 140px;">
+            <button onclick="checkAnswer('sgD1', 'D', 'sgD1Tick')">Check</button>
+            <span id="sgD1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="sgE1Tick">
+        <h2>8. Subgoal E Activity</h2>
+        <div class="question-block">
+          <p>Trace the running total for inputs 2, 3, 4.</p>
+          <table class="trace-table">
+            <thead>
+              <tr>
+                <th>Input</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2</td>
+                <td><input type="text" id="trace1" style="width: 80px;"></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><input type="text" id="trace2" style="width: 80px;"></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><input type="text" id="trace3" style="width: 80px;"></td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" class="check-btn" onclick="checkTrace(['trace1','trace2','trace3'], ['2','5','9'], 'sgE1Tick')">Check</button>
+          <span id="sgE1Tick" class="tick-mark"></span>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="assessmentFeedback">
+        <h2>9. Modify Activity (Parsons Puzzle)</h2>
+        <p>Rearrange the code lines to build a working program.</p>
+        <div id="parsons-area" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+          <div id="p1" class="draggable" draggable="true" ondragstart="drag(event)">line 1</div>
+          <div id="p2" class="draggable" draggable="true" ondragstart="drag(event)">line 2</div>
+          <div id="p3" class="draggable" draggable="true" ondragstart="drag(event)">line 3</div>
+        </div>
+        <button onclick="verifyParsons('parsons-area', ['p1','p2','p3'], 'assessmentFeedback')">Verify Logic</button>
+        <p id="assessmentFeedback"></p>
+      </section>
+
+      <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
+        <h2>10. Make Task</h2>
+        <p>Students write their own solution and compare output.</p>
+        <p><strong>Your Program</strong></p>
+        <textarea class="code-area" id="makeProgram" rows="8" placeholder="Write your program here..."></textarea>
+        <div class="question-block">
+          <p><strong>Test Case</strong></p>
+          <div class="question-input">
+            <select id="makeCase" onchange="updateExpectedOutput()">
+              <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+              <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+              <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+            </select>
+          </div>
+        </div>
+        <p><strong>Expected Output</strong></p>
+        <pre class="paper-code"><code id="makeExpected">Scores: ...
+Total: ...
+Average: ...</code></pre>
+        <p><strong>Your Output</strong></p>
+        <div class="run-row">
+          <button class="check-btn" id="runProgramBtn" onclick="runProgram()" disabled>Run Program</button>
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="runStatus" class="run-status">Python runtime loading...</span>
+        </div>
+        <pre class="paper-code"><code id="makeActual">Run your program to see the output here.</code></pre>
+        <button class="check-btn" onclick="checkActualOutput('makeCase', 'makeActual', 'makeOutputTick')">Check Output</button>
+        <span id="makeOutputTick" class="tick-mark"></span>
+      </section>
+
+      <div class="stepper-controls">
+        <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
+        <button class="check-btn reset-btn" id="stepReset" onclick="resetAssessment()">Restart</button>
+        <button class="check-btn nav-btn" id="stepNext">Next</button>
+      </div>
+    </main>
+
+    <section class="completion-screen" id="completionScreen">
+      <div class="completion-card">
+        <p class="completion-eyebrow">Completed</p>
+        <h2>Example Finished</h2>
+        <p>You have completed this example.</p>
+        <p class="completion-note">Use Restart to try again or return home.</p>
+        <div class="completion-actions">
+          <a class="check-btn nav-btn back-btn" href="../index.html">Back to Home</a>
+          <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
+        </div>
+      </div>
+    </section>
+
+    <script src="../js/script.js"></script>
+  </body>
+</html>
