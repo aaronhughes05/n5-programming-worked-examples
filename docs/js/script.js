@@ -799,6 +799,180 @@ const initHomeCardReveal = () => {
     cards.forEach((card) => observer.observe(card));
 };
 
+const initDefaultTooltipCopy = () => {
+    const buildTip = (el) => {
+        const label = (el.textContent || "").trim().replace(/\s+/g, " ");
+        const lower = label.toLowerCase();
+        const href = ((el.getAttribute && el.getAttribute("href")) || "").toLowerCase();
+        const id = (el.id || "").toLowerCase();
+        const onclick = (el.getAttribute && (el.getAttribute("onclick") || "").toLowerCase()) || "";
+        const sectionTitle = (el.closest("section")?.querySelector("h2")?.textContent || "").trim();
+        const sectionLabel = sectionTitle ? ` in ${sectionTitle}` : "";
+
+        if (el.classList.contains("appbar-menu-toggle")) return "Show quick links";
+        if (el.classList.contains("appbar-resume")) return "Resume your saved progress";
+
+        if (id === "stepprev") return "Go to previous step";
+        if (id === "stepnext") return "Go to next step";
+        if (id === "stepreset") return "Restart from step 1";
+        if (id === "runprogrambtn") return "Run your code with the selected test case";
+        if (id === "examplepreviewlink") return "Open this previewed activity";
+
+        if (el.classList.contains("examples-tab")) {
+            const key = (el.dataset.exampleKey || "").toLowerCase();
+            if (key === "example1") return "Preview example 1";
+            if (key === "example2") return "Preview example 2";
+            if (key === "example3") return "Preview example 3";
+            if (key === "assessment") return "Preview final assessment";
+            return "Preview this activity";
+        }
+
+        if (onclick.includes("verifyparsons")) return `Verify your order${sectionLabel}`;
+        if (onclick.includes("checkactualoutput")) return "Check your program output";
+        if (onclick.includes("checktrace")) return `Check your trace${sectionLabel}`;
+        if (onclick.includes("checklinechoice")) return `Check your line choice${sectionLabel}`;
+        if (onclick.includes("checkchoice")) return `Check your selected subgoal${sectionLabel}`;
+        if (onclick.includes("checkanswer")) return `Check your answer${sectionLabel}`;
+        if (onclick.includes("runprogram")) return "Run your code with the selected test case";
+        if (onclick.includes("resetassessment")) return "Restart this activity";
+        if (onclick.includes("nextstep")) return "Show the next code step";
+        if (onclick.includes("show full code")) return "Reveal the full solution";
+
+        if (lower.includes("menu")) return "Show quick links";
+        if (lower.includes("home")) return "Go to homepage";
+        if (lower.includes("examples")) return "Jump to examples";
+        if (lower.includes("assessment")) return "Open assessment";
+        if (lower.includes("resume")) return "Resume your saved progress";
+        if (lower.includes("start")) return "Start this activity";
+        if (lower.includes("try")) return "Open this activity";
+        if (lower.includes("next")) return "Go to next step";
+        if (lower.includes("back")) return "Go to previous step";
+        if (lower.includes("restart")) return "Restart this activity";
+        if (lower === "check") return "Check your answer";
+        if (lower.includes("check answer")) return "Check your answer";
+        if (lower.includes("verify")) return "Verify your solution";
+        if (lower.includes("run program")) return "Run your code";
+        if (lower.includes("preview")) return "Preview this section";
+        if (lower.includes("example 1")) return "Preview example 1";
+        if (lower.includes("example 2")) return "Preview example 2";
+        if (lower.includes("example 3")) return "Preview example 3";
+        if (href.includes("#examples")) return "Jump to examples";
+        if (href.includes("assessment")) return "Open assessment";
+        if (href.includes("example1")) return "Open example 1";
+        if (href.includes("example2")) return "Open example 2";
+        if (href.includes("example3")) return "Open example 3";
+        if (el.classList.contains("back-btn")) return "Return to the previous page";
+        if (el.classList.contains("reset-btn")) return "Restart this activity";
+        if (el.classList.contains("check-btn")) return "Continue with this action";
+        return "Select this option";
+    };
+
+    const selector = [
+        ".appbar-nav-pill",
+        ".appbar-menu-toggle",
+        ".examples-tab",
+        ".check-btn",
+        "button:not(.code-line):not(.draggable)"
+    ].join(", ");
+
+    const controls = Array.from(document.querySelectorAll(selector));
+    const uniqueControls = Array.from(new Set(controls));
+
+    uniqueControls.forEach((el) => {
+        if (el.hasAttribute("data-tooltip")) return;
+        if (el.getAttribute("aria-hidden") === "true") return;
+        if ("disabled" in el && el.disabled) return;
+        el.setAttribute("data-tooltip", buildTip(el));
+    });
+};
+
+const initGlassTooltips = () => {
+    const triggers = Array.from(document.querySelectorAll("[data-tooltip]"));
+    if (!triggers.length) return;
+
+    const tooltip = document.createElement("div");
+    tooltip.className = "glass-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.setAttribute("aria-hidden", "true");
+    document.body.appendChild(tooltip);
+
+    let activeTrigger = null;
+    let showTimer = null;
+    const delayMs = 1700;
+    const gap = 10;
+
+    const clearShowTimer = () => {
+        if (!showTimer) return;
+        window.clearTimeout(showTimer);
+        showTimer = null;
+    };
+
+    const hideTooltip = () => {
+        clearShowTimer();
+        activeTrigger = null;
+        tooltip.classList.remove("is-visible");
+        tooltip.setAttribute("aria-hidden", "true");
+    };
+
+    const positionTooltip = (trigger) => {
+        if (!trigger) return;
+        const rect = trigger.getBoundingClientRect();
+        tooltip.style.left = "0px";
+        tooltip.style.top = "0px";
+
+        const tipRect = tooltip.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+        left = Math.max(12, Math.min(left, vw - tipRect.width - 12));
+
+        let top = rect.bottom + gap;
+        if (top + tipRect.height > vh - 12) {
+            top = Math.max(12, rect.top - tipRect.height - gap);
+        }
+
+        tooltip.style.left = `${Math.round(left)}px`;
+        tooltip.style.top = `${Math.round(top)}px`;
+    };
+
+    const showTooltip = (trigger) => {
+        const text = trigger.getAttribute("data-tooltip");
+        if (!text) return;
+        activeTrigger = trigger;
+        tooltip.textContent = text;
+        tooltip.classList.remove("is-visible");
+        tooltip.setAttribute("aria-hidden", "false");
+        positionTooltip(trigger);
+        tooltip.classList.add("is-visible");
+    };
+
+    const scheduleShow = (trigger) => {
+        clearShowTimer();
+        showTimer = window.setTimeout(() => {
+            showTooltip(trigger);
+            showTimer = null;
+        }, delayMs);
+    };
+
+    triggers.forEach((trigger) => {
+        trigger.addEventListener("mouseenter", () => scheduleShow(trigger));
+        trigger.addEventListener("focusin", () => scheduleShow(trigger));
+        trigger.addEventListener("mouseleave", hideTooltip);
+        trigger.addEventListener("focusout", hideTooltip);
+    });
+
+    window.addEventListener("scroll", () => {
+        if (!activeTrigger) return;
+        positionTooltip(activeTrigger);
+    }, { passive: true });
+
+    window.addEventListener("resize", () => {
+        if (!activeTrigger) return;
+        positionTooltip(activeTrigger);
+    });
+};
+
 const runProgram = async () => {
     const programEl = document.getElementById("makeProgram");
     const caseSelect = document.getElementById("makeCase");
@@ -878,6 +1052,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initBackToTopFab();
     initExamplesShowcase();
     initHomeCardReveal();
+    initDefaultTooltipCopy();
+    initGlassTooltips();
     enableRunButton();
     updateExpectedOutput();
     const statusEl = document.getElementById("runStatus");

@@ -825,6 +825,74 @@ a:focus-visible {
   color: var(--accent-500);
 }
 
+[data-tooltip] {
+  position: relative;
+}
+
+.glass-tooltip {
+  --edge-angle: 0deg;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1200;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(120deg, rgba(37, 99, 235, 0.12), rgba(20, 184, 166, 0.08));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--ink-900);
+  padding: 8px 12px;
+  max-width: min(220px, calc(100vw - 24px));
+  width: max-content;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+  overflow: clip;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.glass-tooltip::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from calc(-45deg + var(--edge-angle)),
+    transparent 0deg,
+    transparent 300deg,
+    rgba(37, 99, 235, 0.85) 322deg,
+    rgba(37, 99, 235, 0.98) 340deg,
+    rgba(20, 184, 166, 0.9) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.2)) drop-shadow(0 0 10px rgba(20, 184, 166, 0.14));
+}
+
+.glass-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.glass-tooltip.is-visible::after {
+  opacity: 1;
+  animation: edgeSweepBalanced 1.9s linear infinite;
+}
+
 .examples-intro {
   margin-top: var(--space-3);
   max-width: 78ch;
