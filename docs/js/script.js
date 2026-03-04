@@ -178,6 +178,13 @@ const checkAnswer = (inputId, correctAnswer, tickId) => {
     setTickState(tick, cleanUser === cleanCorrect);
 };
 
+const checkRadioButton = (inputId, tickId) => {
+    const inputField = document.getElementById(inputId);
+    const tick = document.getElementById(tickId);
+
+    setTickState(tick, inputField.checked);
+};
+
 function allowDrop(ev) {
     ev.preventDefault();
 }

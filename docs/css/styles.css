@@ -1247,6 +1247,10 @@ body.is-modal-open {
   line-height: 1;
 }
 
+.question-input-part {
+  padding-bottom: var(--space-1);
+}
+
 .mc-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -1350,6 +1354,10 @@ body.is-modal-open {
 .tick-mark {
   font-weight: 700;
   color: var(--teal-500);
+}
+
+.tick-mark.padded {
+  margin-left: var(--space-2);
 }
 
 #assessmentFeedback {
