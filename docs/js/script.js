@@ -17,9 +17,35 @@ let stepperState = {
     index: 0
 };
 
-const STORAGE_KEY = "assessmentStepperState";
+const STORAGE_NAMESPACE = "assessmentStepperState.v2";
+const getStorageKey = () => `${STORAGE_NAMESPACE}:${window.location.pathname}`;
+
+const readStorage = (key) => {
+    try {
+        return localStorage.getItem(key);
+    } catch {
+        return null;
+    }
+};
+
+const writeStorage = (key, value) => {
+    try {
+        localStorage.setItem(key, value);
+    } catch {
+        // Ignore storage write failures (e.g., privacy mode).
+    }
+};
+
+const removeStorage = (key) => {
+    try {
+        localStorage.removeItem(key);
+    } catch {
+        // Ignore storage removal failures.
+    }
+};
 
 const saveStepperState = () => {
+    if (!stepperState.sections.length) return;
     const completed = [];
     document.querySelectorAll("[data-correct='true']").forEach((el) => {
         if (el.id) completed.push(el.id);
@@ -37,6 +63,8 @@ const saveStepperState = () => {
     const actualEl = document.getElementById("makeActual");
 
     const payload = {
+        path: window.location.pathname,
+        stepCount: stepperState.sections.length,
         index: stepperState.index,
         completed,
         inputs,
@@ -45,19 +73,25 @@ const saveStepperState = () => {
         makeActual: actualEl ? actualEl.textContent : ""
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    writeStorage(getStorageKey(), JSON.stringify(payload));
 };
 
 const loadStepperState = () => {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = readStorage(getStorageKey());
     if (!raw) return false;
     let payload = null;
     try {
         payload = JSON.parse(raw);
     } catch {
+        removeStorage(getStorageKey());
         return false;
     }
     if (!payload) return false;
+    if (payload.path && payload.path !== window.location.pathname) return false;
+    if (typeof payload.stepCount === "number" && payload.stepCount !== stepperState.sections.length) {
+        removeStorage(getStorageKey());
+        return false;
+    }
 
     if (Array.isArray(payload.completed)) {
         payload.completed.forEach((id) => {
@@ -349,14 +383,36 @@ const isStepComplete = (section) => {
     });
 };
 
+const getIncompleteRequirementCount = (section) => {
+    if (!section) return 0;
+    const requires = section.dataset.requires;
+    if (!requires) return 0;
+    const ids = requires.split(",").map((id) => id.trim()).filter(Boolean);
+    if (!ids.length) return 0;
+    return ids.filter((id) => {
+        const el = document.getElementById(id);
+        return !(el && el.dataset.correct === "true");
+    }).length;
+};
+
 const updateStepperState = () => {
     const current = stepperState.sections[stepperState.index];
     const nextBtn = document.getElementById("stepNext");
     const note = document.getElementById("stepperNote");
     if (!current || !nextBtn || !note) return;
     const complete = isStepComplete(current);
+    const remaining = getIncompleteRequirementCount(current);
     nextBtn.disabled = !complete;
-    note.textContent = complete ? "Ready to continue." : "Complete the activity to continue.";
+    nextBtn.setAttribute("aria-disabled", String(!complete));
+    if (complete) {
+        note.textContent = "Ready to continue.";
+    } else if (remaining > 0) {
+        note.textContent = `Complete ${remaining} required check${remaining === 1 ? "" : "s"} to continue.`;
+    } else {
+        note.textContent = "Complete the activity to continue.";
+    }
+    note.classList.toggle("is-ready", complete);
+    note.classList.toggle("is-pending", !complete);
 };
 
 const showStep = (index) => {
@@ -426,11 +482,11 @@ const restartStepper = () => {
     showStep(0);
     const main = document.querySelector("main.content");
     if (main) main.scrollIntoView({ behavior: "smooth" });
-    localStorage.removeItem(STORAGE_KEY);
+    removeStorage(getStorageKey());
 };
 
 const resetAssessment = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    removeStorage(getStorageKey());
     document.querySelectorAll("[data-correct='true']").forEach((el) => {
         delete el.dataset.correct;
     });

@@ -46,7 +46,7 @@
         <div class="question-block">
           <p>How many times will the main loop repeat?</p>
           <div class="question-input">
-            <input type="text" id="pred1" placeholder="Enter a number" style="width: 80px;">
+            <input type="text" id="pred1" class="w-80" placeholder="Enter a number">
             <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
             <span id="tick1" class="tick-mark"></span>
           </div>
@@ -55,7 +55,7 @@
         <div class="question-block">
           <p>Which loop would you use to reject negative prices?</p>
           <div class="question-input">
-            <input type="text" id="pred2" placeholder="Is it while or for?" style="width: 140px;">
+            <input type="text" id="pred2" class="w-140" placeholder="Is it while or for?">
             <button onclick="checkAnswer('pred2', 'while', 'tick2')">Check</button>
             <span id="tick2" class="tick-mark"></span>
           </div>
@@ -64,7 +64,7 @@
         <div class="question-block">
           <p>What variable stores the running total?</p>
           <div class="question-input">
-            <input type="text" id="pred3" placeholder="Enter variable name" style="width: 140px;">
+            <input type="text" id="pred3" class="w-140" placeholder="Enter variable name">
             <button onclick="checkAnswer('pred3', 'total', 'tick3')">Check</button>
             <span id="tick3" class="tick-mark"></span>
           </div>
@@ -73,7 +73,7 @@
         <div class="question-block">
           <p>Should the list store each valid price?</p>
           <div class="question-input">
-            <input type="text" id="pred4" placeholder="Enter yes or no" style="width: 100px;">
+            <input type="text" id="pred4" class="w-100" placeholder="Enter yes or no">
             <button onclick="checkAnswer('pred4', 'yes', 'tick4')">Check</button>
             <span id="tick4" class="tick-mark"></span>
           </div>
@@ -128,7 +128,7 @@ E: print("Total:", total)</code></pre>
       <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="sgA1Tick">
         <h2>4. Match The Subgoal</h2>
         <div class="question-block" data-choice-group="sgA">
-          <p>Which subgoal does this line belong to? <span style="font-family: 'Courier New', Courier, monospace;"><strong>total = 0</strong></span></p>
+          <p>Which subgoal does this line belong to? <span class="inline-code"><strong>total = 0</strong></span></p>
           <div class="mc-buttons">
             <button type="button" onclick="setChoice('sgA', 'A', this)">A</button>
             <button type="button" onclick="setChoice('sgA', 'B', this)">B</button>
@@ -158,9 +158,9 @@ E: print("Total:", total)</code></pre>
       <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="sgC1Tick">
         <h2>6. Fill In The Blank</h2>
         <div class="question-block">
-          <p>Fill the blank to update the running total: <span style="font-family: 'Courier New', Courier, monospace;"><strong>total = total + ___</strong></span></p>
+          <p>Fill the blank to update the running total: <span class="inline-code"><strong>total = total + ___</strong></span></p>
           <div class="question-input">
-            <input type="text" id="sgC1" style="width: 140px;">
+            <input type="text" id="sgC1" class="w-140">
             <button onclick="checkAnswer('sgC1', 'price', 'sgC1Tick')">Check</button>
             <span id="sgC1Tick" class="tick-mark"></span>
           </div>
@@ -170,9 +170,9 @@ E: print("Total:", total)</code></pre>
       <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="sgD1Tick">
         <h2>7. Identify The Subgoal</h2>
         <div class="question-block">
-          <p>Identify the subgoal for: <span style="font-family: 'Courier New', Courier, monospace;"><strong>for value in items:</strong></span></p>
+          <p>Identify the subgoal for: <span class="inline-code"><strong>for value in items:</strong></span></p>
           <div class="question-input">
-            <input type="text" id="sgD1" placeholder="A, B, C, D, or E" style="width: 160px;">
+            <input type="text" id="sgD1" class="w-160" placeholder="A, B, C, D, or E">
             <button onclick="checkAnswer('sgD1', 'D', 'sgD1Tick')">Check</button>
             <span id="sgD1Tick" class="tick-mark"></span>
           </div>
@@ -193,15 +193,15 @@ E: print("Total:", total)</code></pre>
             <tbody>
               <tr>
                 <td>2</td>
-                <td><input type="text" id="trace1" style="width: 80px;"></td>
+                <td><input type="text" id="trace1" class="w-80"></td>
               </tr>
               <tr>
                 <td>3</td>
-                <td><input type="text" id="trace2" style="width: 80px;"></td>
+                <td><input type="text" id="trace2" class="w-80"></td>
               </tr>
               <tr>
                 <td>4</td>
-                <td><input type="text" id="trace3" style="width: 80px;"></td>
+                <td><input type="text" id="trace3" class="w-80"></td>
               </tr>
             </tbody>
           </table>
