@@ -829,10 +829,6 @@ a:focus-visible {
   color: var(--accent-500);
 }
 
-[data-tooltip] {
-  position: relative;
-}
-
 .glass-tooltip {
   --edge-angle: 0deg;
   position: fixed;

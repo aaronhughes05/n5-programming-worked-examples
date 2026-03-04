@@ -615,9 +615,10 @@ const initBackToTopFab = () => {
     document.body.appendChild(button);
 
     const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const showThreshold = Math.max(40, Math.round(window.innerHeight * 0.08));
 
     const updateVisibility = () => {
-        const shouldShow = window.scrollY > 260;
+        const shouldShow = window.scrollY > showThreshold;
         button.classList.toggle("is-visible", shouldShow);
     };
 
@@ -892,6 +893,7 @@ const initDefaultTooltipCopy = () => {
 
     uniqueControls.forEach((el) => {
         if (el.hasAttribute("data-tooltip")) return;
+        if (el.classList.contains("back-to-top-fab")) return;
         if (el.getAttribute("aria-hidden") === "true") return;
         if ("disabled" in el && el.disabled) return;
         el.setAttribute("data-tooltip", buildTip(el));
