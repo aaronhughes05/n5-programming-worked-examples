@@ -387,6 +387,10 @@ body::before {
 }
 
 @media (max-width: 980px) {
+  .appbar {
+    overflow: visible;
+  }
+
   .appbar-subtitle {
     max-width: 220px;
   }
