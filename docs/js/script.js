@@ -14,7 +14,8 @@ const nextStep = (current, next) => {
 
 let stepperState = {
     sections: [],
-    index: 0
+    index: 0,
+    completed: false
 };
 
 const STORAGE_NAMESPACE = "assessmentStepperState.v2";
@@ -46,9 +47,9 @@ const removeStorage = (key) => {
 
 const saveStepperState = () => {
     if (!stepperState.sections.length) return;
-    const completed = [];
+    const completedChecks = [];
     document.querySelectorAll("[data-correct='true']").forEach((el) => {
-        if (el.id) completed.push(el.id);
+        if (el.id) completedChecks.push(el.id);
     });
 
     const inputs = {};
@@ -66,7 +67,8 @@ const saveStepperState = () => {
         path: window.location.pathname,
         stepCount: stepperState.sections.length,
         index: stepperState.index,
-        completed,
+        isComplete: !!stepperState.completed,
+        completedChecks,
         inputs,
         makeProgram: programEl ? programEl.value : "",
         makeCase: caseSelect ? caseSelect.value : "case1",
@@ -93,8 +95,12 @@ const loadStepperState = () => {
         return false;
     }
 
-    if (Array.isArray(payload.completed)) {
-        payload.completed.forEach((id) => {
+    const completedChecks = Array.isArray(payload.completedChecks)
+        ? payload.completedChecks
+        : (Array.isArray(payload.completed) ? payload.completed : []);
+
+    if (completedChecks.length) {
+        completedChecks.forEach((id) => {
             const el = document.getElementById(id);
             if (el) {
                 el.dataset.correct = "true";
@@ -135,6 +141,7 @@ const loadStepperState = () => {
 
     if (typeof payload.index === "number") {
         showStep(Math.min(payload.index, stepperState.sections.length - 1));
+        stepperState.completed = payload.isComplete === true || payload.completed === true;
         return true;
     }
     return false;
@@ -432,6 +439,8 @@ const showStep = (index) => {
     if (prevBtn) prevBtn.disabled = index === 0;
     if (nextBtn) nextBtn.textContent = index === stepperState.sections.length - 1 ? "Finish" : "Next";
     if (completion) completion.classList.remove("is-visible");
+    stepperState.completed = false;
+    document.body.classList.remove("is-complete");
     if (barFill) {
         const pct = ((index + 1) / stepperState.sections.length) * 100;
         barFill.style.width = `${pct}%`;
@@ -467,6 +476,7 @@ const initStepper = () => {
                 const completion = document.getElementById("completionScreen");
                 if (completion) completion.classList.add("is-visible");
                 document.body.classList.add("is-complete");
+                stepperState.completed = true;
                 const completionCard = document.querySelector("#completionScreen .completion-card");
                 if (completionCard) completionCard.scrollIntoView({ behavior: "smooth" });
             }
@@ -479,6 +489,7 @@ const restartStepper = () => {
     const completion = document.getElementById("completionScreen");
     if (completion) completion.classList.remove("is-visible");
     document.body.classList.remove("is-complete");
+    stepperState.completed = false;
     showStep(0);
     const main = document.querySelector("main.content");
     if (main) main.scrollIntoView({ behavior: "smooth" });
@@ -510,6 +521,7 @@ const resetAssessment = () => {
     const completion = document.getElementById("completionScreen");
     if (completion) completion.classList.remove("is-visible");
     document.body.classList.remove("is-complete");
+    stepperState.completed = false;
     showStep(0);
 };
 
@@ -973,6 +985,198 @@ const initGlassTooltips = () => {
     });
 };
 
+const initAssessmentGate = () => {
+    const isAssessmentPage = /\/assessment\.html$/i.test(window.location.pathname);
+    if (isAssessmentPage) return;
+
+    const STORAGE_PREFIX = "assessmentStepperState.v2:";
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    const toExampleHref = (fileName) => (inPagesDir ? fileName : `pages/${fileName}`);
+    const requiredExamples = [
+        { suffix: "/docs/pages/example1.html", label: "Example 1", href: toExampleHref("example1.html") },
+        { suffix: "/docs/pages/example2.html", label: "Example 2", href: toExampleHref("example2.html") },
+        { suffix: "/docs/pages/example3.html", label: "Example 3", href: toExampleHref("example3.html") }
+    ];
+
+    const readExampleCompletion = (suffix) => {
+        try {
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
+                const path = key.slice(STORAGE_PREFIX.length);
+                if (!path.endsWith(suffix)) continue;
+
+                try {
+                    const payload = JSON.parse(localStorage.getItem(key) || "{}");
+                    if (payload && (payload.isComplete === true || payload.completed === true)) return true;
+                } catch {
+                    // Ignore malformed storage records.
+                }
+            }
+        } catch {
+            // If storage cannot be read, keep behaviour safe by treating as incomplete.
+            return false;
+        }
+        return false;
+    };
+
+    const getCompletionState = () => {
+        const withStatus = requiredExamples.map((ex) => ({
+            ...ex,
+            complete: readExampleCompletion(ex.suffix)
+        }));
+        const completedCount = withStatus.filter((ex) => ex.complete).length;
+        const missing = withStatus.filter((ex) => !ex.complete);
+        return { completedCount, missing, withStatus };
+    };
+
+    const modal = document.createElement("div");
+    modal.className = "assessment-gate";
+    modal.setAttribute("aria-hidden", "true");
+    modal.innerHTML = `
+      <div class="assessment-gate__backdrop" data-close-gate="true"></div>
+      <div class="assessment-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="assessmentGateTitle" aria-describedby="assessmentGateBody">
+        <button type="button" class="assessment-gate__close" aria-label="Close warning" data-close-gate="true">&times;</button>
+        <h3 id="assessmentGateTitle">Before You Start The Assessment</h3>
+        <p id="assessmentGateBody">
+          You can continue now, but finishing all worked examples first is recommended.
+          They prepare you for the assessment and help you perform better.
+        </p>
+        <div class="assessment-gate__progress-wrap">
+          <div class="assessment-gate__progress-label" id="assessmentGateProgressLabel"></div>
+          <div class="assessment-gate__progress" aria-hidden="true">
+            <span id="assessmentGateProgressFill"></span>
+          </div>
+        </div>
+        <p class="assessment-gate__missing-title">Still to complete:</p>
+        <div class="assessment-gate__missing-list" id="assessmentGateMissing"></div>
+        <div class="assessment-gate__actions">
+          <button type="button" class="check-btn reset-btn" id="assessmentGateReview">Go to next incomplete example</button>
+          <button type="button" class="check-btn" id="assessmentGateProceed">Proceed anyway</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const dialog = modal.querySelector(".assessment-gate__dialog");
+    const proceedBtn = modal.querySelector("#assessmentGateProceed");
+    const reviewBtn = modal.querySelector("#assessmentGateReview");
+    const missingText = modal.querySelector("#assessmentGateMissing");
+    const progressLabel = modal.querySelector("#assessmentGateProgressLabel");
+    const progressFill = modal.querySelector("#assessmentGateProgressFill");
+    let pendingHref = "";
+    let reviewHref = "";
+    let returnFocusEl = null;
+
+    const hideModal = () => {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+        if (returnFocusEl) returnFocusEl.focus();
+    };
+
+    const showModal = (href, sourceEl, statusArg = null) => {
+        const status = statusArg || getCompletionState();
+        if (!status.missing.length) {
+            window.location.href = href;
+            return;
+        }
+
+        pendingHref = href;
+        reviewHref = status.missing[0]?.href || "";
+        returnFocusEl = sourceEl || null;
+        progressLabel.textContent = `${status.completedCount} of 3 examples complete`;
+        progressFill.style.width = `${Math.round((status.completedCount / 3) * 100)}%`;
+        missingText.innerHTML = status.missing
+            .map((ex) => `<span class="assessment-gate__chip">${ex.label}</span>`)
+            .join("");
+        reviewBtn.disabled = !reviewHref;
+        reviewBtn.textContent = reviewHref
+            ? `Go to ${status.missing[0].label}`
+            : "Go to next incomplete example";
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+        reviewBtn.focus();
+    };
+
+    modal.addEventListener("click", (event) => {
+        const target = event.target;
+        if (target instanceof Element && target.matches("[data-close-gate='true']")) {
+            hideModal();
+        }
+    });
+
+    proceedBtn.addEventListener("click", () => {
+        if (!pendingHref) return;
+        window.location.href = pendingHref;
+    });
+
+    reviewBtn.addEventListener("click", () => {
+        if (!reviewHref) return;
+        window.location.href = reviewHref;
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (!modal.classList.contains("is-open")) return;
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            hideModal();
+            return;
+        }
+
+        if (event.key !== "Tab" || !dialog) return;
+        const focusables = Array.from(
+            dialog.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")
+        ).filter((el) => !el.hasAttribute("disabled") && !el.getAttribute("aria-hidden"));
+        if (!focusables.length) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+
+        if (event.shiftKey && active === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && active === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
+
+    document.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const link = target.closest("a[href]");
+        if (!link) return;
+
+        const hrefAttr = link.getAttribute("href") || "";
+        const hrefResolved = link.href || "";
+        const isAssessmentTarget =
+            /(^|\/)assessment\.html($|[?#])/i.test(hrefAttr) ||
+            /(^|\/)assessment\.html($|[?#])/i.test(hrefResolved);
+        if (!isAssessmentTarget) return;
+
+        // Always intercept first so the warning can appear reliably.
+        event.preventDefault();
+        let status;
+        try {
+            status = getCompletionState();
+        } catch {
+            status = { completedCount: 0, missing: requiredExamples, withStatus: [] };
+        }
+
+        if (!status.missing.length) {
+            window.location.href = link.href;
+            return;
+        }
+
+        showModal(link.href, link, status);
+    });
+};
+
 const runProgram = async () => {
     const programEl = document.getElementById("makeProgram");
     const caseSelect = document.getElementById("makeCase");
@@ -1054,6 +1258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initHomeCardReveal();
     initDefaultTooltipCopy();
     initGlassTooltips();
+    initAssessmentGate();
     enableRunButton();
     updateExpectedOutput();
     const statusEl = document.getElementById("runStatus");
