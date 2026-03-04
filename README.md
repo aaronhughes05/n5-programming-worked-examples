@@ -1,216 +1,309 @@
-# Interactive Subgoal-Labelled Worked Examples  
-## National 5 Computing Science Programming
+# Crack the Code
+## National 5 Computing Science Worked Examples
 
-This project provides an interactive learning resource for **National 5 Computing Science** programmig (all resources will be based on the _Qualifications Scotland_ course specification). The website supports learners in developing programming problem-solving skills through structured worked examples and guided activities.
+Crack the Code is an interactive web resource that supports National 5 learners in moving from a problem description to a working program through structured, guided activities.
 
-The resource helps learners move from **problem description to program solution** using clear stages of analysis, design, implementation, and testing.
-
-The website is designed for use in classroom environments and on school computers with restricted software access.
+The site is intentionally built with plain HTML, CSS, and JavaScript so it runs well in typical school environments without framework dependencies.
 
 ---
 
-## Project Aim
+## Current Status
 
-The aim of this project is to support National 5 programming learners who struggle to:
+- Home page, assessment page, and Example 2 are implemented and styled with a unified UI system.
+- Example 1 and Example 3 files currently exist but are empty:
+  - `docs/pages/example1.html`
+  - `docs/pages/example3.html`
 
-- Translate problem descriptions into algorithms
-- Plan programs before coding
-- Understand loops and algorithms
-- Structure solutions logically
-
-The resource models expert problem solving and provides structured activities to support understanding.
+This affects some flows (for example, the assessment readiness warning expects all three examples to be completed).
 
 ---
 
-## Target Learners
+## Who This Is For
 
-This resource is designed for:
-
-- National 5 Computing Science students  
-- Ages 15–16  
-- Beginner programmers
+- National 5 Computing Science learners (typically ages 15–16)
+- Beginner programmers who need scaffolded problem-solving support
 
 Expected prior knowledge:
 
 - Variables
-- Basic input and output
+- Basic input/output
 - Simple arithmetic
+- Basic loop awareness
 
 ---
 
-## Artefact Overview
+## Learning Design
 
-The website contains **three interactive worked examples** based on core National 5 programming algorithms:
+Worked examples use a step-by-step flow with interactive checks to build confidence before independent coding.
 
-1. **Input Validation**
-2. **Running Totals**
-3. **Array Traversal**
+Typical activity types include:
 
-Each example focuses on a key programming concept required in the National 5 course.
+- Prediction questions
+- Step-by-step code reveal
+- Parsons puzzle reordering
+- Subgoal matching and code identification
+- Modify/extend tasks
+- Program run/output checking
 
----
-
-## Learning Structure
-
-Each example follows the same structured sequence:
-
-### 1. Problem
-
-Learners are presented with a realistic programming problem.
-
-### 2. Predict
-
-Learners think about the solution before seeing the program.
-
-Typical questions include:
-
-- What inputs are required?
-- What outputs are required?
-- What programming constructs might be needed?
-
-### 3. Worked Example
-
-The complete solution is presented using structured problem solving:
-
-- Analysis (Inputs, Processes, Outputs)
-- Algorithm design
-- Subgoal breakdown
-- Step-by-step code
-- Final program
-
-### 4. Parsons Puzzle
-
-Learners reorder program lines into the correct sequence.
-
-This helps learners focus on program logic without needing to write full code.
-
-### 5. Code Understanding Activities
-
-Learners answer questions about program structure such as:
-
-- Which lines run inside the loop
-- What each variable stores
-- How the program behaves
-
-These activities help learners explain how programs work.
-
-### 6. Modify Task
-
-Learners modify the program to solve a related problem.
-
-This encourages independent problem solving.
-
-### 7. Testing
-
-Example test cases are provided to demonstrate correct program behaviour.
-
-### 8. Reflection
-
-Learners explain the reasoning behind the program.
-
-Example questions include:
-
-- Why is a loop needed?
-- What happens if the input is invalid?
-- How does the program ensure correctness?
+Each page uses a stepper that controls progression and shows completion state.
 
 ---
 
-## Website Structure
+## Pedagogical Intent
 
+The resource is designed to reduce cognitive load and improve transfer from guided examples to independent coding.
 
-```
+Design choices include:
+
+- **Consistent structure** across examples so learners can focus on problem solving rather than interface changes.
+- **Small verification checkpoints** (checks, trace, code identification) to catch misconceptions early.
+- **Progressive release** from modelled solution steps to modification and output validation.
+- **Assessment gating warning** to encourage practice-first sequencing while still allowing learner autonomy.
+
+---
+
+## Main Features
+
+### 1) Unified App Bar
+
+All active pages use a shared app bar with:
+
+- quick links (`Home`, `Examples`, `Final Assessment`)
+- mobile menu behavior
+- resume link (shown when progress exists)
+
+### 2) Home Examples Showcase
+
+The home page has a tabbed examples preview section that:
+
+- auto-rotates through examples
+- supports manual tab selection
+- preloads preview images to reduce switching lag
+
+### 3) Progress Persistence
+
+Learner progress is saved in `localStorage` per page using:
+
+- `assessmentStepperState.v2:<pathname>`
+
+Saved state includes:
+
+- current step index
+- completed checks
+- input values
+- run/output fields where applicable
+- final completion flag when finish screen is reached
+
+### 4) Assessment Readiness Warning
+
+When a user tries to open the assessment without completing all three examples, a warning dialog appears.
+
+Behavior:
+
+- users are warned but can still proceed
+- includes progress indicator (`X of 3 examples complete`)
+- provides path to the next incomplete example
+
+Completion rule:
+
+- an example counts as complete only after the user reaches that page’s finish screen
+
+### 5) Custom Glass Tooltips
+
+Reusable delayed tooltips are implemented centrally and auto-assigned to pill-style controls for short assistive guidance.
+
+### 6) Back-to-Top FAB
+
+A floating action button appears after scrolling and smoothly returns the page to top.
+
+---
+
+## UX and Interaction Model
+
+### Global Navigation
+
+- Sticky glass app bar on all active pages
+- Home/Examples/Assessment quick links
+- Resume link appears when valid progress data exists
+
+### Home Experience
+
+- Hero section with direct entry points
+- Tabbed preview module for examples and assessment
+- Auto-rotating preview with manual override
+- Scroll-reveal animation for home cards
+
+### Assessment Warning Flow
+
+When users attempt to open the assessment:
+
+1. Example completion is checked from persisted stepper state.
+2. If all examples are complete, navigation proceeds immediately.
+3. If not, a warning modal appears with:
+   - completion progress (`X of 3`)
+   - missing example chips
+   - two paths: proceed anyway or open the next incomplete example
+
+---
+
+## Data and State Model
+
+Client-side persistence uses `localStorage` with the namespace:
+
+- `assessmentStepperState.v2:<pathname>`
+
+Saved payload fields include:
+
+- `index`: current step index
+- `completedChecks`: IDs marked correct
+- `inputs`: text input values
+- `makeProgram`, `makeCase`, `makeActual`: make-task state (where present)
+- `isComplete`: true only when finish screen is reached
+
+This model supports:
+
+- restoring in-progress work
+- resume-link targeting
+- assessment readiness checks
+
+---
+
+## Accessibility Notes
+
+Current implementation includes:
+
+- Keyboard-usable controls across navigation and activities
+- Modal close by `Esc`, click-outside, and explicit close button
+- Focus trapping while modal is open
+- Reduced-motion fallbacks for animated UI paths
+- Tooltip support on focus, not hover-only
+
+---
+
+## Project Structure
+
+```text
 /docs
-    index.html
-    /pages
-        example1.html
-        example2.html
-        example3.html
-    /css
-        styles.css
-    /js
-        script.js
+  index.html
+  /css
+    styles.css
+  /js
+    script.js
+  /pages
+    assessment.html
+    example-template.html
+    example1.html
+    example2.html
+    example3.html
 ```
-
-
-### Pages
-
-**Home Page**
-
-- Introduction
-- Instructions
-- Navigation
-
-**Example Pages**
-
-- Example 1 – Input Validation
-- Example 2 – Running Total
-- Example 3 – Array Traversal
 
 ---
 
-## Technologies Used
-
-This project uses simple web technologies to ensure compatibility with school computers.
+## Tech Stack
 
 - HTML
 - CSS
-- JavaScript
-- GitHub Pages
-
-No external libraries or frameworks are required.
+- JavaScript (vanilla)
+- Pyodide (for browser-based Python execution in relevant activities)
+- GitHub Pages deployment from `/docs`
 
 ---
 
-## Running the Website Locally
+## Key Front-End Modules
 
-Clone the repository:
+### `docs/js/script.js`
 
-`git clone https://github.com/aaronhughes05/n5-programming-worked-examples.git`
+Main responsibilities:
 
-Open the website by opening:
+- Stepper progression and validation logic
+- Local storage save/load/reset
+- Parsons drag-and-drop ordering checks
+- Subgoal activity checks
+- Pyodide run/evaluate path for make tasks
+- App bar enhancements and resume-link handling
+- Glass tooltip generation and positioning
+- Assessment gate modal behavior and routing interception
 
-`docs/index.html`
+### `docs/css/styles.css`
+
+Main responsibilities:
+
+- Design tokens and color system
+- App bar, card, and edge-sweep visual language
+- Responsive layout behavior
+- Tooltip and modal visual system
+- Home preview interactions and reveal states
+
+---
+
+## Run Locally
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/aaronhughes05/n5-programming-worked-examples.git
+```
+
+2. Open:
+
+```text
+docs/index.html
+```
 
 in a web browser.
 
----
-
-## Deployment
-
-The website is deployed using **GitHub Pages**.
-
-The site is served from the `/docs` directory.
+No build step is required.
 
 ---
 
-## Development Workflow
+## Manual Test Checklist
 
-### Before working
+Recommended smoke tests after UI/logic changes:
 
-Pull the latest version:
+1. Home page loads with app bar, examples preview, and footer layout intact.
+2. App bar links route correctly from both `/docs` and `/docs/pages`.
+3. Example/assessment stepper:
+   - next/back/restart work
+   - required checks gate step progression
+   - completion screen appears at final step
+4. Progress persistence:
+   - reload restores step + inputs
+   - resume link appears when progress exists
+5. Assessment gate:
+   - warning appears when any example incomplete
+   - proceed anyway opens assessment
+   - next incomplete example button routes correctly
+6. Tooltips:
+   - appear after delay
+   - position correctly near trigger
+   - disappear on leave/blur/escape paths
+7. Responsive behavior at mobile widths:
+   - app bar menu toggle
+   - modal layout
+   - examples preview tabs
 
-```
-git pull
-```
+---
 
-### After making changes
+## Known Limitations
 
-Commit and push:
+- `example1.html` and `example3.html` are currently empty, which impacts full end-to-end learner flow.
+- Completion checks are client-side only (local to browser/storage context).
+- No analytics/telemetry layer is currently included.
 
-```
-git add .
-git commit -m "Describe changes"
-git push
-```
+---
+
+## Suggested Next Improvements
+
+- Rebuild Example 1 and Example 3 pages using the shared template and current UI system.
+- Add automated UI regression checks (Playwright/Cypress) for critical user journeys.
+- Add versioned content metadata for examples to manage future curriculum updates.
+- Consider optional teacher mode (progress reset/overview controls).
 
 ---
 
 ## Contributors
 
-This project was developed as part of the **Computing Science Education Theory and Practice** course.
-
-Contributors:
+Developed for the Computing Science Education Theory and Practice course.
 
 - Aaron Hughes
 - Varshini Seshan
@@ -219,17 +312,6 @@ Contributors:
 
 ---
 
-## Future Development
-
-Possible extensions include:
-
-- Additional programming examples
-- More interactive activities
-- Automated feedback
-- Additional National 5 topics
-
----
-
 ## License
 
-This project is for educational use.
+Educational use.
