@@ -527,30 +527,6 @@ const enableRunButton = () => {
     runBtn.disabled = programEl.value.trim().length === 0;
 };
 
-const initGlobalFloatingNav = () => {
-    // Keep custom nav implementations untouched.
-    if (document.querySelector(".appbar") || document.querySelector(".floating-nav")) return;
-
-    const inPagesDir = window.location.pathname.includes("/docs/pages/");
-    const homeHref = inPagesDir ? "../index.html" : "index.html";
-    const examplesHref = `${homeHref}#examples`;
-    const assessmentHref = inPagesDir ? "assessment.html" : "pages/assessment.html";
-
-    const nav = document.createElement("nav");
-    nav.className = "floating-nav";
-    nav.setAttribute("aria-label", "Site navigation");
-    nav.innerHTML = `
-      <span class="floating-nav-brand">Crack the Code</span>
-      <span class="floating-nav-links">
-        <a class="floating-nav-link" href="${homeHref}">Home</a>
-        <a class="floating-nav-link" href="${examplesHref}">Examples</a>
-        <a class="floating-nav-link" href="${assessmentHref}">Final Assessment</a>
-      </span>
-    `;
-
-    document.body.prepend(nav);
-};
-
 const initAppbarEnhancements = () => {
     const menuToggle = document.getElementById("appbarMenuToggle");
     const navActions = document.getElementById("appbarNavActions");
@@ -600,11 +576,15 @@ const initAppbarEnhancements = () => {
     }
 
     if (!best) return;
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
     const docsMarker = "/docs/";
     let href = "pages/example1.html";
     const markerIndex = best.path.lastIndexOf(docsMarker);
     if (markerIndex !== -1) {
         href = best.path.slice(markerIndex + docsMarker.length);
+    }
+    if (inPagesDir && href.startsWith("pages/")) {
+        href = `../${href}`;
     }
     resumeLink.href = href;
     resumeLink.hidden = false;
@@ -687,7 +667,6 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("DOMContentLoaded", () => {
     initAppbarEnhancements();
-    initGlobalFloatingNav();
     enableRunButton();
     updateExpectedOutput();
     const statusEl = document.getElementById("runStatus");
