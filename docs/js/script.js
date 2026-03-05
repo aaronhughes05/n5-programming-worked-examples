@@ -1155,6 +1155,57 @@ const initBackToTopFab = () => {
     updateVisibility();
 };
 
+const initWorksheetActions = () => {
+    const printButtons = Array.from(document.querySelectorAll("[data-print-worksheet]"));
+    const downloadLinks = Array.from(document.querySelectorAll("[data-download-worksheet]"));
+    if (!printButtons.length && !downloadLinks.length) return;
+
+    printButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            window.print();
+        });
+    });
+
+    downloadLinks.forEach((link) => {
+        link.addEventListener("click", async (event) => {
+            const href = link.getAttribute("href");
+            if (!href) return;
+            const fileName = link.getAttribute("download") || "worksheet.html";
+            const targetUrl = new URL(href, window.location.href);
+
+            const forceBlobDownload = (blob) => {
+                const blobUrl = URL.createObjectURL(blob);
+                const temp = document.createElement("a");
+                temp.href = blobUrl;
+                temp.download = fileName;
+                document.body.appendChild(temp);
+                temp.click();
+                temp.remove();
+                URL.revokeObjectURL(blobUrl);
+            };
+
+            // Current page download is generated directly to avoid browser no-op on same-file links.
+            if (targetUrl.pathname === window.location.pathname) {
+                event.preventDefault();
+                const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
+                forceBlobDownload(new Blob([html], { type: "text/html;charset=utf-8" }));
+                return;
+            }
+
+            event.preventDefault();
+
+            try {
+                const response = await fetch(targetUrl.href, { cache: "no-store" });
+                if (!response.ok) throw new Error(`Failed to fetch worksheet: ${response.status}`);
+                const blob = await response.blob();
+                forceBlobDownload(blob);
+            } catch {
+                window.location.href = targetUrl.href;
+            }
+        });
+    });
+};
+
 const initExamplesShowcase = () => {
     const root = document.getElementById("examples");
     if (!root) return;
@@ -1346,6 +1397,8 @@ const initDefaultTooltipCopy = () => {
 
         if (el.classList.contains("appbar-menu-toggle")) return "Show quick links";
         if (el.classList.contains("appbar-resume")) return "Resume your saved progress";
+        if (el.hasAttribute("data-print-worksheet")) return "Print this worksheet";
+        if (el.hasAttribute("data-download-worksheet")) return "Download this worksheet";
 
         if (id === "stepprev") return "Go to previous step";
         if (id === "stepnext") return "Go to next step";
@@ -1377,6 +1430,8 @@ const initDefaultTooltipCopy = () => {
         if (lower.includes("home")) return "Go to homepage";
         if (lower.includes("examples")) return "Jump to examples";
         if (lower.includes("assessment")) return "Open assessment";
+        if (lower.includes("print worksheet")) return "Print this worksheet";
+        if (lower.includes("download worksheet")) return "Download this worksheet";
         if (lower.includes("resume")) return "Resume your saved progress";
         if (lower.includes("start")) return "Start this activity";
         if (lower.includes("try")) return "Open this activity";
@@ -1778,6 +1833,7 @@ document.addEventListener("input", (event) => {
 document.addEventListener("DOMContentLoaded", () => {
     initAppbarEnhancements();
     initLearningDashboard();
+    initWorksheetActions();
     initBackToTopFab();
     initExamplesShowcase();
     initHomeCardReveal();
