@@ -417,10 +417,9 @@ const loadStepperState = () => {
                 el.dataset.correct = "true";
                 if (el.classList.contains("tick-mark")) {
                     el.style.display = "inline";
-                    if (!el.textContent) {
-                        el.textContent = " ✔ Correct";
-                    }
-                    el.style.color = "var(--teal-500)";
+                    el.textContent = "Correct";
+                    el.classList.remove("is-incorrect");
+                    el.classList.add("is-correct");
                 }
             }
         });
@@ -466,8 +465,9 @@ const setTickState = (tick, correct, checkpointId = null) => {
     const effectiveCheckpointId = checkpointId || tick.id;
     tick.dataset.correct = correct ? "true" : "false";
     tick.style.display = "inline";
-    tick.textContent = correct ? " ✔ Correct" : " ✖ Try again";
-    tick.style.color = correct ? "var(--teal-500)" : "#e63946";
+    tick.classList.remove("is-correct", "is-incorrect");
+    tick.classList.add(correct ? "is-correct" : "is-incorrect");
+    tick.textContent = correct ? "Correct" : "Try again";
     updateHintCheckpointResult(effectiveCheckpointId, correct);
     renderRichFeedback(tick, effectiveCheckpointId, correct, correct ? "Correct." : "Try again.");
     updateStepperState();
@@ -683,8 +683,9 @@ const markComplete = (tickId) => {
     if (!tick) return;
     tick.dataset.correct = "true";
     tick.style.display = "inline";
-    tick.textContent = " ✔ Correct";
-    tick.style.color = "var(--teal-500)";
+    tick.classList.remove("is-incorrect");
+    tick.classList.add("is-correct");
+    tick.textContent = "Correct";
     updateHintCheckpointResult(tickId, true);
     updateStepperState();
     saveStepperState();
@@ -824,6 +825,7 @@ const resetAssessment = () => {
     });
     document.querySelectorAll(".tick-mark").forEach((tick) => {
         tick.style.display = "none";
+        tick.classList.remove("is-correct", "is-incorrect");
         tick.textContent = "";
     });
     document.querySelectorAll("input[type='text']").forEach((input) => {

@@ -1948,8 +1948,66 @@ body.is-modal-open {
 
 
 .tick-mark {
+  display: none;
+  position: relative;
+  padding-left: 24px;
   font-weight: 700;
-  color: var(--teal-500);
+  font-size: 0.84rem;
+  line-height: 1;
+  color: var(--ink-600);
+}
+
+.tick-mark::before,
+.tick-mark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.tick-mark::before {
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(159, 176, 201, 0.72);
+  background: rgba(239, 244, 252, 0.9);
+}
+
+.tick-mark::after {
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px 8px;
+}
+
+.tick-mark.is-correct {
+  color: var(--success-600);
+}
+
+.tick-mark.is-correct::before {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.tick-mark.is-correct::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%230f8a4f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M1 4.2 3 6.1 7 1.9'/></svg>");
+}
+
+.tick-mark.is-incorrect {
+  color: #b64c57;
+}
+
+.tick-mark.is-incorrect::before {
+  border-color: rgba(220, 60, 77, 0.5);
+  background: rgba(220, 60, 77, 0.12);
+}
+
+.tick-mark.is-incorrect::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%23b23f4a' stroke-width='1.8' stroke-linecap='round'><path d='M1.3 1.3 6.7 6.7'/><path d='M6.7 1.3 1.3 6.7'/></svg>");
 }
 
 #assessmentFeedback {
