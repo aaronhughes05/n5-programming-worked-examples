@@ -42,6 +42,60 @@
     </header>
 
     <main class="content">
+      <section class="card dashboard-card" id="dashboard">
+        <div class="dashboard-top">
+          <h2>Your Learning Dashboard</h2>
+          <a class="check-btn dashboard-continue-btn" id="dashboardContinueCta" href="pages/example1.html">Continue</a>
+        </div>
+        <p class="dashboard-intro">
+          Track each activity, jump back in where you stopped, and follow the next recommended step.
+        </p>
+
+        <div class="dashboard-main">
+          <div class="dashboard-next">
+            <p class="dashboard-next__label">Next recommended step</p>
+            <p class="dashboard-next__text" id="dashboardRecommendedText">Start with Example 1 to build your foundation.</p>
+            <a class="check-btn outline-btn dashboard-next__btn" id="dashboardRecommendedBtn" href="pages/example1.html">Open recommendation</a>
+          </div>
+
+          <div class="dashboard-progress-pane">
+            <div class="dashboard-stack" aria-label="Progress cards">
+              <article class="dashboard-progress-card" data-activity-key="example1">
+                <p class="dashboard-progress-card__kicker">Example 1</p>
+                <h3 class="dashboard-progress-card__title">Input Validation</h3>
+                <p class="dashboard-progress-card__status" data-status>Not started</p>
+                <div class="dashboard-progress-card__bar" aria-hidden="true"><span data-progress-fill></span></div>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/example1.html">Start</a>
+              </article>
+
+              <article class="dashboard-progress-card" data-activity-key="example2">
+                <p class="dashboard-progress-card__kicker">Example 2</p>
+                <h3 class="dashboard-progress-card__title">Running Total</h3>
+                <p class="dashboard-progress-card__status" data-status>Not started</p>
+                <div class="dashboard-progress-card__bar" aria-hidden="true"><span data-progress-fill></span></div>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/example2.html">Start</a>
+              </article>
+
+              <article class="dashboard-progress-card" data-activity-key="example3">
+                <p class="dashboard-progress-card__kicker">Example 3</p>
+                <h3 class="dashboard-progress-card__title">Array Traversal</h3>
+                <p class="dashboard-progress-card__status" data-status>Not started</p>
+                <div class="dashboard-progress-card__bar" aria-hidden="true"><span data-progress-fill></span></div>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/example3.html">Start</a>
+              </article>
+
+              <article class="dashboard-progress-card" data-activity-key="assessment">
+                <p class="dashboard-progress-card__kicker">Assessment</p>
+                <h3 class="dashboard-progress-card__title">Final Assessment</h3>
+                <p class="dashboard-progress-card__status" data-status>Not started</p>
+                <div class="dashboard-progress-card__bar" aria-hidden="true"><span data-progress-fill></span></div>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/assessment.html">Start</a>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="card">
         <h2>Purpose of the Resource</h2>
         <p>

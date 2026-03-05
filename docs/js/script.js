@@ -68,6 +68,7 @@ const saveStepperState = () => {
         stepCount: stepperState.sections.length,
         index: stepperState.index,
         isComplete: !!stepperState.completed,
+        updatedAt: Date.now(),
         completedChecks,
         inputs,
         makeProgram: programEl ? programEl.value : "",
@@ -545,6 +546,106 @@ const enableRunButton = () => {
     runBtn.disabled = programEl.value.trim().length === 0;
 };
 
+const ACTIVITY_DEFINITIONS = [
+    { key: "example1", label: "Example 1", title: "Input Validation", path: "/docs/pages/example1.html" },
+    { key: "example2", label: "Example 2", title: "Running Total", path: "/docs/pages/example2.html" },
+    { key: "example3", label: "Example 3", title: "Array Traversal", path: "/docs/pages/example3.html" },
+    { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/docs/pages/assessment.html" }
+];
+
+const STORAGE_PREFIX = `${STORAGE_NAMESPACE}:`;
+
+const resolveActivityHref = (activityPath) => {
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    const marker = "/docs/";
+    const markerIndex = activityPath.lastIndexOf(marker);
+    let relative = "pages/example1.html";
+    if (markerIndex !== -1) {
+        relative = activityPath.slice(markerIndex + marker.length);
+    }
+    if (inPagesDir && relative.startsWith("pages/")) {
+        return `../${relative}`;
+    }
+    return relative;
+};
+
+const readBestPayloadForPathSuffix = (pathSuffix) => {
+    let bestPayload = null;
+    let bestUpdatedAt = -1;
+    let bestProgress = -1;
+
+    for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
+        const path = key.slice(STORAGE_PREFIX.length);
+        if (!path.endsWith(pathSuffix)) continue;
+
+        let payload;
+        try {
+            payload = JSON.parse(localStorage.getItem(key) || "{}");
+        } catch {
+            continue;
+        }
+
+        const stepCount = Number(payload.stepCount || 0);
+        const index = Number(payload.index || 0);
+        const denominator = Math.max(stepCount - 1, 1);
+        const progress = Math.min(1, Math.max(0, index / denominator));
+        const updatedAt = Number(payload.updatedAt || 0);
+
+        const shouldReplace =
+            updatedAt > bestUpdatedAt ||
+            (updatedAt === bestUpdatedAt && progress > bestProgress);
+        if (!shouldReplace) continue;
+
+        bestPayload = payload;
+        bestUpdatedAt = updatedAt;
+        bestProgress = progress;
+    }
+
+    return bestPayload;
+};
+
+const isPayloadStarted = (payload) => {
+    if (!payload || typeof payload !== "object") return false;
+    const index = Number(payload.index || 0);
+    if (index > 0) return true;
+    if (Array.isArray(payload.completedChecks) && payload.completedChecks.length) return true;
+    if (payload.inputs && typeof payload.inputs === "object") {
+        const hasInput = Object.values(payload.inputs).some((value) => String(value || "").trim().length > 0);
+        if (hasInput) return true;
+    }
+    if (typeof payload.makeProgram === "string" && payload.makeProgram.trim().length > 0) return true;
+    if (typeof payload.makeActual === "string" && payload.makeActual.trim().length > 0 && !payload.makeActual.includes("Run your program")) return true;
+    return false;
+};
+
+const buildActivitySummaries = () => {
+    return ACTIVITY_DEFINITIONS.map((activity) => {
+        const payload = readBestPayloadForPathSuffix(activity.path);
+        const stepCount = Number(payload?.stepCount || 0);
+        const index = Number(payload?.index || 0);
+        const isComplete = payload?.isComplete === true || payload?.completed === true;
+        const started = isComplete || isPayloadStarted(payload);
+        const inProgress = started && !isComplete;
+        const denominator = Math.max(stepCount - 1, 1);
+        let progress = isComplete ? 1 : Math.min(1, Math.max(0, index / denominator));
+        if (!isComplete && started && progress === 0) progress = 0.08;
+
+        return {
+            ...activity,
+            href: resolveActivityHref(activity.path),
+            payload,
+            started,
+            inProgress,
+            isComplete,
+            progress,
+            updatedAt: Number(payload?.updatedAt || 0),
+            statusLabel: isComplete ? "Complete" : (inProgress ? "In progress" : "Not started")
+        };
+    });
+};
+
 const initAppbarEnhancements = () => {
     const menuToggle = document.getElementById("appbarMenuToggle");
     const navActions = document.getElementById("appbarNavActions");
@@ -567,48 +668,106 @@ const initAppbarEnhancements = () => {
     }
 
     if (!resumeLink) return;
-    const storagePrefix = "assessmentStepperState.v2:";
-    let best = null;
-
-    for (let i = 0; i < localStorage.length; i += 1) {
-        const key = localStorage.key(i);
-        if (!key || !key.startsWith(storagePrefix)) continue;
-        const path = key.slice(storagePrefix.length);
-        if (!path.includes("/pages/")) continue;
-
-        let payload;
-        try {
-            payload = JSON.parse(localStorage.getItem(key) || "{}");
-        } catch {
-            continue;
-        }
-
-        const stepCount = Number(payload.stepCount || 0);
-        const index = Number(payload.index || 0);
-        const isComplete = payload.isComplete === true || payload.completed === true;
-        const isInProgress = stepCount >= 2 && index > 0 && index < stepCount && !isComplete;
-        if (!isInProgress) continue;
-
-        const progress = index / (stepCount - 1);
-        if (!best || progress > best.progress) {
-            best = { path, progress };
-        }
-    }
-
-    if (!best) return;
-    const inPagesDir = window.location.pathname.includes("/docs/pages/");
-    const docsMarker = "/docs/";
-    let href = "pages/example1.html";
-    const markerIndex = best.path.lastIndexOf(docsMarker);
-    if (markerIndex !== -1) {
-        href = best.path.slice(markerIndex + docsMarker.length);
-    }
-    if (inPagesDir && href.startsWith("pages/")) {
-        href = `../${href}`;
-    }
-    resumeLink.href = href;
+    const summaries = buildActivitySummaries();
+    const candidates = summaries.filter((item) => item.inProgress);
+    if (!candidates.length) return;
+    candidates.sort((a, b) => {
+        if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt;
+        return b.progress - a.progress;
+    });
+    resumeLink.href = candidates[0].href;
     resumeLink.hidden = false;
     resumeLink.title = "Resume your latest progress";
+};
+
+const initLearningDashboard = () => {
+    const root = document.getElementById("dashboard");
+    if (!root) return;
+
+    const cards = Array.from(root.querySelectorAll(".dashboard-progress-card[data-activity-key]"));
+    const continueCta = document.getElementById("dashboardContinueCta");
+    const recommendedText = document.getElementById("dashboardRecommendedText");
+    const recommendedBtn = document.getElementById("dashboardRecommendedBtn");
+
+    const summaries = buildActivitySummaries();
+    const summaryMap = new Map(summaries.map((item) => [item.key, item]));
+
+    cards.forEach((card) => {
+        const key = card.getAttribute("data-activity-key");
+        if (!key) return;
+        const summary = summaryMap.get(key);
+        if (!summary) return;
+
+        const statusEl = card.querySelector("[data-status]");
+        const fillEl = card.querySelector("[data-progress-fill]");
+        const actionEl = card.querySelector("[data-card-action]");
+
+        if (statusEl) {
+            statusEl.textContent = summary.statusLabel;
+            statusEl.classList.remove("is-not-started", "is-in-progress", "is-complete");
+            statusEl.classList.add(
+                summary.isComplete ? "is-complete" : (summary.inProgress ? "is-in-progress" : "is-not-started")
+            );
+        }
+
+        if (fillEl) {
+            fillEl.style.width = `${Math.round(summary.progress * 100)}%`;
+        }
+
+        if (actionEl) {
+            actionEl.href = summary.href;
+            actionEl.textContent = summary.isComplete ? "Review" : (summary.inProgress ? "Continue" : "Start");
+        }
+    });
+
+    const inProgress = summaries.filter((item) => item.inProgress).sort((a, b) => {
+        if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt;
+        return b.progress - a.progress;
+    });
+
+    if (continueCta) {
+        if (inProgress.length) {
+            continueCta.href = inProgress[0].href;
+            continueCta.textContent = `Continue ${inProgress[0].label}`;
+        } else {
+            const fallback = summaries.find((item) => !item.isComplete) || summaries[summaries.length - 1];
+            continueCta.href = fallback.href;
+            continueCta.textContent = `Start ${fallback.label}`;
+        }
+    }
+
+    const exampleOrder = ["example1", "example2", "example3"];
+    const nextExample = exampleOrder
+        .map((key) => summaryMap.get(key))
+        .find((item) => item && !item.isComplete);
+    const assessment = summaryMap.get("assessment");
+
+    let recommendation = null;
+    if (nextExample) {
+        recommendation = {
+            href: nextExample.href,
+            text: `Recommended next: ${nextExample.label} (${nextExample.title}).`,
+            button: `Open ${nextExample.label}`
+        };
+    } else if (assessment && !assessment.isComplete) {
+        recommendation = {
+            href: assessment.href,
+            text: "You have completed all worked examples. Next recommended step: Final Assessment.",
+            button: "Open Assessment"
+        };
+    } else {
+        recommendation = {
+            href: assessment ? assessment.href : "pages/assessment.html",
+            text: "Everything is complete. You can review any activity whenever needed.",
+            button: "Review Assessment"
+        };
+    }
+
+    if (recommendedText) recommendedText.textContent = recommendation.text;
+    if (recommendedBtn) {
+        recommendedBtn.href = recommendation.href;
+        recommendedBtn.textContent = recommendation.button;
+    }
 };
 
 const initBackToTopFab = () => {
@@ -1263,6 +1422,7 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("DOMContentLoaded", () => {
     initAppbarEnhancements();
+    initLearningDashboard();
     initBackToTopFab();
     initExamplesShowcase();
     initHomeCardReveal();
