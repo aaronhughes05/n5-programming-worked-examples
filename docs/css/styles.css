@@ -1579,6 +1579,24 @@ body.is-modal-open {
   cursor: not-allowed;
 }
 
+.rich-feedback {
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-weight: 600;
+  white-space: pre-line;
+  max-width: 68ch;
+  color: var(--ink-600, #3d4f6d);
+}
+
+.rich-feedback.is-correct {
+  color: var(--success-600);
+}
+
+.rich-feedback.is-incorrect {
+  color: #a24f58;
+}
+
 .question-input {
   display: flex;
   align-items: center;
@@ -1607,24 +1625,24 @@ body.is-modal-open {
 
 .mc-buttons button {
   min-width: 44px;
-  height: 36px;
-  padding: 0 12px;
+  min-height: 38px;
+  padding: 8px 14px;
   border-radius: var(--radius-pill);
+}
+
+.mc-buttons button:not(.check-btn) {
   background: #eef5ff;
   color: var(--ink-800);
   border: 1px solid rgba(37, 99, 235, 0.24);
   box-shadow: none;
-}
-
-.mc-buttons button:hover {
-  background: #e4efff;
+  font-weight: 700;
 }
 
 .mc-buttons button:not(.check-btn):hover {
   background: #e4efff;
   color: var(--ink-800);
-  box-shadow: none;
   border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: none;
 }
 
 .mc-buttons .check-btn {
@@ -1632,12 +1650,14 @@ body.is-modal-open {
   background: linear-gradient(120deg, var(--accent-700), var(--accent-600));
   color: #ffffff;
   border: none;
+  box-shadow: 0 6px 12px rgba(31, 87, 205, 0.14);
 }
 
 .mc-buttons button.selected,
 .code-line.selected {
-  background: var(--accent-600);
+  background: linear-gradient(120deg, var(--accent-700), var(--accent-600));
   color: #ffffff;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.34), 0 8px 16px rgba(37, 99, 235, 0.18);
 }
 
 .code-select {

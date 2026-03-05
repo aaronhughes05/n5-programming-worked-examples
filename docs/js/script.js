@@ -84,6 +84,42 @@ const HINT_MODEL = {
     }
 };
 
+const FEEDBACK_MAP = {
+    "example2.html": {
+        tick1: {
+            correct: "Good prediction. You matched the fixed loop count.",
+            incorrect: "Not quite yet.",
+            misconception: "You may be mixing up number of loop runs with the final total value.",
+            next: "Re-check the loop header and count how many item entries are required."
+        },
+        parsonsFeedback: {
+            correct: "Great ordering. The logic now flows from setup to output correctly.",
+            incorrect: "The sequence is still off.",
+            misconception: "A common issue is placing `print(total)` inside the loop or skipping initialization first.",
+            next: "Order the blocks as initialize -> loop -> update total -> print."
+        },
+        tick2: {
+            correct: "Correct modification. You adjusted only the loop range target.",
+            incorrect: "Close, but the loop line is not exact yet.",
+            misconception: "You may have changed the loop structure instead of only changing the range value.",
+            next: "Keep the same syntax and replace only `5` with `10`, including the colon."
+        }
+    },
+    "assessment.html": {
+        tick1: { correct: "Correct. The loop count matches the number of required inputs.", incorrect: "Not correct yet.", misconception: "You may be counting outputs instead of input iterations.", next: "Use the problem statement to confirm how many prices are entered." },
+        tick2: { correct: "Correct. `while` is appropriate for repeated validation.", incorrect: "That loop choice is not best here.", misconception: "You may be choosing `for` when the number of retries is unknown.", next: "Pick the loop that repeats until input is valid." },
+        tick3: { correct: "Correct. You identified the accumulator variable.", incorrect: "Not quite.", misconception: "You may be naming the list variable instead of the running total variable.", next: "Find the variable initialized to 0 and updated each iteration." },
+        tick4: { correct: "Correct. Valid values should be stored for traversal later.", incorrect: "Not correct yet.", misconception: "You may think total alone is enough, but printing each item requires stored values.", next: "Check the later step that loops through `items`." },
+        sgA1Tick: { correct: "Correct subgoal mapping.", incorrect: "That subgoal mapping is off.", misconception: "You may be mapping by line position rather than line purpose.", next: "Classify the line by what it does: setup, loop, process, traverse, output." },
+        sgB1Tick: { correct: "Correct line selection for Subgoal B.", incorrect: "Wrong line selected.", misconception: "You may be selecting an update line instead of the repetition line.", next: "Find the line that controls repeated execution." },
+        sgC1Tick: { correct: "Correct fill-in value.", incorrect: "That value is not right yet.", misconception: "You may be using the total variable on both sides instead of adding the current input.", next: "Use the current validated price variable." },
+        sgD1Tick: { correct: "Correct. Traversal belongs to subgoal D.", incorrect: "Not quite right.", misconception: "You may be matching on syntax shape rather than traversal purpose.", next: "Identify which subgoal is about iterating through stored items." },
+        sgE1Tick: { correct: "Correct trace values.", incorrect: "Trace values are off.", misconception: "You may be restarting total each row instead of carrying it forward.", next: "Add each new input to the previous running total step by step." },
+        assessmentFeedback: { correct: "Excellent. The full logic order is correct.", incorrect: "The program order is still incorrect.", misconception: "A common issue is putting validation/output at the wrong stage of the flow.", next: "Rebuild from pipeline order: setup -> input loop -> validate -> store/update -> compute -> output." },
+        makeOutputTick: { correct: "Output matches expected values and formatting.", incorrect: "Output does not match expected yet.", misconception: "Likely formatting mismatch, wrong total/average formula, or missing lines.", next: "Compare your output line-by-line with expected output and rerun." }
+    }
+};
+
 let hintState = { checkpoints: {} };
 let hintPanels = [];
 
@@ -135,6 +171,52 @@ const getCheckpointHints = (checkpointId, section) => {
         l3: "Trace one concrete example input slowly and verify each intermediate value.",
         worked: "Use the worked example structure: initialize -> loop/validate -> process -> output."
     };
+};
+
+const getFeedbackEntry = (checkpointId) => {
+    const byPage = FEEDBACK_MAP[ACTIVITY_PAGE_NAME] || {};
+    return byPage[checkpointId] || null;
+};
+
+const buildTargetedFeedback = (checkpointId, correct, fallbackMessage) => {
+    const entry = getFeedbackEntry(checkpointId);
+    const attemptCount = Number(hintState?.checkpoints?.[checkpointId]?.attempts || 0);
+    if (!entry) {
+        return correct
+            ? `${fallbackMessage || "Correct."}\nNext: continue to the next checkpoint.`
+            : `${fallbackMessage || "Try again."}\nNext: compare your answer with the worked example.`;
+    }
+    if (correct) {
+        return `${entry.correct}\nNext: continue to the next checkpoint.`;
+    }
+    const lines = [entry.incorrect];
+    if (attemptCount >= 2 && entry.misconception) {
+        lines.push(`Possible mix-up: ${entry.misconception}`);
+    }
+    lines.push(`Next: ${entry.next}`);
+    return lines.join("\n");
+};
+
+const getOrCreateRichFeedbackEl = (anchorEl, checkpointId) => {
+    const host = anchorEl?.closest(".question-block") || anchorEl?.parentElement || anchorEl?.closest(".card");
+    if (!host) return null;
+    let el = host.querySelector(`.rich-feedback[data-feedback-for="${checkpointId}"]`);
+    if (!el) {
+        el = document.createElement("p");
+        el.className = "rich-feedback";
+        el.dataset.feedbackFor = checkpointId;
+        host.appendChild(el);
+    }
+    return el;
+};
+
+const renderRichFeedback = (anchorEl, checkpointId, correct, fallbackMessage) => {
+    if (!checkpointId) return;
+    const feedbackEl = getOrCreateRichFeedbackEl(anchorEl, checkpointId);
+    if (!feedbackEl) return;
+    feedbackEl.textContent = buildTargetedFeedback(checkpointId, correct, fallbackMessage);
+    feedbackEl.classList.toggle("is-correct", !!correct);
+    feedbackEl.classList.toggle("is-incorrect", !correct);
 };
 
 const getActiveCheckpointId = (section) => {
@@ -379,22 +461,25 @@ const loadStepperState = () => {
 
 const setTickState = (tick, correct, checkpointId = null) => {
     if (!tick) return;
+    const effectiveCheckpointId = checkpointId || tick.id;
     tick.dataset.correct = correct ? "true" : "false";
     tick.style.display = "inline";
     tick.textContent = correct ? " ✔ Correct" : " ✖ Try again";
     tick.style.color = correct ? "var(--teal-500)" : "#e63946";
-    updateHintCheckpointResult(checkpointId || tick.id, correct);
+    updateHintCheckpointResult(effectiveCheckpointId, correct);
+    renderRichFeedback(tick, effectiveCheckpointId, correct, correct ? "Correct." : "Try again.");
     updateStepperState();
     saveStepperState();
 };
 
 const setFeedbackState = (el, correct, message, checkpointId = null) => {
     if (!el) return;
+    const effectiveCheckpointId = checkpointId || el.id;
+    updateHintCheckpointResult(effectiveCheckpointId, correct);
     el.dataset.correct = correct ? "true" : "false";
-    el.textContent = message;
+    el.textContent = buildTargetedFeedback(effectiveCheckpointId, correct, message);
     el.style.color = correct ? "var(--teal-500)" : "#e63946";
-    el.style.fontWeight = "700";
-    updateHintCheckpointResult(checkpointId || el.id, correct);
+    el.style.fontWeight = "600";
     updateStepperState();
     saveStepperState();
 };
