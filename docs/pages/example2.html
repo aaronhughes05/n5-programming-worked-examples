@@ -38,15 +38,17 @@
     </header>
 
     <main class="content">
-        <details class="card" open>
+        <details class="card expander-card subgoals-panel">
             <summary>Subgoals</summary>
-            <p>Steps to solve the problem.</p>
-            <p><strong>A</strong>. Initialise a total variable</p>
-            <p><strong>B</strong>. Take in a value entered by the user</p>
-            <p><strong>C</strong>. Add the value to the total</p>
-            <p><strong>D</strong>. Repeat until a set number of values have been taken in, or the user indicates they are done</p>
+            <p class="subgoal-intro">Steps to solve the problem.</p>
+            <ul class="subgoal-list">
+                <li class="subgoal-item"><span class="subgoal-code">A</span><span class="subgoal-text">Initialise a total variable</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">B</span><span class="subgoal-text">Take in a value entered by the user</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">C</span><span class="subgoal-text">Add the value to the total</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">D</span><span class="subgoal-text">Repeat until a set number of values have been taken in, or the user indicates they are done</span></li>
+            </ul>
         </details>
-        <details id="workedExample" class="card hidden">
+        <details id="workedExample" class="card expander-card worked-example-panel hidden">
             <summary>Full Solution</summary>
             <pre><code>total = 0 <span class="code-comment">                          # Subgoal A</span>
 for counter in range(5): <span class="code-comment">           # Subgoal D</span>

@@ -2678,7 +2678,109 @@ button[disabled] {
   color: var(--ink-500)
 }
 
-details.card summary {
-  font-weight: 700;
-  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+.expander-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(246, 250, 255, 0.96)),
+    linear-gradient(120deg, rgba(37, 99, 235, 0.08), rgba(20, 184, 166, 0.06));
+}
+
+.expander-card > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-weight: 800;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  color: var(--ink-900);
+  transition: margin-bottom 220ms ease;
+}
+
+.expander-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.expander-card > summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--accent-700);
+  border-bottom: 2px solid var(--accent-700);
+  transform: rotate(-45deg);
+  transform-origin: 50% 50%;
+  transition: transform 180ms ease;
+  margin-right: 4px;
+}
+
+.expander-card[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.subgoals-panel > summary {
+  margin-bottom: 0;
+}
+
+.subgoals-panel {
+  background: #ffffff;
+}
+
+.subgoals-panel[open] > summary {
+  margin-bottom: 10px;
+}
+
+.expander-card > .expander-content {
+  overflow: hidden;
+  height: 0;
+  opacity: 0;
+  margin-top: 0;
+  transition: height 220ms ease, opacity 180ms ease, margin-top 220ms ease;
+}
+
+.subgoal-intro {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink-600);
+}
+
+.subgoal-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.subgoal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.subgoal-code {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-code);
+  font-size: 0.83rem;
+  font-weight: 800;
+  color: var(--accent-700);
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(37, 99, 235, 0.26);
+  margin-top: 1px;
+}
+
+.subgoal-text {
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: var(--ink-800);
 }

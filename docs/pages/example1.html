@@ -37,15 +37,17 @@
     </header>
 
     <main class="content">
-        <details class="card" open>
+        <details class="card expander-card subgoals-panel">
             <summary>Subgoals</summary>
-            <p>Steps to solve the problem.</p>
-            <p><strong>A</strong>. Receive user input</p>
-            <p><strong>B</strong>. Check if the input is valid</p>
-            <p><strong>C</strong>. If it isn't, provide an error message</p>
-            <p><strong>D</strong>. Repeat the process until a valid input is provided</p>
+            <p class="subgoal-intro">Steps to solve the problem.</p>
+            <ul class="subgoal-list">
+                <li class="subgoal-item"><span class="subgoal-code">A</span><span class="subgoal-text">Receive user input</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">B</span><span class="subgoal-text">Check if the input is valid</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">C</span><span class="subgoal-text">If it isn't, provide an error message</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">D</span><span class="subgoal-text">Repeat the process until a valid input is provided</span></li>
+            </ul>
         </details>
-        <details id="workedExample" class="card hidden">
+        <details id="workedExample" class="card expander-card worked-example-panel hidden">
             <summary>Full Solution</summary>
             <pre><code>username = input("Enter username: ") <span class="code-comment">                     #  Subgoal A</span>
 while len(username) &lt; 5: <span class="code-comment">                                 #  Subgoal B  ---</span>

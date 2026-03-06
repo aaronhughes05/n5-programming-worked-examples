@@ -2054,6 +2054,93 @@ const initAssessmentGate = () => {
     });
 };
 
+const initExpanderAnimations = () => {
+    const expanders = Array.from(document.querySelectorAll("details.expander-card"));
+    if (!expanders.length) return;
+
+    const prefersReducedMotion = window.matchMedia
+        && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    expanders.forEach((details) => {
+        const summary = details.querySelector(":scope > summary");
+        if (!summary) return;
+
+        let content = details.querySelector(":scope > .expander-content");
+        if (!content) {
+            content = document.createElement("div");
+            content.className = "expander-content";
+            const children = Array.from(details.children).filter((child) => child !== summary);
+            children.forEach((child) => content.appendChild(child));
+            details.appendChild(content);
+        }
+
+        const setExpandedState = () => {
+            content.style.height = "auto";
+            content.style.opacity = "1";
+            content.style.marginTop = "10px";
+        };
+
+        const setCollapsedState = () => {
+            content.style.height = "0px";
+            content.style.opacity = "0";
+            content.style.marginTop = "0px";
+        };
+
+        if (details.open) setExpandedState();
+        else setCollapsedState();
+
+        if (prefersReducedMotion) return;
+
+        let isAnimating = false;
+
+        summary.addEventListener("click", (event) => {
+            event.preventDefault();
+            if (isAnimating) return;
+            isAnimating = true;
+
+            if (details.open) {
+                const startHeight = content.scrollHeight;
+                content.style.height = `${startHeight}px`;
+                content.style.opacity = "1";
+                content.style.marginTop = "10px";
+                requestAnimationFrame(() => {
+                    content.style.height = "0px";
+                    content.style.opacity = "0";
+                    content.style.marginTop = "0px";
+                });
+
+                const onCollapseEnd = (evt) => {
+                    if (evt.propertyName !== "height") return;
+                    content.removeEventListener("transitionend", onCollapseEnd);
+                    details.open = false;
+                    isAnimating = false;
+                };
+                content.addEventListener("transitionend", onCollapseEnd);
+                return;
+            }
+
+            details.open = true;
+            content.style.height = "0px";
+            content.style.opacity = "0";
+            content.style.marginTop = "0px";
+            const targetHeight = content.scrollHeight;
+            requestAnimationFrame(() => {
+                content.style.height = `${targetHeight}px`;
+                content.style.opacity = "1";
+                content.style.marginTop = "10px";
+            });
+
+            const onExpandEnd = (evt) => {
+                if (evt.propertyName !== "height") return;
+                content.removeEventListener("transitionend", onExpandEnd);
+                content.style.height = "auto";
+                isAnimating = false;
+            };
+            content.addEventListener("transitionend", onExpandEnd);
+        });
+    });
+};
+
 const runProgram = async () => {
     const programEl = document.getElementById("makeProgram");
     const caseSelect = document.getElementById("makeCase");
@@ -2139,6 +2226,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initDefaultTooltipCopy();
     initGlassTooltips();
     initAssessmentGate();
+    initExpanderAnimations();
     initAdaptiveHints();
     enableRunButton();
     updateExpectedOutput();
