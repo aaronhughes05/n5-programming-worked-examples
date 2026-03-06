@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Worksheet - Example 3 Array Traversal</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body class="page page-inner worksheet-page">
+    <div class="appbar worksheet-hide-print" id="appbar">
+      <div class="appbar-brand-wrap">
+        <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+        <div class="appbar-brand-stack">
+          <div class="appbar-brand">Crack the Code</div>
+          <div class="appbar-subtitle">National 5 Computing Science</div>
+        </div>
+      </div>
+
+      <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
+
+      <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
+        <a class="appbar-nav-pill" href="../index.html">Home</a>
+        <a class="appbar-nav-pill" href="../index.html#examples">Examples</a>
+        <a class="appbar-nav-pill is-active" href="worksheets.html">Worksheets</a>
+        <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
+        <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
+          Resume
+          <span class="appbar-status-dot" aria-hidden="true"></span>
+        </a>
+      </nav>
+    </div>
+
+    <header class="hero hero-main worksheet-hide-print">
+      <h1 class="hero-title">Example 3 Worksheet: Array Traversal</h1>
+      <p class="hero-summary">Plan list traversal clearly and verify each iteration step.</p>
+      <div class="hero-actions">
+        <button type="button" class="check-btn" data-print-worksheet>Print Worksheet</button>
+        <a class="check-btn" href="worksheet-example3.html" data-download-worksheet download="worksheet-example3.html">Download Worksheet</a>
+      </div>
+    </header>
+
+    <main class="content worksheet-content">
+      <section class="card worksheet-block">
+        <h2>How To Use This Sheet</h2>
+        <ul>
+          <li>Describe traversal logic in plain language before coding.</li>
+          <li>Trace index and item values together to avoid skipping values.</li>
+          <li>Test with different list lengths and value types.</li>
+          <li>Check for off-by-one and condition errors explicitly.</li>
+        </ul>
+      </section>
+
+      <section class="card worksheet-block">
+        <h2>Planning Sheet</h2>
+        <p>Define what happens for every list item and what output is expected at each step.</p>
+        <div class="worksheet-grid-2">
+          <div>
+            <p class="worksheet-label">List data to process</p>
+            <div class="worksheet-lines"></div>
+          </div>
+          <div>
+            <p class="worksheet-label">Traversal rule (for each item in list)</p>
+            <div class="worksheet-lines"></div>
+          </div>
+        </div>
+        <table class="worksheet-table">
+          <thead><tr><th>Variable</th><th>Type</th><th>Purpose</th><th>Updated where?</th></tr></thead>
+          <tbody>
+            <tr><td>list</td><td></td><td></td><td></td></tr>
+            <tr><td>item</td><td></td><td></td><td></td></tr>
+            <tr><td>index</td><td></td><td></td><td></td></tr>
+            <tr><td>output</td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card worksheet-block">
+        <h2>Prediction Check</h2>
+        <table class="worksheet-table">
+          <thead><tr><th>Question</th><th>Your prediction</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>How many iterations will run?</td><td></td><td></td></tr>
+            <tr><td>What will happen at index 0?</td><td></td><td></td></tr>
+            <tr><td>What will happen at last index?</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card worksheet-block">
+        <h2>Trace Table (Traversal)</h2>
+        <p>Use one row per iteration and record exactly what the loop reads and outputs.</p>
+        <table class="worksheet-table">
+          <thead><tr><th>Iteration</th><th>Index</th><th>Current item</th><th>Condition result</th><th>Output/action</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0</td><td></td><td></td><td></td></tr>
+            <tr><td>2</td><td>1</td><td></td><td></td><td></td></tr>
+            <tr><td>3</td><td>2</td><td></td><td></td><td></td></tr>
+            <tr><td>4</td><td>3</td><td></td><td></td><td></td></tr>
+            <tr><td>5</td><td>4</td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card worksheet-block">
+        <h2>Test-Case Template</h2>
+        <p>Design tests for short lists, long lists, and list values that challenge your condition logic.</p>
+        <table class="worksheet-table">
+          <thead><tr><th>Input list</th><th>Expected traversal outputs</th><th>Condition branch tested</th><th>Pass/Fail</th></tr></thead>
+          <tbody>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card worksheet-block">
+        <h2>Success Criteria Checklist</h2>
+        <table class="worksheet-table">
+          <thead><tr><th>Checklist item</th><th>Yes / Not yet</th><th>Evidence</th></tr></thead>
+          <tbody>
+            <tr><td>I can explain traversal in one sentence.</td><td></td><td></td></tr>
+            <tr><td>I can trace index and item values correctly.</td><td></td><td></td></tr>
+            <tr><td>I can justify why my loop stops at the right point.</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card worksheet-block">
+        <h2>Reflection Prompts</h2>
+        <ol>
+          <li>What helped you avoid skipping or repeating list items?</li>
+          <li>Where did you check for off-by-one errors?</li>
+          <li>How would you explain the difference between item and index traversal?</li>
+        </ol>
+        <div class="worksheet-lines worksheet-lines--tall"></div>
+      </section>
+    </main>
+
+    <script src="../js/script.js"></script>
+  </body>
+</html>
