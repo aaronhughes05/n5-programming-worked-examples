@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Example 2 - Running Total</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="page page-inner">
+    <div class="appbar" id="appbar">
+        <div class="appbar-brand-wrap">
+            <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+            <div class="appbar-brand-stack">
+                <div class="appbar-brand">Crack the Code</div>
+                <div class="appbar-subtitle">National 5 Computing Science</div>
+            </div>
+        </div>
+
+        <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
+
+        <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
+            <a class="appbar-nav-pill" href="../index.html">Home</a>
+            <a class="appbar-nav-pill is-active" href="../index.html#examples">Examples</a>
+            <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
+            <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
+                Resume
+                <span class="appbar-status-dot" aria-hidden="true"></span>
+            </a>
+        </nav>
+    </div>
+
+    <header class="hero hero-main">
+        <h1 class="hero-title">Input Validation</h1>
+        <p class="hero-summary">
+            Design checks that keep user input safe, sensible, and in range before processing.
+        </p>
+    </header>
+
+    <main class="content">
+        <details class="card" open>
+            <summary>Subgoals</summary>
+            <p>Steps to solve the problem.</p>
+            <p><strong>A</strong>. Receive user input</p>
+            <p><strong>B</strong>. Check if the input is valid</p>
+            <p><strong>C</strong>. If it isn't, provide an error message</p>
+            <p><strong>D</strong>. Repeat the process until a valid input is provided</p>
+        </details>
+        <details id="workedExample" class="card hidden">
+            <summary>Full Solution</summary>
+            <pre><code>username = input("Enter username: ") <span class="code-comment">                     #  Subgoal A</span>
+while len(username) &lt; 5: <span class="code-comment">                                 #  Subgoal B  ---</span>
+    print("Username must be at least 5 characters long.") <span class="code-comment">#  Subgoal C     |-- Subgoal D</span>
+    username = input("Enter username: ") <span class="code-comment">                 #             ---</span>
+print("Your password is: " + password)</code></pre>
+        </details>
+        <div class="stepper-header">
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 5</div>
+            <div class="stepper-bar" aria-hidden="true">
+                <span class="stepper-bar-fill" id="stepperBarFill"></span>
+            </div>
+            <div class="stepper-progress-note" id="stepperNote">Complete the activity to continue.</div>
+        </div>
+
+        <section class="card step-section" data-step="1" data-step-id="step-1">
+            <h2>1. Problem Description</h2>
+            <p>Ensure the username entered by a user is at least 5 characters long.</p>
+        </section>
+
+        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2">
+            <h2>2. Prediction Activity</h2>
+            <div class="question-block">
+                <p>Do we need a loop to solve this problem?</p>
+                <div class="question-input-part">
+                    <input type="radio" id="tick1-yes" name="tick1" value="yes" />
+                    <label for="tick1-yes">Yes</label> <br />
+                    <input type="radio" id="tick1-no" name="tick1" value="no" />
+                    <label for="tick1-no">No</label> <br />
+                </div>
+                <div>
+                    <button onclick="checkRadioButton('tick1-yes', 'tick1')">Check</button>
+                    <span id="tick1" class="tick-mark padded"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>If so, what type of loop?</p>
+                <div class="question-input-part">
+                    <input type="radio" id="tick2-for" name="tick2" value="no" />
+                    <label for="tick2-for">For loop</label> <br />
+                    <input type="radio" id="tick2-while" name="tick2" value="yes" />
+                    <label for="tick2-while">While loop</label> <br />
+                    <input type="radio" id="tick2-none" name="tick2" value="yes" />
+                    <label for="tick2-none">No loop needed</label> <br />
+                </div>
+                <div>
+                    <button onclick="checkRadioButton('tick2-while', 'tick2')">Check</button>
+                    <span id="tick2" class="tick-mark padded"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
+            <h2>3. Step-by-Step Implementation</h2>
+            <div id="step1" class="step-box">
+                <p>Take in an initial input.</p>
+                <pre><code>username = input("Enter username: ") <span class="code-comment"># Subgoal A</span></code></pre>
+                <button onclick="nextStep(1, 2)">Next Step</button>
+            </div>
+            <div id="step2" class="step-box hidden">
+                <p>Loop while the input is invalid.</p>
+                <pre><code>while len(username) &lt; 5: <span class="code-comment"># Subgoals B and D</span></code></pre>
+                <button onclick="nextStep(2, 3)">Next Step</button>
+            </div>
+            <div id="step3" class="step-box hidden">
+                <p>Display an error message.</p>
+                <pre><code>    print("Username must be at least 5 characters long.") <span class="code-comment"># Subgoal C</span></code></pre>
+                <button onclick="nextStep(3, 4)">Next Step</button>
+            </div>
+            <div id="step4" class="step-box hidden">
+                <p>Take in new input to validate.</p>
+                <pre><code>    username = input("Enter username: ") <span class="code-comment"># Subgoal D</span></code></pre>
+                <button onclick="nextStep(4, 5)">Next Step</button>
+            </div>
+            <div id="step5" class="step-box hidden">
+                <p>Outside the loop, you can now use the validated username.</p>
+                <pre><code>print("Your username is: " + username)</code></pre>
+                <button onclick="nextStep(5, 'full')">Show Full Code</button>
+            </div>
+            <div id="fullCode" class="step-box hidden">
+                <p><strong>Full Solution:</strong> Combine all steps into one complete program.</p>
+                <pre><code>username = input("Enter username: ") <span class="code-comment">                     #  Subgoal A</span>
+while len(username) &lt; 5: <span class="code-comment">                                 #  Subgoal B  ---</span>
+    print("Username must be at least 5 characters long.") <span class="code-comment">#  Subgoal C     |-- Subgoal D</span>
+    username = input("Enter username: ") <span class="code-comment">                 #             ---</span>
+print("Your password is: " + password)</code></pre>
+            </div>
+        </section>
+
+        <!-- <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="parsonsFeedback">
+            <h2>4. Parsons Puzzle</h2>
+            <p>Drag the lines into the correct logical order:</p>
+            <div id="parsons-area" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="p3" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
+                <div id="p1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
+                <div id="p4" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
+                <div id="p2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(5):</div>
+            </div>
+            <button onclick="verifyParsons('parsons-area', ['p1', 'p2', 'p3', 'p4'], 'parsonsFeedback')">Verify Logic</button>
+            <p id="parsonsFeedback"></p>
+        </section>
+
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="tick3">
+            <h2>6. Modify Task</h2>
+            <div class="question-block">
+                <p>Change the code to ask for 10 items. What would the loop line look like?</p>
+                <div class="question-input">
+                    <input type="text" id="modAns" class="w-full" placeholder="for counter in range...">
+                    <button onclick="checkAnswer('modAns', 'for counter in range(10):', 'tick3')">Check Answer</button>
+                    <span id="tick3" class="tick-mark"></span>
+                </div>
+            </div>
+        </section> -->
+
+        <div class="stepper-controls">
+            <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
+            <button class="check-btn reset-btn" id="stepReset" onclick="resetAssessment()">Restart</button>
+            <button class="check-btn nav-btn" id="stepNext">Next</button>
+        </div>
+    </main>
+
+    <section class="completion-screen" id="completionScreen">
+        <div class="completion-card">
+            <p class="completion-eyebrow">Completed</p>
+            <h2>Example Finished</h2>
+            <p>You have completed this example.</p>
+            <p class="completion-note">Use Restart to try again or return home.</p>
+            <div class="completion-actions">
+                <a class="check-btn nav-btn back-btn" href="../index.html">Back to Home</a>
+                <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

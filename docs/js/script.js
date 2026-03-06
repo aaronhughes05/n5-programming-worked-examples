@@ -7,6 +7,7 @@ const nextStep = (current, next) => {
         nextEl.classList.remove('hidden');
         if (nextEl.id === "fullCode") {
             nextEl.dataset.correct = "true";
+            stepperState.showWorkedExample = true;
             updateStepperState();
         }
     }
@@ -15,7 +16,8 @@ const nextStep = (current, next) => {
 let stepperState = {
     sections: [],
     index: 0,
-    completed: false
+    completed: false,
+    showWorkedExample: false
 };
 
 const STORAGE_NAMESPACE = "assessmentStepperState.v2";
@@ -49,6 +51,20 @@ const removeStorage = (key) => {
 };
 
 const HINT_MODEL = {
+    "example1.html": {
+        tick1: {
+            l1: "Consider the subgoals. How would you go about implementing Subgoal D?",
+            l2: "Consider the subgoals. How would you go about implementing Subgoal D?",
+            l3: "Consider the subgoals. How would you go about implementing Subgoal D?",
+            worked: "The program needs a loop to repeatedly query the user until they provide a valid input."
+        },
+        tick2: {
+            l1: "Consider when the loop should terminate.",
+            l2: "Consider how many times the loop will need to run.",
+            l3: "Can we know how many times the loop will need to run?",
+            worked: "A while loop is required here, as we want to loop until a condition (valid input has been provided) is met."
+        }
+    },
     "example2.html": {
         tick1: {
             l1: "Focus on the loop line. How many item entries are required?",
@@ -85,6 +101,18 @@ const HINT_MODEL = {
 };
 
 const FEEDBACK_MAP = {
+    "example1.html": {
+        tick1: {
+            correct: "We will need a loop here to repeatedly query the user until they provide a valid input.",
+            incorrect: "Try again.",
+            next: "Review the subgoals and consider how you would implement them in code."
+        },
+        tick2: {
+            correct: "A while loop is required here, as we want to loop until a condition (valid input has been provided) is met.",
+            incorrect: "Try again.",
+            next: "Review the subgoals and consider how you would implement them in code."
+        }
+    },
     "example2.html": {
         tick1: {
             correct: "Good prediction. You matched the fixed loop count.",
@@ -383,7 +411,8 @@ const saveStepperState = () => {
         inputs,
         makeProgram: programEl ? programEl.value : "",
         makeCase: caseSelect ? caseSelect.value : "case1",
-        makeActual: actualEl ? actualEl.textContent : ""
+        makeActual: actualEl ? actualEl.textContent : "",
+        showWorkedExample: stepperState.showWorkedExample
     };
 
     writeStorage(getStorageKey(), JSON.stringify(payload));
@@ -432,6 +461,10 @@ const loadStepperState = () => {
                 input.value = value;
             }
         });
+    }
+
+    if (payload.showWorkedExample) {
+        stepperState.showWorkedExample = true;
     }
 
     const programEl = document.getElementById("makeProgram");
@@ -495,6 +528,13 @@ const checkAnswer = (inputId, correctAnswer, tickId) => {
     const cleanUser = userInput.replace(/\s/g, '');
 
     setTickState(tick, cleanUser === cleanCorrect, tickId);
+};
+
+const checkRadioButton = (inputId, tickId) => {
+    const inputField = document.getElementById(inputId);
+    const tick = document.getElementById(tickId);
+
+    setTickState(tick, inputField.checked);
 };
 
 function allowDrop(ev) {
@@ -733,6 +773,13 @@ const updateStepperState = () => {
     }
     note.classList.toggle("is-ready", complete);
     note.classList.toggle("is-pending", !complete);
+
+    if (stepperState.showWorkedExample) {
+        example = document.getElementById("workedExample")
+        if (example) {
+            example.classList.remove('hidden');
+        }
+    }
 };
 
 const showStep = (index) => {
