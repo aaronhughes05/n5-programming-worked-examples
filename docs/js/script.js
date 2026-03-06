@@ -511,10 +511,36 @@ const setFeedbackState = (el, correct, message, checkpointId = null) => {
     if (!el) return;
     const effectiveCheckpointId = checkpointId || el.id;
     updateHintCheckpointResult(effectiveCheckpointId, correct);
+    el.classList.add("result-feedback");
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
     el.dataset.correct = correct ? "true" : "false";
-    el.textContent = buildTargetedFeedback(effectiveCheckpointId, correct, message);
-    el.style.color = correct ? "var(--teal-500)" : "#e63946";
+
+    const status = document.createElement("span");
+    status.className = `tick-mark ${correct ? "is-correct" : "is-incorrect"}`;
+    status.style.display = "inline-flex";
+    status.textContent = correct ? "Correct" : "Try again";
+    status.style.fontSize = "0.86rem";
+    status.style.lineHeight = "1.35";
+
+    const statusRow = document.createElement("div");
+    statusRow.style.display = "flex";
+    statusRow.style.alignItems = "center";
+    statusRow.style.gap = "8px";
+    statusRow.appendChild(status);
+
+    const detail = document.createElement("div");
+    detail.textContent = buildTargetedFeedback(effectiveCheckpointId, correct, message);
+    detail.style.whiteSpace = "pre-line";
+    detail.style.marginTop = "4px";
+    detail.style.fontSize = "0.86rem";
+    detail.style.lineHeight = "1.35";
+
+    el.replaceChildren(statusRow, detail);
+    el.style.color = correct ? "var(--teal-500)" : "#a24f58";
+    el.style.fontSize = "0.86rem";
     el.style.fontWeight = "600";
+    el.style.lineHeight = "1.35";
     updateStepperState();
     saveStepperState();
 };
@@ -605,9 +631,9 @@ const verifyParsons = (containerId, correctIds, feedbackId) => {
     }
 
     if (isCorrect) {
-        setFeedbackState(feedback, true, "✔ Excellent! The logic is in the correct order.", feedbackId);
+        setFeedbackState(feedback, true, "Excellent! The logic is in the correct order.", feedbackId);
     } else {
-        setFeedbackState(feedback, false, "✖ Try again. Think: Initialize -> Loop -> Process -> Output.", feedbackId);
+        setFeedbackState(feedback, false, "Try again. Think: Initialize -> Loop -> Process -> Output.", feedbackId);
     }
 };
 
@@ -895,6 +921,11 @@ const resetAssessment = () => {
     });
     document.querySelectorAll(".rich-feedback").forEach((el) => {
         el.remove();
+    });
+    document.querySelectorAll(".result-feedback").forEach((el) => {
+        el.textContent = "";
+        delete el.dataset.correct;
+        el.removeAttribute("style");
     });
     const programEl = document.getElementById("makeProgram");
     if (programEl) programEl.value = "";
