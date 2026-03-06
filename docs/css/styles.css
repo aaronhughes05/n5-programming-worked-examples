@@ -1845,8 +1845,61 @@ body.is-modal-open {
   line-height: 1;
 }
 
-.question-input-part {
-  padding-bottom: var(--space-1);
+.question-input-part input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0 8px 0 0;
+  border: 2px solid rgba(37, 99, 235, 0.38);
+  border-radius: 999px;
+  background: #ffffff;
+  display: inline-grid;
+  place-content: center;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.question-input-part input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-700);
+  transform: scale(0);
+  transition: transform 0.16s ease;
+}
+
+.question-input-part input[type="radio"]:hover {
+  border-color: rgba(37, 99, 235, 0.62);
+}
+
+.question-input-part input[type="radio"]:checked {
+  border-color: var(--accent-700);
+  background: #f4f8ff;
+}
+
+.question-input-part input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+.question-input-part input[type="radio"]:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.question-input-part input[type="radio"] + label {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--ink-800);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.question-input-part input[type="radio"]:checked + label {
+  color: var(--ink-900);
+  font-weight: 700;
 }
 
 .mc-buttons {
@@ -2437,6 +2490,19 @@ button:active {
 
 .check-btn:active {
   transform: translateY(1px) scale(0.995);
+}
+
+.check-btn,
+button[onclick*="checkAnswer("],
+button[onclick*="checkRadioButton("],
+button[onclick*="checkChoice("],
+button[onclick*="checkLineChoice("],
+button[onclick*="checkTrace("],
+button[onclick*="checkActualOutput("],
+button[onclick*="checkOutput("],
+button[onclick*="verifyParsons("] {
+  font-size: 13.3333px;
+  line-height: 1;
 }
 
 input[type="text"], 
