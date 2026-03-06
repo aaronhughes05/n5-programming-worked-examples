@@ -872,6 +872,18 @@ const ACTIVITY_DEFINITIONS = [
 const STORAGE_PREFIX = `${STORAGE_NAMESPACE}:`;
 const HINT_STORAGE_PREFIX = `${HINT_STORAGE_NAMESPACE}:`;
 
+const getActivityPathSuffixes = (activityPath) => {
+    const lower = String(activityPath || "").toLowerCase();
+    const fileName = lower.split("/").pop() || "";
+    const suffixes = new Set();
+    if (fileName) suffixes.add(`/${fileName}`);
+    if (lower.startsWith("/docs/")) {
+        suffixes.add(lower.slice("/docs".length));
+    }
+    suffixes.add(lower);
+    return Array.from(suffixes);
+};
+
 const resolveActivityHref = (activityPath) => {
     const inPagesDir = window.location.pathname.includes("/docs/pages/");
     const marker = "/docs/";
@@ -886,16 +898,19 @@ const resolveActivityHref = (activityPath) => {
     return relative;
 };
 
-const readBestPayloadForPathSuffix = (pathSuffix) => {
+const readBestPayloadForPathSuffixes = (pathSuffixes) => {
     let bestPayload = null;
     let bestUpdatedAt = -1;
     let bestProgress = -1;
+    const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
+    if (!lowerSuffixes.length) return null;
 
     for (let i = 0; i < localStorage.length; i += 1) {
         const key = localStorage.key(i);
         if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
-        const path = key.slice(STORAGE_PREFIX.length);
-        if (!path.endsWith(pathSuffix)) continue;
+        const path = key.slice(STORAGE_PREFIX.length).toLowerCase();
+        const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
+        if (!matches) continue;
 
         let payload;
         try {
@@ -923,14 +938,19 @@ const readBestPayloadForPathSuffix = (pathSuffix) => {
     return bestPayload;
 };
 
-const readHintAnalyticsForPathSuffix = (pathSuffix) => {
+const readHintAnalyticsForPathSuffixes = (pathSuffixes) => {
     let payload = null;
+    const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
+    if (!lowerSuffixes.length) {
+        return { hintsUsed: 0, workedRevealed: 0 };
+    }
 
     for (let i = 0; i < localStorage.length; i += 1) {
         const key = localStorage.key(i);
         if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
-        const path = key.slice(HINT_STORAGE_PREFIX.length);
-        if (!path.endsWith(pathSuffix)) continue;
+        const path = key.slice(HINT_STORAGE_PREFIX.length).toLowerCase();
+        const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
+        if (!matches) continue;
 
         try {
             payload = JSON.parse(localStorage.getItem(key) || "{}");
@@ -972,8 +992,9 @@ const isPayloadStarted = (payload) => {
 
 const buildActivitySummaries = () => {
     return ACTIVITY_DEFINITIONS.map((activity) => {
-        const payload = readBestPayloadForPathSuffix(activity.path);
-        const hintAnalytics = readHintAnalyticsForPathSuffix(activity.path);
+        const pathSuffixes = getActivityPathSuffixes(activity.path);
+        const payload = readBestPayloadForPathSuffixes(pathSuffixes);
+        const hintAnalytics = readHintAnalyticsForPathSuffixes(pathSuffixes);
         const stepCount = Number(payload?.stepCount || 0);
         const index = Number(payload?.index || 0);
         const isComplete = payload?.isComplete === true || payload?.completed === true;
