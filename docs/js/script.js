@@ -7,11 +7,8 @@ const nextStep = (current, next) => {
         nextEl.classList.remove('hidden');
         if (nextEl.id === "fullCode") {
             nextEl.dataset.correct = "true";
+            stepperState.showWorkedExample = true;
             updateStepperState();
-            example = document.getElementById("workedExample")
-            if (example) {
-                example.classList.remove('hidden');
-            }
         }
     }
 };
@@ -19,7 +16,8 @@ const nextStep = (current, next) => {
 let stepperState = {
     sections: [],
     index: 0,
-    completed: false
+    completed: false,
+    showWorkedExample: false
 };
 
 const STORAGE_NAMESPACE = "assessmentStepperState.v2";
@@ -387,7 +385,8 @@ const saveStepperState = () => {
         inputs,
         makeProgram: programEl ? programEl.value : "",
         makeCase: caseSelect ? caseSelect.value : "case1",
-        makeActual: actualEl ? actualEl.textContent : ""
+        makeActual: actualEl ? actualEl.textContent : "",
+        showWorkedExample: stepperState.showWorkedExample
     };
 
     writeStorage(getStorageKey(), JSON.stringify(payload));
@@ -436,6 +435,10 @@ const loadStepperState = () => {
                 input.value = value;
             }
         });
+    }
+
+    if (payload.showWorkedExample) {
+        stepperState.showWorkedExample = true;
     }
 
     const programEl = document.getElementById("makeProgram");
@@ -744,6 +747,13 @@ const updateStepperState = () => {
     }
     note.classList.toggle("is-ready", complete);
     note.classList.toggle("is-pending", !complete);
+
+    if (stepperState.showWorkedExample) {
+        example = document.getElementById("workedExample")
+        if (example) {
+            example.classList.remove('hidden');
+        }
+    }
 };
 
 const showStep = (index) => {
