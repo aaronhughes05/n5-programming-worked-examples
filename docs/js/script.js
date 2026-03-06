@@ -775,9 +775,9 @@ const updateStepperState = () => {
     note.classList.toggle("is-pending", !complete);
 
     if (stepperState.showWorkedExample) {
-        example = document.getElementById("workedExample")
+        const example = document.getElementById("workedExample");
         if (example) {
-            example.classList.remove('hidden');
+            example.classList.remove("hidden");
         }
     }
 };
@@ -867,8 +867,20 @@ const restartStepper = () => {
 
 const resetAssessment = () => {
     removeStorage(getStorageKey());
+    stepperState.showWorkedExample = false;
+    const workedExample = document.getElementById("workedExample");
+    if (workedExample) {
+        workedExample.classList.add("hidden");
+        workedExample.removeAttribute("open");
+    }
     document.querySelectorAll("[data-correct='true']").forEach((el) => {
         delete el.dataset.correct;
+    });
+    document.querySelectorAll("[data-choice-group], [data-line-group]").forEach((container) => {
+        delete container.dataset.selected;
+    });
+    document.querySelectorAll(".mc-buttons button.selected, .code-line.selected").forEach((btn) => {
+        btn.classList.remove("selected");
     });
     document.querySelectorAll(".tick-mark").forEach((tick) => {
         tick.style.display = "none";
@@ -877,6 +889,12 @@ const resetAssessment = () => {
     });
     document.querySelectorAll("input[type='text']").forEach((input) => {
         input.value = "";
+    });
+    document.querySelectorAll("input[type='radio'], input[type='checkbox']").forEach((input) => {
+        input.checked = false;
+    });
+    document.querySelectorAll(".rich-feedback").forEach((el) => {
+        el.remove();
     });
     const programEl = document.getElementById("makeProgram");
     if (programEl) programEl.value = "";
