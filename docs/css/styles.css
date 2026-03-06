@@ -1520,18 +1520,75 @@ body.is-modal-open {
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--ink-600, #3d4f6d);
+  position: relative;
+  padding-left: 24px;
+}
+
+.dashboard-progress-card__status::before,
+.dashboard-progress-card__status::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.dashboard-progress-card__status::before {
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(159, 176, 201, 0.72);
+  background: rgba(239, 244, 252, 0.9);
+}
+
+.dashboard-progress-card__status::after {
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px 8px;
 }
 
 .dashboard-progress-card__status.is-not-started {
   color: var(--ink-500);
 }
 
+.dashboard-progress-card__status.is-not-started::before {
+  border-color: rgba(159, 176, 201, 0.72);
+  background: rgba(239, 244, 252, 0.9);
+}
+
+.dashboard-progress-card__status.is-not-started::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%23768aa8' stroke-width='1.8' stroke-linecap='round'><path d='M1.4 4h5.2'/></svg>");
+}
+
 .dashboard-progress-card__status.is-in-progress {
   color: var(--accent-700);
 }
 
+.dashboard-progress-card__status.is-in-progress::before {
+  border-color: rgba(37, 99, 235, 0.56);
+  background: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.dashboard-progress-card__status.is-in-progress::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%231f57cd' stroke-width='1.35' stroke-linecap='round' stroke-linejoin='round'><circle cx='4' cy='4' r='2.6'/><path d='M4 2.6v1.6'/><path d='M4 4l1.2.8'/></svg>");
+}
+
 .dashboard-progress-card__status.is-complete {
   color: var(--success-600);
+}
+
+.dashboard-progress-card__status.is-complete::before {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.dashboard-progress-card__status.is-complete::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%230f8a4f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M1 4.2 3 6.1 7 1.9'/></svg>");
 }
 
 .dashboard-progress-card__bar {
