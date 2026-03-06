@@ -1901,18 +1901,21 @@ const initAssessmentGate = () => {
     const inPagesDir = window.location.pathname.includes("/docs/pages/");
     const toExampleHref = (fileName) => (inPagesDir ? fileName : `pages/${fileName}`);
     const requiredExamples = [
-        { suffix: "/docs/pages/example1.html", label: "Example 1", href: toExampleHref("example1.html") },
-        { suffix: "/docs/pages/example2.html", label: "Example 2", href: toExampleHref("example2.html") },
-        { suffix: "/docs/pages/example3.html", label: "Example 3", href: toExampleHref("example3.html") }
+        { path: "/docs/pages/example1.html", label: "Example 1", href: toExampleHref("example1.html") },
+        { path: "/docs/pages/example2.html", label: "Example 2", href: toExampleHref("example2.html") },
+        { path: "/docs/pages/example3.html", label: "Example 3", href: toExampleHref("example3.html") }
     ];
 
-    const readExampleCompletion = (suffix) => {
+    const readExampleCompletion = (pathSuffixes) => {
+        const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
+        if (!lowerSuffixes.length) return false;
         try {
             for (let i = 0; i < localStorage.length; i += 1) {
                 const key = localStorage.key(i);
                 if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
-                const path = key.slice(STORAGE_PREFIX.length);
-                if (!path.endsWith(suffix)) continue;
+                const path = key.slice(STORAGE_PREFIX.length).toLowerCase();
+                const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
+                if (!matches) continue;
 
                 try {
                     const payload = JSON.parse(localStorage.getItem(key) || "{}");
@@ -1931,7 +1934,7 @@ const initAssessmentGate = () => {
     const getCompletionState = () => {
         const withStatus = requiredExamples.map((ex) => ({
             ...ex,
-            complete: readExampleCompletion(ex.suffix)
+            complete: readExampleCompletion(getActivityPathSuffixes(ex.path))
         }));
         const completedCount = withStatus.filter((ex) => ex.complete).length;
         const missing = withStatus.filter((ex) => !ex.complete);
