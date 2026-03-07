@@ -1056,7 +1056,7 @@ const getActivityPathSuffixes = (activityPath) => {
 };
 
 const resolveActivityHref = (activityPath) => {
-    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    const inPagesDir = /\/pages\//.test(window.location.pathname);
     const marker = "/docs/";
     const markerIndex = activityPath.lastIndexOf(marker);
     let relative = "pages/example1.html";
@@ -1973,7 +1973,7 @@ const initAssessmentGate = () => {
     if (isAssessmentPage) return;
 
     const STORAGE_PREFIX = "assessmentStepperState.v2:";
-    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    const inPagesDir = /\/pages\//.test(window.location.pathname);
     const toExampleHref = (fileName) => (inPagesDir ? fileName : `pages/${fileName}`);
     const requiredExamples = [
         { path: "/docs/pages/example1.html", label: "Example 1", href: toExampleHref("example1.html") },
