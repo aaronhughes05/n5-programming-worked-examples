@@ -72,14 +72,45 @@ D: print(total)</code></pre>
             <p>Calculate the total cost of 5 items entered by a user.</p>
         </section>
 
-        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1">
+        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2Pred,tick3Pred,tick4Pred">
             <h2>2. Prediction Activity</h2>
             <div class="question-block">
                 <p>How many times will the loop repeat?</p>
                 <div class="question-input">
-                    <input type="text" id="pred1" class="w-80">
+                    <input type="text" id="pred1" class="w-80" placeholder="Enter a number...">
                     <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
                     <span id="tick1" class="tick-mark"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Which loop structure best fits this fixed-count task?</p>
+                <div class="question-input question-input--stacked">
+                    <label><input type="radio" name="pred2LoopType" id="pred2-for"> for loop</label>
+                    <label><input type="radio" name="pred2LoopType" id="pred2-while"> while loop</label>
+                    <label><input type="radio" name="pred2LoopType" id="pred2-if"> if statement only</label>
+                    <button onclick="checkRadioButton('pred2-for', 'tick2Pred')">Check</button>
+                    <span id="tick2Pred" class="tick-mark"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Which variable stores the running total?</p>
+                <div class="question-input">
+                    <select id="pred3">
+                        <option value="">Select a variable...</option>
+                        <option value="counter">counter</option>
+                        <option value="price">price</option>
+                        <option value="total">total</option>
+                    </select>
+                    <button onclick="checkAnswer('pred3', 'total', 'tick3Pred')">Check</button>
+                    <span id="tick3Pred" class="tick-mark"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Before the loop starts, what value should <code>total</code> be set to?</p>
+                <div class="question-input">
+                    <input type="text" id="pred4" class="w-80" placeholder="Enter a number...">
+                    <button onclick="checkAnswer('pred4', '0', 'tick4Pred')">Check</button>
+                    <span id="tick4Pred" class="tick-mark"></span>
                 </div>
             </div>
         </section>

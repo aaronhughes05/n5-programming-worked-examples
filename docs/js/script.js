@@ -265,6 +265,24 @@ const HINT_MODEL = {
             l3: "Your answer should be the count of loop repetitions, not the final total.",
             worked: "Because the program asks for 5 items, the loop repeats 5 times."
         },
+        tick2Pred: {
+            l1: "Decide whether repetition count is fixed or unknown.",
+            l2: "The task always processes exactly 5 values.",
+            l3: "Use the loop type that is best for a known number of repetitions.",
+            worked: "A for loop is best here because the number of iterations is fixed."
+        },
+        tick3Pred: {
+            l1: "Find the variable that keeps accumulating each new price.",
+            l2: "It starts at 0 and is updated each cycle.",
+            l3: "Look for the pattern total = total + ...",
+            worked: "The running total variable is total."
+        },
+        tick4Pred: {
+            l1: "Think about accumulator initialization before any additions happen.",
+            l2: "A running total should start at the identity value for addition.",
+            l3: "Starting with any non-zero value shifts every result.",
+            worked: "Set total to 0 before entering the loop."
+        },
         parsonsFeedback: {
             l1: "Think setup first, then loop, then update, then final output.",
             l2: "Initialize total before the loop starts.",
@@ -326,6 +344,24 @@ const FEEDBACK_MAP = {
             incorrect: "Not quite yet.",
             misconception: "You may be mixing up number of loop runs with the final total value.",
             next: "Re-check the loop header and count how many item entries are required."
+        },
+        tick2Pred: {
+            correct: "Correct. A for loop is the strongest fit for a known number of repeats.",
+            incorrect: "That choice does not match this fixed-count problem.",
+            misconception: "A while loop is better when repetitions depend on a changing condition rather than a known count.",
+            next: "Use the loop type that clearly expresses exactly 5 iterations."
+        },
+        tick3Pred: {
+            correct: "Correct. total is the accumulator for the running sum.",
+            incorrect: "Not quite right.",
+            misconception: "You may be selecting the current input variable instead of the accumulator variable.",
+            next: "Find the variable initialized once and updated on each pass."
+        },
+        tick4Pred: {
+            correct: "Correct. The accumulator should start at 0.",
+            incorrect: "That initial value would skew the final total.",
+            misconception: "Starting the total at a non-zero value adds an offset to every result.",
+            next: "Initialize total to the neutral value for addition before the loop."
         },
         parsonsFeedback: {
             correct: "Great ordering. The logic now flows from setup to output correctly.",
@@ -744,7 +780,7 @@ const setFeedbackState = (el, correct, message, checkpointId = null) => {
     detail.style.lineHeight = "1.35";
 
     el.replaceChildren(statusRow, detail);
-    el.style.color = correct ? "var(--teal-500)" : "#a24f58";
+    el.style.color = correct ? "var(--success-600)" : "#a24f58";
     el.style.fontSize = "0.86rem";
     el.style.fontWeight = "600";
     el.style.lineHeight = "1.35";
@@ -1229,7 +1265,10 @@ const CHECKPOINT_LABELS = {
         tick4: "Prediction Q4: Retry behavior"
     },
     example2: {
-        tick1: "Prediction: Loop count",
+        tick1: "Prediction Q1: Loop count",
+        tick2Pred: "Prediction Q2: Loop type",
+        tick3Pred: "Prediction Q3: Running total variable",
+        tick4Pred: "Prediction Q4: Initial total value",
         parsonsFeedback: "Parsons logic ordering",
         tick2: "Modify task: range update"
     },
