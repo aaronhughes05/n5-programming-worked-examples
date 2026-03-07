@@ -50,11 +50,12 @@
         </details>
         <details id="workedExample" class="card expander-card worked-example-panel hidden">
             <summary>Full Solution</summary>
-            <pre><code>username = input("Enter username: ") <span class="code-comment">                     #  Subgoal A</span>
-while len(username) &lt; 5: <span class="code-comment">                                 #  Subgoal B  ---</span>
-    print("Username must be at least 5 characters long.") <span class="code-comment">#  Subgoal C     |-- Subgoal D</span>
-    username = input("Enter username: ") <span class="code-comment">                 #             ---</span>
-print("Your username is: " + username)</code></pre>
+            <p class="subgoal-intro">Complete program with subgoal labels.</p>
+            <pre><code>A: username = input("Enter username: ")
+B: while len(username) &lt; 5:
+C:     print("Username must be at least 5 characters long.")
+D:     username = input("Enter username: ")
+D: print("Your username is: " + username)</code></pre>
         </details>
         <div class="stepper-header">
             <div class="stepper-progress" id="stepperProgress">Step 1 of 5</div>
@@ -125,37 +126,37 @@ print("Your username is: " + username)</code></pre>
         <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
             <h2>3. Step-by-Step Implementation</h2>
             <div id="step1" class="step-box">
-                <p>Take in an initial input.</p>
-                <pre><code>username = input("Enter username: ") <span class="code-comment"># Subgoal A</span></code></pre>
+                <p><strong>Step 1:</strong> Take in the initial username before validation begins.</p>
+                <pre><code>A: username = input("Enter username: ")</code></pre>
                 <button onclick="nextStep(1, 2)">Next Step</button>
             </div>
             <div id="step2" class="step-box hidden">
-                <p>Loop while the input is invalid.</p>
-                <pre><code>while len(username) &lt; 5: <span class="code-comment"># Subgoals B and D</span></code></pre>
+                <p><strong>Step 2:</strong> Start a loop that runs while the username is invalid.</p>
+                <pre><code>B: while len(username) &lt; 5:</code></pre>
                 <button onclick="nextStep(2, 3)">Next Step</button>
             </div>
             <div id="step3" class="step-box hidden">
-                <p>Display an error message.</p>
-                <pre><code>    print("Username must be at least 5 characters long.") <span class="code-comment"># Subgoal C</span></code></pre>
+                <p><strong>Step 3:</strong> Give feedback when the input is too short.</p>
+                <pre><code>C:     print("Username must be at least 5 characters long.")</code></pre>
                 <button onclick="nextStep(3, 4)">Next Step</button>
             </div>
             <div id="step4" class="step-box hidden">
-                <p>Take in new input to validate.</p>
-                <pre><code>    username = input("Enter username: ") <span class="code-comment"># Subgoal D</span></code></pre>
+                <p><strong>Step 4:</strong> Ask again so the user can enter a new username.</p>
+                <pre><code>D:     username = input("Enter username: ")</code></pre>
                 <button onclick="nextStep(4, 5)">Next Step</button>
             </div>
             <div id="step5" class="step-box hidden">
-                <p>Outside the loop, you can now use the validated username.</p>
-                <pre><code>print("Your username is: " + username)</code></pre>
+                <p><strong>Step 5:</strong> Once validation is complete, output the accepted username.</p>
+                <pre><code>D: print("Your username is: " + username)</code></pre>
                 <button onclick="nextStep(5, 'full')">Show Full Code</button>
             </div>
             <div id="fullCode" class="step-box hidden">
-                <p><strong>Full Solution:</strong> Combine all steps into one complete program.</p>
-                <pre><code>username = input("Enter username: ") <span class="code-comment">                     #  Subgoal A</span>
-while len(username) &lt; 5: <span class="code-comment">                                 #  Subgoal B  ---</span>
-    print("Username must be at least 5 characters long.") <span class="code-comment">#  Subgoal C     |-- Subgoal D</span>
-    username = input("Enter username: ") <span class="code-comment">                 #             ---</span>
-print("Your username is: " + username)</code></pre>
+                <p><strong>Full Solution:</strong> Combine all steps into one complete program with subgoal labels.</p>
+                <pre><code>A: username = input("Enter username: ")
+B: while len(username) &lt; 5:
+C:     print("Username must be at least 5 characters long.")
+D:     username = input("Enter username: ")
+D: print("Your username is: " + username)</code></pre>
             </div>
         </section>
 

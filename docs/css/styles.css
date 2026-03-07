@@ -849,10 +849,6 @@ body.is-complete main.content {
   padding-top: calc(var(--space-3) - 2px);
 }
 
-.card + .card {
-  margin-top: var(--space-1);
-}
-
 .card > p {
   margin-top: var(--space-2);
 }
@@ -2855,6 +2851,10 @@ button[disabled] {
 }
 
 .subgoals-panel {
+  background: #ffffff;
+}
+
+.worked-example-panel {
   background: #ffffff;
 }
 
