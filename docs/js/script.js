@@ -88,6 +88,13 @@ const getHomeHref = () => {
     return inPagesDir ? "../index.html" : "index.html";
 };
 
+const getTeacherHref = () => {
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    return inPagesDir ? "teacher.html" : "pages/teacher.html";
+};
+
+const getTeacherDeniedHomeHref = () => `${getHomeHref()}?teacherDenied=1`;
+
 const applyTeacherModeClasses = (enabled) => {
     const body = document.body;
     if (!body) return;
@@ -107,6 +114,53 @@ const initTeacherMode = () => {
     const enabled = isTeacherMode();
     applyTeacherModeClasses(enabled);
     return true;
+};
+
+const initTeacherNavEntry = () => {
+    const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
+    if (!navs.length) return;
+
+    navs.forEach((nav) => {
+        if (nav.querySelector('a[href*="teacher.html"]')) return;
+
+        const link = document.createElement("a");
+        link.className = "appbar-nav-pill";
+        link.dataset.teacherNav = "true";
+        link.href = getTeacherHref();
+        link.textContent = "Teacher Mode";
+        if (document.body.classList.contains("page-teacher")) {
+            link.classList.add("is-active");
+            link.setAttribute("aria-current", "page");
+        }
+
+        const resumeLink = nav.querySelector(".appbar-resume");
+        if (resumeLink) {
+            nav.insertBefore(link, resumeLink);
+        } else {
+            nav.appendChild(link);
+        }
+    });
+};
+
+const initTeacherAccessNotice = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (!isTruthyFlag(params.get("teacherDenied"))) return;
+
+    const main = document.querySelector("main.content");
+    if (!main) return;
+
+    const notice = document.createElement("section");
+    notice.className = "card teacher-access-notice";
+    notice.innerHTML = `
+      <h2>Teacher Mode Locked</h2>
+      <p>Access denied. Enter the teacher passcode on the Teacher Mode page to continue.</p>
+    `;
+    main.prepend(notice);
+
+    params.delete("teacherDenied");
+    const nextQuery = params.toString();
+    const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
+    window.history.replaceState(null, "", cleanUrl);
 };
 
 const initTeacherPasscodeGate = () => {
@@ -158,14 +212,14 @@ const initTeacherPasscodeGate = () => {
     cancelBtn.addEventListener("click", () => {
         writeTeacherModeSession(false);
         applyTeacherModeClasses(false);
-        window.location.replace(getHomeHref());
+        window.location.replace(getTeacherDeniedHomeHref());
     });
 
     if (backdrop) {
         backdrop.addEventListener("click", () => {
             writeTeacherModeSession(false);
             applyTeacherModeClasses(false);
-            window.location.replace(getHomeHref());
+            window.location.replace(getTeacherDeniedHomeHref());
         });
     }
 
@@ -174,7 +228,7 @@ const initTeacherPasscodeGate = () => {
             event.preventDefault();
             writeTeacherModeSession(false);
             applyTeacherModeClasses(false);
-            window.location.replace(getHomeHref());
+            window.location.replace(getTeacherDeniedHomeHref());
         });
     });
 };
@@ -2456,6 +2510,8 @@ document.addEventListener("input", (event) => {
 document.addEventListener("DOMContentLoaded", () => {
     const teacherModeReady = initTeacherMode();
     if (!teacherModeReady) return;
+    initTeacherNavEntry();
+    initTeacherAccessNotice();
     if (document.body.classList.contains("page-teacher")) {
         initTeacherPasscodeGate();
     }

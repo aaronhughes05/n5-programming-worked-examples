@@ -2440,6 +2440,11 @@ body.is-teacher-mode [data-student-only] {
   display: none !important;
 }
 
+.teacher-access-notice {
+  border-color: rgba(37, 99, 235, 0.42);
+  background: linear-gradient(120deg, rgba(37, 99, 235, 0.1), rgba(20, 184, 166, 0.08));
+}
+
 .step-box {
   padding: var(--space-4);
   background: #f7fbff;
