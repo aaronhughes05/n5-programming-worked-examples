@@ -51,6 +51,7 @@ const removeStorage = (key) => {
 };
 
 const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
+const TEACHER_MODE_PASSCODE = "n5teacher";
 
 const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
 
@@ -87,9 +88,16 @@ const getHomeHref = () => {
     return inPagesDir ? "../index.html" : "index.html";
 };
 
+const applyTeacherModeClasses = (enabled) => {
+    const body = document.body;
+    if (!body) return;
+    body.classList.toggle("is-teacher-mode", !!enabled);
+    body.classList.toggle("is-student-mode", !enabled);
+};
+
 const initTeacherMode = () => {
     const body = document.body;
-    if (!body) return true;
+    if (!body) return false;
 
     const params = new URLSearchParams(window.location.search);
     if (params.has("teacher")) {
@@ -97,15 +105,78 @@ const initTeacherMode = () => {
     }
 
     const enabled = isTeacherMode();
-    body.classList.toggle("is-teacher-mode", enabled);
-    body.classList.toggle("is-student-mode", !enabled);
+    applyTeacherModeClasses(enabled);
+    return true;
+};
 
-    if (body.classList.contains("page-teacher") && !enabled) {
-        window.location.replace(getHomeHref());
-        return false;
+const initTeacherPasscodeGate = () => {
+    const modal = document.getElementById("teacherGate");
+    const backdrop = modal?.querySelector(".teacher-gate__backdrop");
+    const form = document.getElementById("teacherGateForm");
+    const input = document.getElementById("teacherPasscodeInput");
+    const error = document.getElementById("teacherGateError");
+    const unlockBtn = document.getElementById("teacherGateUnlock");
+    const cancelBtn = document.getElementById("teacherGateCancel");
+    if (!modal || !form || !input || !error || !unlockBtn || !cancelBtn) return;
+
+    const closeGate = () => {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+    };
+
+    const openGate = () => {
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+        error.textContent = "";
+        input.value = "";
+        setTimeout(() => input.focus(), 0);
+    };
+
+    if (!readTeacherModeSession()) {
+        openGate();
+    } else {
+        applyTeacherModeClasses(true);
     }
 
-    return true;
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const attempt = (input.value || "").trim();
+        if (attempt === TEACHER_MODE_PASSCODE) {
+            writeTeacherModeSession(true);
+            applyTeacherModeClasses(true);
+            closeGate();
+            return;
+        }
+        writeTeacherModeSession(false);
+        applyTeacherModeClasses(false);
+        error.textContent = "Incorrect passcode. Try again.";
+        input.select();
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        writeTeacherModeSession(false);
+        applyTeacherModeClasses(false);
+        window.location.replace(getHomeHref());
+    });
+
+    if (backdrop) {
+        backdrop.addEventListener("click", () => {
+            writeTeacherModeSession(false);
+            applyTeacherModeClasses(false);
+            window.location.replace(getHomeHref());
+        });
+    }
+
+    document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            writeTeacherModeSession(false);
+            applyTeacherModeClasses(false);
+            window.location.replace(getHomeHref());
+        });
+    });
 };
 
 const HINT_MODEL = {
@@ -2385,6 +2456,9 @@ document.addEventListener("input", (event) => {
 document.addEventListener("DOMContentLoaded", () => {
     const teacherModeReady = initTeacherMode();
     if (!teacherModeReady) return;
+    if (document.body.classList.contains("page-teacher")) {
+        initTeacherPasscodeGate();
+    }
     initAccessibilityEnhancements();
     initAppbarEnhancements();
     initLearningDashboard();

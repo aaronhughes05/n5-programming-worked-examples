@@ -372,6 +372,11 @@ body::before {
   overflow: clip;
 }
 
+button.appbar-nav-pill {
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .appbar-nav-pill:hover,
 .appbar-nav-pill:focus-visible {
   background: #eef5ff;
@@ -1138,6 +1143,73 @@ body.is-modal-open {
   background: transparent !important;
   color: var(--accent-700);
   box-shadow: none !important;
+}
+
+.teacher-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1350;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.teacher-gate.is-open {
+  display: flex;
+}
+
+.teacher-gate__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 19, 36, 0.24);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.teacher-gate__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(96vw, 460px);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 22px 44px rgba(11, 19, 36, 0.2);
+  padding: 20px;
+}
+
+.teacher-gate__dialog h2 {
+  margin: 0 0 6px;
+}
+
+.teacher-gate__dialog p {
+  margin: 0;
+}
+
+.teacher-gate__form {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.teacher-gate__form label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-800);
+}
+
+.teacher-gate__error {
+  min-height: 1.1em;
+  color: #a24f58;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.teacher-gate__actions {
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 #assessmentGateReview {

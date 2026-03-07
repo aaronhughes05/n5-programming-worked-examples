@@ -24,7 +24,8 @@
         <a class="appbar-nav-pill" href="../index.html#examples">Examples</a>
         <a class="appbar-nav-pill" href="worksheets.html">Worksheets</a>
         <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
-        <a class="appbar-nav-pill is-active" href="teacher.html?teacher=1">Teacher Mode</a>
+        <a class="appbar-nav-pill is-active" href="teacher.html">Teacher Mode</a>
+        <button type="button" class="appbar-nav-pill" data-teacher-lock data-teacher-only>Lock</button>
       </nav>
     </div>
 
@@ -36,12 +37,33 @@
     </header>
 
     <main class="content">
+      <section class="card" data-student-only>
+        <h2>Teacher Mode Locked</h2>
+        <p>Enter the teacher passcode to continue.</p>
+      </section>
       <section class="card" data-teacher-only>
         <h2>Teacher Space</h2>
         <p>Teacher mode is active for this session.</p>
         <p>This first block adds mode state and route gating. Analytics and export tools will be added next.</p>
       </section>
     </main>
+
+    <div class="teacher-gate" id="teacherGate" aria-hidden="true">
+      <div class="teacher-gate__backdrop" aria-hidden="true"></div>
+      <div class="teacher-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherGateTitle">
+        <h2 id="teacherGateTitle">Unlock Teacher Mode</h2>
+        <p>Enter the teacher passcode to access teacher tools.</p>
+        <form id="teacherGateForm" class="teacher-gate__form">
+          <label for="teacherPasscodeInput">Passcode</label>
+          <input id="teacherPasscodeInput" type="password" autocomplete="current-password" required />
+          <p id="teacherGateError" class="teacher-gate__error" aria-live="polite"></p>
+          <div class="teacher-gate__actions">
+            <button type="submit" class="check-btn" id="teacherGateUnlock">Unlock</button>
+            <button type="button" class="check-btn reset-btn" id="teacherGateCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script src="../js/script.js"></script>
   </body>
