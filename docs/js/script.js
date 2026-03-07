@@ -265,6 +265,30 @@ const HINT_MODEL = {
             l3: "Your answer should be the count of loop repetitions, not the final total.",
             worked: "Because the program asks for 5 items, the loop repeats 5 times."
         },
+        sgA2Tick: {
+            l1: "Subgoal A covers setup/initialization.",
+            l2: "Look for the line that creates the starting state.",
+            l3: "total = 0 initializes the accumulator before looping.",
+            worked: "The line total = 0 belongs to Subgoal A."
+        },
+        sgB2Tick: {
+            l1: "Subgoal B is where a new value is read from the user.",
+            l2: "Find the line with input conversion to float.",
+            l3: "Choose the line that captures one price into a variable.",
+            worked: "The matching line is price = float(input(\"Price: \"))."
+        },
+        sgC2Tick: {
+            l1: "Subgoal C updates the running total each cycle.",
+            l2: "The blank should be the current input variable.",
+            l3: "Use the same name used when reading each price.",
+            worked: "Fill the blank with price."
+        },
+        sgD2Tick: {
+            l1: "Subgoal D controls repetition.",
+            l2: "Look for the loop header that repeats a fixed number of times.",
+            l3: "Choose the for counter in range(...) line.",
+            worked: "The matching line is for counter in range(5):"
+        },
         tick2Pred: {
             l1: "Decide whether repetition count is fixed or unknown.",
             l2: "The task always processes exactly 5 values.",
@@ -290,10 +314,10 @@ const HINT_MODEL = {
             worked: "Correct order: total = 0, for ..., total = total + price, print(total)."
         },
         tick2: {
-            l1: "Only the number in the range changes from 5 to 10.",
-            l2: "Keep the loop variable and syntax exactly the same.",
-            l3: "Write the full line including colon at the end.",
-            worked: "Use: for counter in range(10):"
+            l1: "Build the flow in order: setup, loop, input, update, output.",
+            l2: "Use range(10) in the loop header, then keep input/update inside that loop.",
+            l3: "print(total) should come after the loop, not inside it.",
+            worked: "Correct order: total = 0 -> for counter in range(10): -> price input -> total update -> print(total)."
         }
     },
     "assessment.html": {
@@ -345,6 +369,30 @@ const FEEDBACK_MAP = {
             misconception: "You may be mixing up number of loop runs with the final total value.",
             next: "Re-check the loop header and count how many item entries are required."
         },
+        sgA2Tick: {
+            correct: "Correct subgoal mapping.",
+            incorrect: "That subgoal mapping is off.",
+            misconception: "A common mix-up is mapping by line position rather than line purpose.",
+            next: "Ask what the line does first: setup, repetition, process, or output."
+        },
+        sgB2Tick: {
+            correct: "Correct line selection for Subgoal B.",
+            incorrect: "That line is not the input stage.",
+            misconception: "A common mix-up is choosing setup or processing lines instead of the value-entry line.",
+            next: "Pick the line that reads price from the user."
+        },
+        sgC2Tick: {
+            correct: "Correct. That completes the running-total update.",
+            incorrect: "Not quite right.",
+            misconception: "You may be trying to add the accumulator to itself or using a different variable name.",
+            next: "Use the current input value variable in total = total + ___."
+        },
+        sgD2Tick: {
+            correct: "Correct line selection for the repetition subgoal.",
+            incorrect: "That line does not represent the repetition stage.",
+            misconception: "You may be selecting setup or output code instead of the loop header.",
+            next: "Choose the line that controls repeated execution."
+        },
         tick2Pred: {
             correct: "Correct. A for loop is the strongest fit for a known number of repeats.",
             incorrect: "That choice does not match this fixed-count problem.",
@@ -370,10 +418,10 @@ const FEEDBACK_MAP = {
             next: "Order the blocks as initialize -> loop -> update total -> print."
         },
         tick2: {
-            correct: "Correct modification. You adjusted only the loop range target.",
-            incorrect: "Close, but the loop line is not exact yet.",
-            misconception: "You may have changed the loop structure instead of only changing the range value.",
-            next: "Keep the same syntax and replace only 5 with 10, including the colon."
+            correct: "Great modification. The updated 10-item program flow is correct.",
+            incorrect: "The modified program order is still off.",
+            misconception: "A common issue is placing print(total) inside the loop or moving setup below the loop.",
+            next: "Rebuild the order as setup -> loop(10) -> input -> update total -> final output."
         }
     },
     "assessment.html": {
@@ -1266,11 +1314,15 @@ const CHECKPOINT_LABELS = {
     },
     example2: {
         tick1: "Prediction Q1: Loop count",
+        sgA2Tick: "Subgoal mapping: initialization line",
+        sgB2Tick: "Code identification: input line",
+        sgC2Tick: "Fill blank: running total update",
+        sgD2Tick: "Code identification: repetition line",
         tick2Pred: "Prediction Q2: Loop type",
         tick3Pred: "Prediction Q3: Running total variable",
         tick4Pred: "Prediction Q4: Initial total value",
         parsonsFeedback: "Parsons logic ordering",
-        tick2: "Modify task: range update"
+        tick2: "Modify program: reorder 10-item flow"
     },
     example3: {},
     assessment: {
