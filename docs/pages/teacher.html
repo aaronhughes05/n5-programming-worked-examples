@@ -41,10 +41,41 @@
         <h2>Teacher Mode Locked</h2>
         <p>Enter the teacher passcode to continue.</p>
       </section>
-      <section class="card" data-teacher-only>
-        <h2>Teacher Space</h2>
-        <p>Teacher mode is active for this session.</p>
-        <p>This first block adds mode state and route gating. Analytics and export tools will be added next.</p>
+
+      <section class="card teacher-summary-card" id="teacherSummaryPanel" data-teacher-only>
+        <h2>Class Progress Summary</h2>
+        <p class="teacher-summary-intro">Snapshot from activity progress stored on this device.</p>
+
+        <div class="teacher-summary-grid" aria-label="Progress summary counts">
+          <article class="teacher-summary-stat teacher-summary-stat--complete">
+            <p class="teacher-summary-stat__label">Complete</p>
+            <p class="teacher-summary-stat__value" id="teacherCountComplete">0</p>
+          </article>
+          <article class="teacher-summary-stat teacher-summary-stat--progress">
+            <p class="teacher-summary-stat__label">In Progress</p>
+            <p class="teacher-summary-stat__value" id="teacherCountInProgress">0</p>
+          </article>
+          <article class="teacher-summary-stat teacher-summary-stat--not-started">
+            <p class="teacher-summary-stat__label">Not Started</p>
+            <p class="teacher-summary-stat__value" id="teacherCountNotStarted">0</p>
+          </article>
+        </div>
+
+        <div class="teacher-summary-grid teacher-summary-grid--hints" aria-label="Hint usage totals">
+          <article class="teacher-summary-stat">
+            <p class="teacher-summary-stat__label">Hints Used</p>
+            <p class="teacher-summary-stat__value" id="teacherHintsUsed">0</p>
+          </article>
+          <article class="teacher-summary-stat">
+            <p class="teacher-summary-stat__label">Worked Hints Revealed</p>
+            <p class="teacher-summary-stat__value" id="teacherWorkedHints">0</p>
+          </article>
+        </div>
+
+        <div class="teacher-summary-activities">
+          <h3>Activity Breakdown</h3>
+          <ul class="teacher-summary-list" id="teacherSummaryList"></ul>
+        </div>
       </section>
     </main>
 

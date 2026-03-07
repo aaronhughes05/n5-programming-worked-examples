@@ -2445,6 +2445,98 @@ body.is-teacher-mode [data-student-only] {
   background: linear-gradient(120deg, rgba(37, 99, 235, 0.1), rgba(20, 184, 166, 0.08));
 }
 
+.teacher-summary-intro {
+  margin-top: var(--space-2);
+  color: var(--ink-700);
+}
+
+.teacher-summary-grid {
+  margin-top: var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.teacher-summary-grid--hints {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.teacher-summary-stat {
+  border: 1px solid rgba(159, 176, 201, 0.36);
+  border-radius: 14px;
+  background: #fbfdff;
+  padding: 10px 12px;
+}
+
+.teacher-summary-stat--complete {
+  border-color: rgba(34, 197, 94, 0.36);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.teacher-summary-stat--progress {
+  border-color: rgba(37, 99, 235, 0.36);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.teacher-summary-stat--not-started {
+  border-color: rgba(159, 176, 201, 0.48);
+  background: rgba(159, 176, 201, 0.12);
+}
+
+.teacher-summary-stat__label {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 800;
+  color: var(--ink-600);
+}
+
+.teacher-summary-stat__value {
+  margin: 6px 0 0;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--ink-900);
+}
+
+.teacher-summary-activities {
+  margin-top: var(--space-3);
+}
+
+.teacher-summary-activities h3 {
+  margin: 0;
+  font-size: 1.03rem;
+  color: var(--ink-900);
+}
+
+.teacher-summary-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.teacher-summary-list__item {
+  border: 1px solid rgba(159, 176, 201, 0.35);
+  border-radius: 12px;
+  padding: 9px 11px;
+  background: #fbfdff;
+}
+
+.teacher-summary-list__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.teacher-summary-list__meta {
+  margin: 3px 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-600);
+}
+
 .step-box {
   padding: var(--space-4);
   background: #f7fbff;

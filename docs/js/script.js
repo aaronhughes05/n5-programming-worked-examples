@@ -1650,6 +1650,51 @@ const initLearningDashboard = () => {
     }
 };
 
+const initTeacherSummaryPanel = () => {
+    const root = document.getElementById("teacherSummaryPanel");
+    if (!root) return;
+
+    const summaries = buildActivitySummaries();
+    const completeCount = summaries.filter((item) => item.isComplete).length;
+    const inProgressCount = summaries.filter((item) => item.inProgress).length;
+    const notStartedCount = summaries.filter((item) => !item.started).length;
+    const totalHintsUsed = summaries.reduce(
+        (sum, item) => sum + Number(item?.hintAnalytics?.hintsUsed || 0),
+        0
+    );
+    const totalWorkedHints = summaries.reduce(
+        (sum, item) => sum + Number(item?.hintAnalytics?.workedRevealed || 0),
+        0
+    );
+
+    const completeEl = document.getElementById("teacherCountComplete");
+    const inProgressEl = document.getElementById("teacherCountInProgress");
+    const notStartedEl = document.getElementById("teacherCountNotStarted");
+    const hintsUsedEl = document.getElementById("teacherHintsUsed");
+    const workedHintsEl = document.getElementById("teacherWorkedHints");
+    const listEl = document.getElementById("teacherSummaryList");
+
+    if (completeEl) completeEl.textContent = String(completeCount);
+    if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
+    if (notStartedEl) notStartedEl.textContent = String(notStartedCount);
+    if (hintsUsedEl) hintsUsedEl.textContent = String(totalHintsUsed);
+    if (workedHintsEl) workedHintsEl.textContent = String(totalWorkedHints);
+
+    if (!listEl) return;
+
+    listEl.innerHTML = "";
+    summaries.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "teacher-summary-list__item";
+        li.innerHTML = `
+          <p class="teacher-summary-list__title">${item.label}: ${item.title}</p>
+          <p class="teacher-summary-list__meta">${item.statusLabel} (${Math.round(item.progress * 100)}%)</p>
+          <p class="teacher-summary-list__meta">Hints used: ${item.hintAnalytics.hintsUsed} • Worked hints: ${item.hintAnalytics.workedRevealed}</p>
+        `;
+        listEl.appendChild(li);
+    });
+};
+
 const initBackToTopFab = () => {
     const existing = document.querySelector(".back-to-top-fab");
     if (existing) return;
@@ -2514,6 +2559,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initTeacherAccessNotice();
     if (document.body.classList.contains("page-teacher")) {
         initTeacherPasscodeGate();
+        initTeacherSummaryPanel();
     }
     initAccessibilityEnhancements();
     initAppbarEnhancements();
