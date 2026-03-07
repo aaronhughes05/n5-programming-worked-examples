@@ -63,6 +63,18 @@ const HINT_MODEL = {
             l2: "Consider how many times the loop will need to run.",
             l3: "Can we know how many times the loop will need to run?",
             worked: "A while loop is required here, as we want to loop until a condition (valid input has been provided) is met."
+        },
+        tick3: {
+            l1: "Write a condition that is true only when the username is invalid.",
+            l2: "The rule says minimum length is 5, so invalid means below 5.",
+            l3: "Use `len(username)` and compare against 5 with the correct operator.",
+            worked: "Use `len(username) < 5` to detect invalid input."
+        },
+        tick4: {
+            l1: "What action helps the user correct invalid input?",
+            l2: "Validation usually gives feedback, then asks again.",
+            l3: "Do not accept invalid data and do not terminate immediately.",
+            worked: "Show an error message and ask again until valid input is provided."
         }
     },
     "example2.html": {
@@ -111,6 +123,18 @@ const FEEDBACK_MAP = {
             correct: "A while loop is required here, as we want to loop until a condition (valid input has been provided) is met.",
             incorrect: "Try again.",
             next: "Review the subgoals and consider how you would implement them in code."
+        },
+        tick3: {
+            correct: "Correct. That condition flags usernames shorter than 5 characters.",
+            incorrect: "Not quite right yet.",
+            misconception: "A common mix-up is using `> 5`, which checks long usernames instead of short invalid ones.",
+            next: "Use the invalid rule directly: length is less than 5."
+        },
+        tick4: {
+            correct: "Correct. The program should show an error and ask for another input.",
+            incorrect: "That behavior will not validate safely.",
+            misconception: "Accepting invalid input or stopping immediately skips the correction loop.",
+            next: "Choose the option that keeps prompting until valid data is entered."
         }
     },
     "example2.html": {

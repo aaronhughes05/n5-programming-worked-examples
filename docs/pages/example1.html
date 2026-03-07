@@ -69,7 +69,7 @@ print("Your username is: " + username)</code></pre>
             <p>Ensure the username entered by a user is at least 5 characters long.</p>
         </section>
 
-        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2">
+        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2,tick3,tick4">
             <h2>2. Prediction Activity</h2>
             <div class="question-block">
                 <p>Do we need a loop to solve this problem?</p>
@@ -97,6 +97,27 @@ print("Your username is: " + username)</code></pre>
                 <div>
                     <button onclick="checkRadioButton('tick2-while', 'tick2')">Check</button>
                     <span id="tick2" class="tick-mark padded"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Type the exact condition used to detect an invalid username.</p>
+                <div class="question-input">
+                    <input type="text" id="pred3" class="w-200" placeholder="e.g. len(username)...">
+                    <button onclick="checkAnswer('pred3', 'len(username) &lt; 5', 'tick3')">Check</button>
+                    <span id="tick3" class="tick-mark padded"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>What should the program do when the username is too short?</p>
+                <div class="question-input">
+                    <select id="pred4" class="w-220">
+                        <option value="">Select one</option>
+                        <option value="accept">Accept it and continue</option>
+                        <option value="retry">Show an error and ask again</option>
+                        <option value="stop">Stop the program immediately</option>
+                    </select>
+                    <button onclick="checkAnswer('pred4', 'retry', 'tick4')">Check</button>
+                    <span id="tick4" class="tick-mark padded"></span>
                 </div>
             </div>
         </section>
