@@ -50,6 +50,187 @@ const removeStorage = (key) => {
     }
 };
 
+const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
+const TEACHER_MODE_PASSCODE = "n5teacher";
+
+const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
+
+const readTeacherModeSession = () => {
+    try {
+        return sessionStorage.getItem(TEACHER_MODE_SESSION_KEY) === "true";
+    } catch {
+        return false;
+    }
+};
+
+const writeTeacherModeSession = (enabled) => {
+    try {
+        if (enabled) {
+            sessionStorage.setItem(TEACHER_MODE_SESSION_KEY, "true");
+        } else {
+            sessionStorage.removeItem(TEACHER_MODE_SESSION_KEY);
+        }
+    } catch {
+        // Ignore session storage errors.
+    }
+};
+
+const isTeacherMode = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("teacher")) {
+        return isTruthyFlag(params.get("teacher"));
+    }
+    return readTeacherModeSession();
+};
+
+const getHomeHref = () => {
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    return inPagesDir ? "../index.html" : "index.html";
+};
+
+const getTeacherHref = () => {
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    return inPagesDir ? "teacher.html" : "pages/teacher.html";
+};
+
+const getTeacherDeniedHomeHref = () => `${getHomeHref()}?teacherDenied=1`;
+
+const applyTeacherModeClasses = (enabled) => {
+    const body = document.body;
+    if (!body) return;
+    body.classList.toggle("is-teacher-mode", !!enabled);
+    body.classList.toggle("is-student-mode", !enabled);
+};
+
+const initTeacherMode = () => {
+    const body = document.body;
+    if (!body) return false;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("teacher")) {
+        writeTeacherModeSession(isTruthyFlag(params.get("teacher")));
+    }
+
+    const enabled = isTeacherMode();
+    applyTeacherModeClasses(enabled);
+    return true;
+};
+
+const initTeacherNavEntry = () => {
+    const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
+    if (!navs.length) return;
+
+    navs.forEach((nav) => {
+        if (nav.querySelector('a[href*="teacher.html"]')) return;
+
+        const link = document.createElement("a");
+        link.className = "appbar-nav-pill";
+        link.dataset.teacherNav = "true";
+        link.href = getTeacherHref();
+        link.textContent = "Teacher Mode";
+        if (document.body.classList.contains("page-teacher")) {
+            link.classList.add("is-active");
+            link.setAttribute("aria-current", "page");
+        }
+
+        const resumeLink = nav.querySelector(".appbar-resume");
+        if (resumeLink) {
+            nav.insertBefore(link, resumeLink);
+        } else {
+            nav.appendChild(link);
+        }
+    });
+};
+
+const initTeacherAccessNotice = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (!isTruthyFlag(params.get("teacherDenied"))) return;
+
+    const main = document.querySelector("main.content");
+    if (!main) return;
+
+    const notice = document.createElement("section");
+    notice.className = "card teacher-access-notice";
+    notice.innerHTML = `
+      <h2>Teacher Mode Locked</h2>
+      <p>Access denied. Enter the teacher passcode on the Teacher Mode page to continue.</p>
+    `;
+    main.prepend(notice);
+
+    params.delete("teacherDenied");
+    const nextQuery = params.toString();
+    const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
+    window.history.replaceState(null, "", cleanUrl);
+};
+
+const initTeacherPasscodeGate = () => {
+    const modal = document.getElementById("teacherGate");
+    const closeTriggers = modal
+        ? Array.from(modal.querySelectorAll("[data-close-teacher-gate='true']"))
+        : [];
+    const form = document.getElementById("teacherGateForm");
+    const input = document.getElementById("teacherPasscodeInput");
+    const error = document.getElementById("teacherGateError");
+    if (!modal || !form || !input || !error) return;
+
+    const closeGate = () => {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+    };
+
+    const openGate = () => {
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+        error.textContent = "";
+        error.classList.remove("is-visible");
+        input.value = "";
+        setTimeout(() => input.focus(), 0);
+    };
+
+    if (!readTeacherModeSession()) {
+        openGate();
+    } else {
+        applyTeacherModeClasses(true);
+    }
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const attempt = (input.value || "").trim();
+        if (attempt === TEACHER_MODE_PASSCODE) {
+            writeTeacherModeSession(true);
+            applyTeacherModeClasses(true);
+            error.textContent = "";
+            error.classList.remove("is-visible");
+            closeGate();
+            return;
+        }
+        writeTeacherModeSession(false);
+        applyTeacherModeClasses(false);
+        error.textContent = "Incorrect passcode. Try again.";
+        error.classList.add("is-visible");
+        input.select();
+    });
+
+    closeTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", () => {
+            writeTeacherModeSession(false);
+            applyTeacherModeClasses(false);
+            window.location.replace(getTeacherDeniedHomeHref());
+        });
+    });
+
+    document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            writeTeacherModeSession(false);
+            applyTeacherModeClasses(false);
+            window.location.replace(getTeacherDeniedHomeHref());
+        });
+    });
+};
+
 const HINT_MODEL = {
     "example1.html": {
         tick1: {
@@ -1040,6 +1221,34 @@ const ACTIVITY_DEFINITIONS = [
     { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/docs/pages/assessment.html" }
 ];
 
+const CHECKPOINT_LABELS = {
+    example1: {
+        tick1: "Prediction Q1: Need a loop",
+        tick2: "Prediction Q2: Loop type",
+        tick3: "Prediction Q3: Validation condition",
+        tick4: "Prediction Q4: Retry behavior"
+    },
+    example2: {
+        tick1: "Prediction: Loop count",
+        parsonsFeedback: "Parsons logic ordering",
+        tick2: "Modify task: range update"
+    },
+    example3: {},
+    assessment: {
+        tick1: "Prediction Q1: Loop count",
+        tick2: "Prediction Q2: Validation loop",
+        tick3: "Prediction Q3: Running total variable",
+        tick4: "Prediction Q4: Store valid values",
+        sgA1Tick: "Subgoal match A",
+        sgB1Tick: "Identify line for subgoal B",
+        sgC1Tick: "Fill blank for total update",
+        sgD1Tick: "Identify traversal subgoal",
+        sgE1Tick: "Trace running total",
+        assessmentFeedback: "Modify program ordering",
+        makeOutputTick: "Output verification"
+    }
+};
+
 const STORAGE_PREFIX = `${STORAGE_NAMESPACE}:`;
 const HINT_STORAGE_PREFIX = `${HINT_STORAGE_NAMESPACE}:`;
 
@@ -1067,6 +1276,151 @@ const resolveActivityHref = (activityPath) => {
         return `../${relative}`;
     }
     return relative;
+};
+
+const getCheckpointLabel = (activityKey, checkpointId) => {
+    const byActivity = CHECKPOINT_LABELS[activityKey] || {};
+    if (byActivity[checkpointId]) return byActivity[checkpointId];
+    return String(checkpointId || "checkpoint")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+};
+
+const getHintPayloadRecency = (payload) => {
+    const checkpoints = payload?.checkpoints;
+    if (!checkpoints || typeof checkpoints !== "object") return 0;
+    return Object.values(checkpoints).reduce((max, bucket) => {
+        const stamp = Number(bucket?.lastUsedAt || 0);
+        return Math.max(max, stamp);
+    }, 0);
+};
+
+const readBestHintPayloadForPathSuffixes = (pathSuffixes) => {
+    let bestPayload = null;
+    let bestRecency = -1;
+    const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
+    if (!lowerSuffixes.length) return null;
+
+    for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
+        const path = key.slice(HINT_STORAGE_PREFIX.length).toLowerCase();
+        const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
+        if (!matches) continue;
+
+        let payload = null;
+        try {
+            payload = JSON.parse(localStorage.getItem(key) || "{}");
+        } catch {
+            payload = null;
+        }
+
+        const recency = getHintPayloadRecency(payload);
+        if (recency > bestRecency) {
+            bestRecency = recency;
+            bestPayload = payload;
+        }
+    }
+
+    return bestPayload;
+};
+
+const clearAllLocalProgress = () => {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith(STORAGE_PREFIX) || key.startsWith(HINT_STORAGE_PREFIX)) {
+            keys.push(key);
+        }
+    }
+    keys.forEach((key) => removeStorage(key));
+};
+
+const seedDemoProgress = () => {
+    const now = Date.now();
+    const minute = 60 * 1000;
+    const saveStep = (path, payload) => {
+        writeStorage(`${STORAGE_PREFIX}${path}`, JSON.stringify(payload));
+    };
+    const saveHint = (path, payload) => {
+        writeStorage(`${HINT_STORAGE_PREFIX}${path}`, JSON.stringify(payload));
+    };
+
+    saveStep("/docs/pages/example1.html", {
+        path: "/docs/pages/example1.html",
+        stepCount: 5,
+        index: 4,
+        isComplete: true,
+        updatedAt: now - 24 * minute,
+        completedChecks: ["tick1", "tick2", "tick3", "tick4", "fullCode"],
+        inputs: {
+            pred3: "len(username) < 5",
+            pred4: "retry"
+        },
+        showWorkedExample: true
+    });
+    saveHint("/docs/pages/example1.html", {
+        checkpoints: {
+            tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 25 * minute },
+            tick2: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 24 * minute },
+            tick3: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 23 * minute }
+        }
+    });
+
+    saveStep("/docs/pages/example2.html", {
+        path: "/docs/pages/example2.html",
+        stepCount: 6,
+        index: 3,
+        isComplete: false,
+        updatedAt: now - 12 * minute,
+        completedChecks: ["tick1"],
+        inputs: {},
+        showWorkedExample: false
+    });
+    saveHint("/docs/pages/example2.html", {
+        checkpoints: {
+            tick1: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 11 * minute },
+            parsonsFeedback: { attempts: 4, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 10 * minute }
+        }
+    });
+
+    saveStep("/docs/pages/example3.html", {
+        path: "/docs/pages/example3.html",
+        stepCount: 6,
+        index: 0,
+        isComplete: false,
+        updatedAt: now - 6 * minute,
+        completedChecks: [],
+        inputs: {},
+        showWorkedExample: false
+    });
+    saveHint("/docs/pages/example3.html", { checkpoints: {} });
+
+    saveStep("/docs/pages/assessment.html", {
+        path: "/docs/pages/assessment.html",
+        stepCount: 10,
+        index: 5,
+        isComplete: false,
+        updatedAt: now - 3 * minute,
+        completedChecks: ["tick1", "tick2", "tick3", "tick4", "sgA1Tick", "sgB1Tick"],
+        inputs: {
+            pred1: "5",
+            pred2: "while",
+            pred3: "total",
+            pred4: "yes"
+        },
+        showWorkedExample: false
+    });
+    saveHint("/docs/pages/assessment.html", {
+        checkpoints: {
+            tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 4 * minute },
+            sgC1Tick: { attempts: 5, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 2 * minute },
+            assessmentFeedback: { attempts: 6, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - minute }
+        }
+    });
 };
 
 const readBestPayloadForPathSuffixes = (pathSuffixes) => {
@@ -1110,25 +1464,9 @@ const readBestPayloadForPathSuffixes = (pathSuffixes) => {
 };
 
 const readHintAnalyticsForPathSuffixes = (pathSuffixes) => {
-    let payload = null;
-    const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
-    if (!lowerSuffixes.length) {
+    const payload = readBestHintPayloadForPathSuffixes(pathSuffixes);
+    if (!payload) {
         return { hintsUsed: 0, workedRevealed: 0 };
-    }
-
-    for (let i = 0; i < localStorage.length; i += 1) {
-        const key = localStorage.key(i);
-        if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
-        const path = key.slice(HINT_STORAGE_PREFIX.length).toLowerCase();
-        const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
-        if (!matches) continue;
-
-        try {
-            payload = JSON.parse(localStorage.getItem(key) || "{}");
-        } catch {
-            payload = null;
-        }
-        break;
     }
 
     const checkpoints = payload?.checkpoints;
@@ -1464,6 +1802,278 @@ const initLearningDashboard = () => {
     if (recommendedBtn) {
         recommendedBtn.href = recommendation.href;
         recommendedBtn.textContent = recommendation.button;
+    }
+};
+
+const initTeacherSummaryPanel = () => {
+    const root = document.getElementById("teacherSummaryPanel");
+    if (!root) return;
+
+    const summaries = buildActivitySummaries();
+    const completeCount = summaries.filter((item) => item.isComplete).length;
+    const inProgressCount = summaries.filter((item) => item.inProgress).length;
+    const notStartedCount = summaries.filter((item) => !item.started).length;
+    const totalHintsUsed = summaries.reduce(
+        (sum, item) => sum + Number(item?.hintAnalytics?.hintsUsed || 0),
+        0
+    );
+    const totalWorkedHints = summaries.reduce(
+        (sum, item) => sum + Number(item?.hintAnalytics?.workedRevealed || 0),
+        0
+    );
+
+    const completeEl = document.getElementById("teacherCountComplete");
+    const inProgressEl = document.getElementById("teacherCountInProgress");
+    const notStartedEl = document.getElementById("teacherCountNotStarted");
+    const hintsUsedEl = document.getElementById("teacherHintsUsed");
+    const workedHintsEl = document.getElementById("teacherWorkedHints");
+    const listEl = document.getElementById("teacherSummaryList");
+    const attemptListEl = document.getElementById("teacherAttemptList");
+    const mostMissedEl = document.getElementById("teacherMostMissedList");
+    const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
+    const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
+    const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
+    const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
+    const resetModal = document.getElementById("teacherResetModal");
+    const resetConfirmBtn = document.getElementById("teacherResetConfirmBtn");
+    const resetCloseTriggers = resetModal
+        ? Array.from(resetModal.querySelectorAll("[data-close-reset-modal='true']"))
+        : [];
+
+    if (completeEl) completeEl.textContent = String(completeCount);
+    if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
+    if (notStartedEl) notStartedEl.textContent = String(notStartedCount);
+    if (hintsUsedEl) hintsUsedEl.textContent = String(totalHintsUsed);
+    if (workedHintsEl) workedHintsEl.textContent = String(totalWorkedHints);
+
+    if (listEl) {
+        listEl.innerHTML = "";
+        summaries.forEach((item) => {
+            const li = document.createElement("li");
+            li.className = "teacher-summary-list__item";
+            li.innerHTML = `
+              <p class="teacher-summary-list__title">${item.label}: ${item.title}</p>
+              <p class="teacher-summary-list__meta">${item.statusLabel} (${Math.round(item.progress * 100)}%)</p>
+              <p class="teacher-summary-list__meta">Hints used: ${item.hintAnalytics.hintsUsed} • Worked hints: ${item.hintAnalytics.workedRevealed}</p>
+            `;
+            listEl.appendChild(li);
+        });
+    }
+
+    const attemptRows = [];
+    const missedAgg = new Map();
+
+    summaries.forEach((item) => {
+        const pathSuffixes = getActivityPathSuffixes(item.path);
+        const hintPayload = readBestHintPayloadForPathSuffixes(pathSuffixes);
+        const checkpoints = hintPayload?.checkpoints && typeof hintPayload.checkpoints === "object"
+            ? hintPayload.checkpoints
+            : {};
+        const entries = Object.entries(checkpoints)
+            .map(([checkpointId, bucket]) => ({
+                checkpointId,
+                attempts: Number(bucket?.attempts || 0)
+            }))
+            .filter((entry) => entry.attempts > 0);
+
+        const totalAttempts = entries.reduce((sum, entry) => sum + entry.attempts, 0);
+        const toughest = entries.reduce((best, entry) => (
+            !best || entry.attempts > best.attempts ? entry : best
+        ), null);
+        const signal = totalAttempts >= 10 || (toughest && toughest.attempts >= 5)
+            ? "High difficulty signal"
+            : totalAttempts >= 4 || (toughest && toughest.attempts >= 3)
+                ? "Moderate difficulty signal"
+                : totalAttempts > 0
+                    ? "Low difficulty signal"
+                    : "No difficulty signal yet";
+
+        attemptRows.push({
+            activityKey: item.key,
+            label: item.label,
+            title: item.title,
+            totalAttempts,
+            checkpointsTried: entries.length,
+            signal,
+            toughest
+        });
+
+        entries.forEach((entry) => {
+            const key = `${item.key}:${entry.checkpointId}`;
+            const existing = missedAgg.get(key) || {
+                activityLabel: item.label,
+                checkpointId: entry.checkpointId,
+                label: getCheckpointLabel(item.key, entry.checkpointId),
+                attempts: 0
+            };
+            existing.attempts += entry.attempts;
+            missedAgg.set(key, existing);
+        });
+    });
+
+    if (attemptListEl) {
+        attemptListEl.innerHTML = "";
+        attemptRows.forEach((row) => {
+            const li = document.createElement("li");
+            li.className = "teacher-summary-list__item";
+            const toughestText = row.toughest
+                ? `${getCheckpointLabel(
+                    row.activityKey,
+                    row.toughest.checkpointId
+                )} (${row.toughest.attempts} attempts)`
+                : "None yet";
+            li.innerHTML = `
+              <p class="teacher-summary-list__title">${row.label}: ${row.title}</p>
+              <p class="teacher-summary-list__meta">Attempts: ${row.totalAttempts} across ${row.checkpointsTried} checkpoints</p>
+              <p class="teacher-summary-list__meta">${row.signal}</p>
+              <p class="teacher-summary-list__meta">Most missed in this activity: ${toughestText}</p>
+            `;
+            attemptListEl.appendChild(li);
+        });
+    }
+
+    if (mostMissedEl) {
+        mostMissedEl.innerHTML = "";
+        const topMissed = Array.from(missedAgg.values())
+            .sort((a, b) => b.attempts - a.attempts)
+            .slice(0, 5);
+
+        if (!topMissed.length) {
+            const li = document.createElement("li");
+            li.className = "teacher-summary-list__item";
+            li.innerHTML = `<p class="teacher-summary-list__meta">No missed checkpoint data yet.</p>`;
+            mostMissedEl.appendChild(li);
+        } else {
+            topMissed.forEach((item) => {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `
+                  <p class="teacher-summary-list__title">${item.activityLabel}: ${item.label}</p>
+                  <p class="teacher-summary-list__meta">${item.attempts} failed attempts recorded</p>
+                `;
+                mostMissedEl.appendChild(li);
+            });
+        }
+    }
+
+    const reportRows = summaries.map((item) => ({
+        key: item.key,
+        label: item.label,
+        title: item.title,
+        status: item.statusLabel,
+        progressPercent: Math.round(item.progress * 100),
+        hintsUsed: Number(item?.hintAnalytics?.hintsUsed || 0),
+        workedHintsRevealed: Number(item?.hintAnalytics?.workedRevealed || 0),
+        updatedAt: Number(item?.updatedAt || 0)
+    }));
+
+    const reportPayload = {
+        generatedAt: new Date().toISOString(),
+        totals: {
+            complete: completeCount,
+            inProgress: inProgressCount,
+            notStarted: notStartedCount,
+            hintsUsed: totalHintsUsed,
+            workedHintsRevealed: totalWorkedHints
+        },
+        activities: reportRows
+    };
+
+    if (exportJsonBtn) {
+        exportJsonBtn.onclick = () => {
+            const blob = new Blob([JSON.stringify(reportPayload, null, 2)], {
+                type: "application/json;charset=utf-8"
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "teacher-progress-report.json";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        };
+    }
+
+    if (exportCsvBtn) {
+        exportCsvBtn.onclick = () => {
+            const escapeCsv = (value) => `"${String(value ?? "").replace(/"/g, "\"\"")}"`;
+            const headers = [
+                "generated_at",
+                "activity_key",
+                "activity_label",
+                "activity_title",
+                "status",
+                "progress_percent",
+                "hints_used",
+                "worked_hints_revealed",
+                "updated_at"
+            ];
+            const lines = [headers.join(",")];
+            reportRows.forEach((row) => {
+                lines.push([
+                    escapeCsv(reportPayload.generatedAt),
+                    escapeCsv(row.key),
+                    escapeCsv(row.label),
+                    escapeCsv(row.title),
+                    escapeCsv(row.status),
+                    row.progressPercent,
+                    row.hintsUsed,
+                    row.workedHintsRevealed,
+                    row.updatedAt || ""
+                ].join(","));
+            });
+            const csv = lines.join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "teacher-progress-report.csv";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        };
+    }
+
+    if (resetProgressBtn) {
+        resetProgressBtn.onclick = () => {
+            if (!resetModal) return;
+            resetModal.classList.add("is-open");
+            resetModal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("is-modal-open");
+            if (resetConfirmBtn) {
+                window.setTimeout(() => resetConfirmBtn.focus(), 0);
+            }
+        };
+    }
+
+    if (resetConfirmBtn) {
+        resetConfirmBtn.onclick = () => {
+            clearAllLocalProgress();
+            if (resetModal) {
+                resetModal.classList.remove("is-open");
+                resetModal.setAttribute("aria-hidden", "true");
+            }
+            document.body.classList.remove("is-modal-open");
+            initTeacherSummaryPanel();
+        };
+    }
+
+    resetCloseTriggers.forEach((el) => {
+        el.onclick = () => {
+            if (!resetModal) return;
+            resetModal.classList.remove("is-open");
+            resetModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("is-modal-open");
+        };
+    });
+
+    if (seedDemoBtn) {
+        seedDemoBtn.onclick = () => {
+            seedDemoProgress();
+            initTeacherSummaryPanel();
+        };
     }
 };
 
@@ -2325,6 +2935,14 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    const teacherModeReady = initTeacherMode();
+    if (!teacherModeReady) return;
+    initTeacherNavEntry();
+    initTeacherAccessNotice();
+    if (document.body.classList.contains("page-teacher")) {
+        initTeacherPasscodeGate();
+        initTeacherSummaryPanel();
+    }
     initAccessibilityEnhancements();
     initAppbarEnhancements();
     initLearningDashboard();
