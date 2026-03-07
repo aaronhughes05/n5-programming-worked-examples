@@ -1223,6 +1223,34 @@ const ACTIVITY_DEFINITIONS = [
     { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/docs/pages/assessment.html" }
 ];
 
+const CHECKPOINT_LABELS = {
+    example1: {
+        tick1: "Prediction Q1: Need a loop",
+        tick2: "Prediction Q2: Loop type",
+        tick3: "Prediction Q3: Validation condition",
+        tick4: "Prediction Q4: Retry behavior"
+    },
+    example2: {
+        tick1: "Prediction: Loop count",
+        parsonsFeedback: "Parsons logic ordering",
+        tick2: "Modify task: range update"
+    },
+    example3: {},
+    assessment: {
+        tick1: "Prediction Q1: Loop count",
+        tick2: "Prediction Q2: Validation loop",
+        tick3: "Prediction Q3: Running total variable",
+        tick4: "Prediction Q4: Store valid values",
+        sgA1Tick: "Subgoal match A",
+        sgB1Tick: "Identify line for subgoal B",
+        sgC1Tick: "Fill blank for total update",
+        sgD1Tick: "Identify traversal subgoal",
+        sgE1Tick: "Trace running total",
+        assessmentFeedback: "Modify program ordering",
+        makeOutputTick: "Output verification"
+    }
+};
+
 const STORAGE_PREFIX = `${STORAGE_NAMESPACE}:`;
 const HINT_STORAGE_PREFIX = `${HINT_STORAGE_NAMESPACE}:`;
 
@@ -1250,6 +1278,55 @@ const resolveActivityHref = (activityPath) => {
         return `../${relative}`;
     }
     return relative;
+};
+
+const getCheckpointLabel = (activityKey, checkpointId) => {
+    const byActivity = CHECKPOINT_LABELS[activityKey] || {};
+    if (byActivity[checkpointId]) return byActivity[checkpointId];
+    return String(checkpointId || "checkpoint")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+};
+
+const getHintPayloadRecency = (payload) => {
+    const checkpoints = payload?.checkpoints;
+    if (!checkpoints || typeof checkpoints !== "object") return 0;
+    return Object.values(checkpoints).reduce((max, bucket) => {
+        const stamp = Number(bucket?.lastUsedAt || 0);
+        return Math.max(max, stamp);
+    }, 0);
+};
+
+const readBestHintPayloadForPathSuffixes = (pathSuffixes) => {
+    let bestPayload = null;
+    let bestRecency = -1;
+    const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
+    if (!lowerSuffixes.length) return null;
+
+    for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
+        const path = key.slice(HINT_STORAGE_PREFIX.length).toLowerCase();
+        const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
+        if (!matches) continue;
+
+        let payload = null;
+        try {
+            payload = JSON.parse(localStorage.getItem(key) || "{}");
+        } catch {
+            payload = null;
+        }
+
+        const recency = getHintPayloadRecency(payload);
+        if (recency > bestRecency) {
+            bestRecency = recency;
+            bestPayload = payload;
+        }
+    }
+
+    return bestPayload;
 };
 
 const readBestPayloadForPathSuffixes = (pathSuffixes) => {
@@ -1293,25 +1370,9 @@ const readBestPayloadForPathSuffixes = (pathSuffixes) => {
 };
 
 const readHintAnalyticsForPathSuffixes = (pathSuffixes) => {
-    let payload = null;
-    const lowerSuffixes = (pathSuffixes || []).map((suffix) => String(suffix || "").toLowerCase());
-    if (!lowerSuffixes.length) {
+    const payload = readBestHintPayloadForPathSuffixes(pathSuffixes);
+    if (!payload) {
         return { hintsUsed: 0, workedRevealed: 0 };
-    }
-
-    for (let i = 0; i < localStorage.length; i += 1) {
-        const key = localStorage.key(i);
-        if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
-        const path = key.slice(HINT_STORAGE_PREFIX.length).toLowerCase();
-        const matches = lowerSuffixes.some((suffix) => path.endsWith(suffix));
-        if (!matches) continue;
-
-        try {
-            payload = JSON.parse(localStorage.getItem(key) || "{}");
-        } catch {
-            payload = null;
-        }
-        break;
     }
 
     const checkpoints = payload?.checkpoints;
@@ -1673,6 +1734,8 @@ const initTeacherSummaryPanel = () => {
     const hintsUsedEl = document.getElementById("teacherHintsUsed");
     const workedHintsEl = document.getElementById("teacherWorkedHints");
     const listEl = document.getElementById("teacherSummaryList");
+    const attemptListEl = document.getElementById("teacherAttemptList");
+    const mostMissedEl = document.getElementById("teacherMostMissedList");
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
@@ -1680,19 +1743,115 @@ const initTeacherSummaryPanel = () => {
     if (hintsUsedEl) hintsUsedEl.textContent = String(totalHintsUsed);
     if (workedHintsEl) workedHintsEl.textContent = String(totalWorkedHints);
 
-    if (!listEl) return;
+    if (listEl) {
+        listEl.innerHTML = "";
+        summaries.forEach((item) => {
+            const li = document.createElement("li");
+            li.className = "teacher-summary-list__item";
+            li.innerHTML = `
+              <p class="teacher-summary-list__title">${item.label}: ${item.title}</p>
+              <p class="teacher-summary-list__meta">${item.statusLabel} (${Math.round(item.progress * 100)}%)</p>
+              <p class="teacher-summary-list__meta">Hints used: ${item.hintAnalytics.hintsUsed} • Worked hints: ${item.hintAnalytics.workedRevealed}</p>
+            `;
+            listEl.appendChild(li);
+        });
+    }
 
-    listEl.innerHTML = "";
+    const attemptRows = [];
+    const missedAgg = new Map();
+
     summaries.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "teacher-summary-list__item";
-        li.innerHTML = `
-          <p class="teacher-summary-list__title">${item.label}: ${item.title}</p>
-          <p class="teacher-summary-list__meta">${item.statusLabel} (${Math.round(item.progress * 100)}%)</p>
-          <p class="teacher-summary-list__meta">Hints used: ${item.hintAnalytics.hintsUsed} • Worked hints: ${item.hintAnalytics.workedRevealed}</p>
-        `;
-        listEl.appendChild(li);
+        const pathSuffixes = getActivityPathSuffixes(item.path);
+        const hintPayload = readBestHintPayloadForPathSuffixes(pathSuffixes);
+        const checkpoints = hintPayload?.checkpoints && typeof hintPayload.checkpoints === "object"
+            ? hintPayload.checkpoints
+            : {};
+        const entries = Object.entries(checkpoints)
+            .map(([checkpointId, bucket]) => ({
+                checkpointId,
+                attempts: Number(bucket?.attempts || 0)
+            }))
+            .filter((entry) => entry.attempts > 0);
+
+        const totalAttempts = entries.reduce((sum, entry) => sum + entry.attempts, 0);
+        const toughest = entries.reduce((best, entry) => (
+            !best || entry.attempts > best.attempts ? entry : best
+        ), null);
+        const signal = totalAttempts >= 10 || (toughest && toughest.attempts >= 5)
+            ? "High difficulty signal"
+            : totalAttempts >= 4 || (toughest && toughest.attempts >= 3)
+                ? "Moderate difficulty signal"
+                : totalAttempts > 0
+                    ? "Low difficulty signal"
+                    : "No difficulty signal yet";
+
+        attemptRows.push({
+            activityKey: item.key,
+            label: item.label,
+            title: item.title,
+            totalAttempts,
+            checkpointsTried: entries.length,
+            signal,
+            toughest
+        });
+
+        entries.forEach((entry) => {
+            const key = `${item.key}:${entry.checkpointId}`;
+            const existing = missedAgg.get(key) || {
+                activityLabel: item.label,
+                checkpointId: entry.checkpointId,
+                label: getCheckpointLabel(item.key, entry.checkpointId),
+                attempts: 0
+            };
+            existing.attempts += entry.attempts;
+            missedAgg.set(key, existing);
+        });
     });
+
+    if (attemptListEl) {
+        attemptListEl.innerHTML = "";
+        attemptRows.forEach((row) => {
+            const li = document.createElement("li");
+            li.className = "teacher-summary-list__item";
+            const toughestText = row.toughest
+                ? `${getCheckpointLabel(
+                    row.activityKey,
+                    row.toughest.checkpointId
+                )} (${row.toughest.attempts} attempts)`
+                : "None yet";
+            li.innerHTML = `
+              <p class="teacher-summary-list__title">${row.label}: ${row.title}</p>
+              <p class="teacher-summary-list__meta">Attempts: ${row.totalAttempts} across ${row.checkpointsTried} checkpoints</p>
+              <p class="teacher-summary-list__meta">${row.signal}</p>
+              <p class="teacher-summary-list__meta">Most missed in this activity: ${toughestText}</p>
+            `;
+            attemptListEl.appendChild(li);
+        });
+    }
+
+    if (mostMissedEl) {
+        mostMissedEl.innerHTML = "";
+        const topMissed = Array.from(missedAgg.values())
+            .sort((a, b) => b.attempts - a.attempts)
+            .slice(0, 5);
+
+        if (!topMissed.length) {
+            const li = document.createElement("li");
+            li.className = "teacher-summary-list__item";
+            li.innerHTML = `<p class="teacher-summary-list__meta">No missed checkpoint data yet.</p>`;
+            mostMissedEl.appendChild(li);
+        } else {
+            topMissed.forEach((item) => {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `
+                  <p class="teacher-summary-list__title">${item.activityLabel}: ${item.label}</p>
+                  <p class="teacher-summary-list__meta">${item.attempts} failed attempts recorded</p>
+                `;
+                mostMissedEl.appendChild(li);
+            });
+        }
+    }
 };
 
 const initBackToTopFab = () => {
