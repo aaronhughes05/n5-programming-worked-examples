@@ -83,17 +83,17 @@ const isTeacherMode = () => {
     return readTeacherModeSession();
 };
 
-const getHomeHref = () => {
-    const inPagesDir = window.location.pathname.includes("/docs/pages/");
-    return inPagesDir ? "../index.html" : "index.html";
-};
+const isInPagesDirectory = () => /\/pages\//.test(window.location.pathname);
 
-const getTeacherHref = () => {
-    const inPagesDir = window.location.pathname.includes("/docs/pages/");
-    return inPagesDir ? "teacher.html" : "pages/teacher.html";
-};
+const getHomeHref = () => (isInPagesDirectory() ? "../index.html" : "index.html");
 
-const getTeacherDeniedHomeHref = () => `${getHomeHref()}?teacherDenied=1`;
+const getTeacherHref = () => (isInPagesDirectory() ? "teacher.html" : "pages/teacher.html");
+
+const getTeacherDeniedHomeHref = () => {
+    const target = new URL(getHomeHref(), window.location.href);
+    target.searchParams.set("teacherDenied", "1");
+    return target.toString();
+};
 
 const applyTeacherModeClasses = (enabled) => {
     const body = document.body;
