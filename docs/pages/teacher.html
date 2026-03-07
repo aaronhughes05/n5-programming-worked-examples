@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teacher Mode</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body class="page page-inner page-teacher">
+    <div class="appbar" id="appbar">
+      <div class="appbar-brand-wrap">
+        <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+        <div class="appbar-brand-stack">
+          <div class="appbar-brand">Crack the Code</div>
+          <div class="appbar-subtitle">National 5 Computing Science</div>
+        </div>
+      </div>
+
+      <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
+
+      <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
+        <a class="appbar-nav-pill" href="../index.html">Home</a>
+        <a class="appbar-nav-pill" href="../index.html#examples">Examples</a>
+        <a class="appbar-nav-pill" href="worksheets.html">Worksheets</a>
+        <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
+        <a class="appbar-nav-pill is-active" href="teacher.html">Teacher Mode</a>
+        <button type="button" class="appbar-nav-pill" data-teacher-lock data-teacher-only>Lock</button>
+      </nav>
+    </div>
+
+    <header class="hero hero-main">
+      <h1 class="hero-title">Teacher Mode</h1>
+      <p class="hero-summary">
+        Review learning progress, identify difficult checkpoints, and manage local classroom demo data.
+      </p>
+    </header>
+
+    <main class="content">
+      <section class="card" data-student-only>
+        <h2>Teacher Mode Locked</h2>
+        <p>Enter the teacher passcode to continue.</p>
+      </section>
+
+      <section class="card teacher-summary-card" id="teacherSummaryPanel" data-teacher-only aria-label="Class summary">
+        <h2>Class Progress Summary</h2>
+        <p class="teacher-summary-intro">Snapshot from progress currently stored on this device.</p>
+
+        <div class="teacher-summary-grid" aria-label="Progress summary counts">
+          <article class="teacher-summary-stat teacher-summary-stat--complete">
+            <p class="teacher-summary-stat__label">Complete</p>
+            <p class="teacher-summary-stat__value" id="teacherCountComplete">0</p>
+          </article>
+          <article class="teacher-summary-stat teacher-summary-stat--progress">
+            <p class="teacher-summary-stat__label">In Progress</p>
+            <p class="teacher-summary-stat__value" id="teacherCountInProgress">0</p>
+          </article>
+          <article class="teacher-summary-stat teacher-summary-stat--not-started">
+            <p class="teacher-summary-stat__label">Not Started</p>
+            <p class="teacher-summary-stat__value" id="teacherCountNotStarted">0</p>
+          </article>
+        </div>
+
+        <div class="teacher-summary-grid teacher-summary-grid--hints" aria-label="Hint usage totals">
+          <article class="teacher-summary-stat">
+            <p class="teacher-summary-stat__label">Hints Used</p>
+            <p class="teacher-summary-stat__value" id="teacherHintsUsed">0</p>
+          </article>
+          <article class="teacher-summary-stat">
+            <p class="teacher-summary-stat__label">Worked Hints Revealed</p>
+            <p class="teacher-summary-stat__value" id="teacherWorkedHints">0</p>
+          </article>
+        </div>
+
+        <p class="teacher-summary-intro teacher-summary-intro--actions">Teacher actions:</p>
+        <div class="teacher-summary-actions teacher-summary-actions--single-row teacher-summary-actions--in-summary" role="group" aria-label="Teacher tools">
+          <button type="button" class="check-btn outline-btn" id="teacherExportCsvBtn">Export CSV</button>
+          <button type="button" class="check-btn outline-btn" id="teacherExportJsonBtn">Export JSON</button>
+          <button type="button" class="check-btn" id="teacherSeedDemoBtn">Insert Test Data</button>
+          <button type="button" class="check-btn reset-btn" id="teacherResetProgressBtn">Reset all local progress</button>
+        </div>
+      </section>
+
+      <section class="card teacher-summary-card" data-teacher-only aria-label="Activity breakdown">
+        <h2>Activity Breakdown</h2>
+        <p class="teacher-summary-intro">Completion and hint use for each activity.</p>
+        <ul class="teacher-summary-list" id="teacherSummaryList" aria-live="polite"></ul>
+      </section>
+
+      <section class="card teacher-summary-card" data-teacher-only aria-label="Attempt analytics">
+        <h2>Attempt Analytics</h2>
+        <p class="teacher-summary-intro">Per-activity attempt volume and difficulty signal.</p>
+        <ul class="teacher-summary-list" id="teacherAttemptList" aria-live="polite"></ul>
+      </section>
+
+      <section class="card teacher-summary-card" data-teacher-only aria-label="Most missed checkpoints">
+        <h2>Most Missed Checkpoints</h2>
+        <p class="teacher-summary-intro">Highest failed-attempt checkpoints from local data.</p>
+        <ul class="teacher-summary-list" id="teacherMostMissedList" aria-live="polite"></ul>
+      </section>
+    </main>
+
+    <div class="teacher-gate" id="teacherGate" aria-hidden="true">
+      <div class="teacher-gate__backdrop" data-close-teacher-gate="true" aria-hidden="true"></div>
+      <div class="teacher-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherGateTitle" aria-describedby="teacherGateBody">
+        <button type="button" class="teacher-gate__close" aria-label="Close teacher mode" data-close-teacher-gate="true">&times;</button>
+        <h2 id="teacherGateTitle">Unlock Teacher Mode</h2>
+        <p id="teacherGateBody">Enter the teacher passcode to access teacher tools.</p>
+        <form id="teacherGateForm" class="teacher-gate__form">
+          <label for="teacherPasscodeInput">Passcode</label>
+          <input id="teacherPasscodeInput" type="password" autocomplete="current-password" required />
+          <p id="teacherGateError" class="teacher-gate__error tick-mark is-incorrect" aria-live="polite"></p>
+          <div class="teacher-gate__actions">
+            <button type="submit" class="check-btn" id="teacherGateUnlock">Unlock</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="teacher-reset-modal" id="teacherResetModal" aria-hidden="true">
+      <div class="teacher-reset-modal__backdrop" data-close-reset-modal="true" aria-hidden="true"></div>
+      <div class="teacher-reset-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherResetTitle" aria-describedby="teacherResetBody">
+        <button type="button" class="teacher-reset-modal__close" aria-label="Close reset dialog" data-close-reset-modal="true">&times;</button>
+        <h3 id="teacherResetTitle">Reset Local Progress</h3>
+        <p id="teacherResetBody">This will remove all local student progress and hint data on this device. This cannot be undone.</p>
+        <div class="teacher-reset-modal__actions">
+          <button type="button" class="check-btn reset-btn" id="teacherResetConfirmBtn">Reset all local progress</button>
+          <button type="button" class="check-btn outline-btn" data-close-reset-modal="true">Keep current data</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+  </body>
+</html>
