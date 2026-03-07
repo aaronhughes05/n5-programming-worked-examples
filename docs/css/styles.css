@@ -1364,12 +1364,6 @@ body.is-modal-open {
   gap: 8px;
 }
 
-.dashboard-badges__btn {
-  min-height: 42px;
-  padding: 10px 16px;
-  font-size: 0.83rem;
-}
-
 .dashboard-top {
   display: flex;
   align-items: center;
@@ -1391,9 +1385,6 @@ body.is-modal-open {
 }
 
 .dashboard-continue-btn {
-  min-height: 42px;
-  padding: 10px 16px;
-  font-size: 0.85rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1433,8 +1424,6 @@ body.is-modal-open {
   background: #ffffff;
   color: var(--accent-700);
   border-color: rgba(37, 99, 235, 0.35);
-  min-height: 42px;
-  padding: 10px 16px;
 }
 
 .dashboard-next__btn:hover,
@@ -1650,8 +1639,6 @@ body.is-modal-open {
   margin-top: auto;
   width: 100%;
   justify-content: center;
-  min-height: 42px;
-  padding: 10px 16px;
 }
 
 @media (max-width: 1040px) {
