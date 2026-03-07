@@ -1736,6 +1736,8 @@ const initTeacherSummaryPanel = () => {
     const listEl = document.getElementById("teacherSummaryList");
     const attemptListEl = document.getElementById("teacherAttemptList");
     const mostMissedEl = document.getElementById("teacherMostMissedList");
+    const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
+    const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
@@ -1851,6 +1853,86 @@ const initTeacherSummaryPanel = () => {
                 mostMissedEl.appendChild(li);
             });
         }
+    }
+
+    const reportRows = summaries.map((item) => ({
+        key: item.key,
+        label: item.label,
+        title: item.title,
+        status: item.statusLabel,
+        progressPercent: Math.round(item.progress * 100),
+        hintsUsed: Number(item?.hintAnalytics?.hintsUsed || 0),
+        workedHintsRevealed: Number(item?.hintAnalytics?.workedRevealed || 0),
+        updatedAt: Number(item?.updatedAt || 0)
+    }));
+
+    const reportPayload = {
+        generatedAt: new Date().toISOString(),
+        totals: {
+            complete: completeCount,
+            inProgress: inProgressCount,
+            notStarted: notStartedCount,
+            hintsUsed: totalHintsUsed,
+            workedHintsRevealed: totalWorkedHints
+        },
+        activities: reportRows
+    };
+
+    if (exportJsonBtn) {
+        exportJsonBtn.onclick = () => {
+            const blob = new Blob([JSON.stringify(reportPayload, null, 2)], {
+                type: "application/json;charset=utf-8"
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "teacher-progress-report.json";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        };
+    }
+
+    if (exportCsvBtn) {
+        exportCsvBtn.onclick = () => {
+            const escapeCsv = (value) => `"${String(value ?? "").replace(/"/g, "\"\"")}"`;
+            const headers = [
+                "generated_at",
+                "activity_key",
+                "activity_label",
+                "activity_title",
+                "status",
+                "progress_percent",
+                "hints_used",
+                "worked_hints_revealed",
+                "updated_at"
+            ];
+            const lines = [headers.join(",")];
+            reportRows.forEach((row) => {
+                lines.push([
+                    escapeCsv(reportPayload.generatedAt),
+                    escapeCsv(row.key),
+                    escapeCsv(row.label),
+                    escapeCsv(row.title),
+                    escapeCsv(row.status),
+                    row.progressPercent,
+                    row.hintsUsed,
+                    row.workedHintsRevealed,
+                    row.updatedAt || ""
+                ].join(","));
+            });
+            const csv = lines.join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "teacher-progress-report.csv";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        };
     }
 };
 

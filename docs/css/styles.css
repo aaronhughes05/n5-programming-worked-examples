@@ -2500,6 +2500,13 @@ body.is-teacher-mode [data-student-only] {
   color: var(--ink-900);
 }
 
+.teacher-summary-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .teacher-summary-activities {
   margin-top: var(--space-3);
 }
