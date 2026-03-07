@@ -84,18 +84,18 @@ print("Your username is: " + username)</code></pre>
                     <span id="tick1" class="tick-mark padded"></span>
                 </div>
             </div>
-            <div class="question-block">
+            <div class="question-block" id="example1-loop-type-question">
                 <p>If so, what type of loop?</p>
                 <div class="question-input-part">
                     <input type="radio" id="tick2-for" name="tick2" value="no" />
                     <label for="tick2-for">For loop</label> <br />
                     <input type="radio" id="tick2-while" name="tick2" value="yes" />
                     <label for="tick2-while">While loop</label> <br />
-                    <input type="radio" id="tick2-none" name="tick2" value="yes" />
+                    <input type="radio" id="tick2-none" name="tick2" value="no" />
                     <label for="tick2-none">No loop needed</label> <br />
                 </div>
                 <div>
-                    <button onclick="checkRadioButton('tick2-while', 'tick2')">Check</button>
+                    <button id="tick2-check-btn" onclick="checkRadioButton('tick2-while', 'tick2')">Check</button>
                     <span id="tick2" class="tick-mark padded"></span>
                 </div>
             </div>

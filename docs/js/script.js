@@ -67,8 +67,8 @@ const HINT_MODEL = {
         tick3: {
             l1: "Write a condition that is true only when the username is invalid.",
             l2: "The rule says minimum length is 5, so invalid means below 5.",
-            l3: "Use `len(username)` and compare against 5 with the correct operator.",
-            worked: "Use `len(username) < 5` to detect invalid input."
+            l3: "Use len(username) and compare against 5 with the correct operator.",
+            worked: "Use len(username) < 5 to detect invalid input."
         },
         tick4: {
             l1: "What action helps the user correct invalid input?",
@@ -80,34 +80,34 @@ const HINT_MODEL = {
     "example2.html": {
         tick1: {
             l1: "Focus on the loop line. How many item entries are required?",
-            l2: "Check the worked code: `range(5)` means the loop runs 5 times.",
+            l2: "Check the worked code: range(5) means the loop runs 5 times.",
             l3: "Your answer should be the count of loop repetitions, not the final total.",
             worked: "Because the program asks for 5 items, the loop repeats 5 times."
         },
         parsonsFeedback: {
             l1: "Think setup first, then loop, then update, then final output.",
-            l2: "Initialize `total` before the loop starts.",
+            l2: "Initialize total before the loop starts.",
             l3: "Order pattern: initialize -> loop header -> update inside loop -> print after loop.",
-            worked: "Correct order: `total = 0`, `for ...`, `total = total + price`, `print(total)`."
+            worked: "Correct order: total = 0, for ..., total = total + price, print(total)."
         },
         tick2: {
             l1: "Only the number in the range changes from 5 to 10.",
             l2: "Keep the loop variable and syntax exactly the same.",
             l3: "Write the full line including colon at the end.",
-            worked: "Use: `for counter in range(10):`"
+            worked: "Use: for counter in range(10):"
         }
     },
     "assessment.html": {
         tick1: { l1: "Look at the required item count.", l2: "The loop count matches the number of prices collected.", l3: "Use the exact numeric count.", worked: "The loop repeats 5 times." },
-        tick2: { l1: "Which loop keeps checking until input is valid?", l2: "Validation usually repeats while a bad condition is true.", l3: "Negative-price checking uses `while`.", worked: "Use `while` for repeated validation." },
-        tick3: { l1: "Find the variable that accumulates values.", l2: "It starts at zero and is updated each loop.", l3: "Look for `total = total + ...`.", worked: "The running total variable is `total`." },
+        tick2: { l1: "Which loop keeps checking until input is valid?", l2: "Validation usually repeats while a bad condition is true.", l3: "Negative-price checking uses while.", worked: "Use while for repeated validation." },
+        tick3: { l1: "Find the variable that accumulates values.", l2: "It starts at zero and is updated each loop.", l3: "Look for total = total + ...", worked: "The running total variable is total." },
         tick4: { l1: "Should valid prices be kept for later traversal?", l2: "The program prints each value later, so it must store them.", l3: "The list is required for step D traversal.", worked: "Yes, valid prices should be stored in the list." },
-        sgA1Tick: { l1: "This line creates starting state.", l2: "Subgoal A is initialization/setup.", l3: "`total = 0` belongs to setup.", worked: "Answer: A." },
-        sgB1Tick: { l1: "Subgoal B is the repeating loop.", l2: "Pick the line that repeats exactly 5 times.", l3: "Look for the `for counter in range(5):` line.", worked: "Correct line: `for counter in range(5):`." },
-        sgC1Tick: { l1: "What gets added into total each cycle?", l2: "The blank is the current valid input value.", l3: "Use the same variable read from input.", worked: "Fill with `price`." },
+        sgA1Tick: { l1: "This line creates starting state.", l2: "Subgoal A is initialization/setup.", l3: "total = 0 belongs to setup.", worked: "Answer: A." },
+        sgB1Tick: { l1: "Subgoal B is the repeating loop.", l2: "Pick the line that repeats exactly 5 times.", l3: "Look for the for counter in range(5): line.", worked: "Correct line: for counter in range(5):" },
+        sgC1Tick: { l1: "What gets added into total each cycle?", l2: "The blank is the current valid input value.", l3: "Use the same variable read from input.", worked: "Fill with price." },
         sgD1Tick: { l1: "This line traverses items for display.", l2: "Traversal/processing list values is subgoal D.", l3: "Map line purpose, not syntax shape.", worked: "Answer: D." },
         sgE1Tick: { l1: "Update total cumulatively row by row.", l2: "Start from 0, then add each new input.", l3: "Totals should be 2, then 5, then 9.", worked: "Running totals: 2, 5, 9." },
-        assessmentFeedback: { l1: "Order by problem flow: setup -> input loop -> validate -> store/update -> output.", l2: "Ensure validation (`while`) sits inside the main loop.", l3: "Average is calculated after data collection and before final prints.", worked: "Use the sequence shown in the expected arrangement for each stage." },
+        assessmentFeedback: { l1: "Order by problem flow: setup -> input loop -> validate -> store/update -> output.", l2: "Ensure validation (while) sits inside the main loop.", l3: "Average is calculated after data collection and before final prints.", worked: "Use the sequence shown in the expected arrangement for each stage." },
         makeOutputTick: { l1: "Compare formatting and values against expected output.", l2: "Check spacing, commas, and order of lines.", l3: "Ensure totals/averages are computed from the chosen test case.", worked: "Match expected output exactly after running your program." }
     }
 };
@@ -115,26 +115,28 @@ const HINT_MODEL = {
 const FEEDBACK_MAP = {
     "example1.html": {
         tick1: {
-            correct: "We will need a loop here to repeatedly query the user until they provide a valid input.",
-            incorrect: "Try again.",
-            next: "Review the subgoals and consider how you would implement them in code."
+            correct: "Correct. A loop is required because the user may need multiple attempts before entering a valid username.",
+            incorrect: "Not quite right yet.",
+            misconception: "A common mix-up is assuming one input attempt is always enough.",
+            next: "Think about Subgoal D: the process repeats until the username meets the rule."
         },
         tick2: {
-            correct: "A while loop is required here, as we want to loop until a condition (valid input has been provided) is met.",
-            incorrect: "Try again.",
-            next: "Review the subgoals and consider how you would implement them in code."
+            correct: "Correct. while is the best fit because retries continue until the input becomes valid.",
+            incorrect: "That loop choice is not best here.",
+            misconception: "A for loop is for a fixed count, but validation retries are not a fixed number.",
+            next: "Choose the loop that keeps running while len(username) < 5 is true."
         },
         tick3: {
-            correct: "Correct. That condition flags usernames shorter than 5 characters.",
-            incorrect: "Not quite right yet.",
-            misconception: "A common mix-up is using `> 5`, which checks long usernames instead of short invalid ones.",
-            next: "Use the invalid rule directly: length is less than 5."
+            correct: "Correct. len(username) < 5 is the exact invalid condition for this rule.",
+            incorrect: "Close, but that condition does not match the validation rule exactly.",
+            misconception: "Common mix-ups are reversing the operator (>) or trying to compare the whole username directly to a number.",
+            next: "Use the minimum-length rule directly: invalid means length is less than 5."
         },
         tick4: {
-            correct: "Correct. The program should show an error and ask for another input.",
-            incorrect: "That behavior will not validate safely.",
-            misconception: "Accepting invalid input or stopping immediately skips the correction loop.",
-            next: "Choose the option that keeps prompting until valid data is entered."
+            correct: "Correct. The program should display feedback and prompt again until the username is valid.",
+            incorrect: "That behavior breaks the validation flow.",
+            misconception: "If you accept invalid input or terminate immediately, the user never gets a proper retry cycle.",
+            next: "Pick the action that keeps the loop active until a valid username is entered."
         }
     },
     "example2.html": {
@@ -147,21 +149,21 @@ const FEEDBACK_MAP = {
         parsonsFeedback: {
             correct: "Great ordering. The logic now flows from setup to output correctly.",
             incorrect: "The sequence is still off.",
-            misconception: "A common issue is placing `print(total)` inside the loop or skipping initialization first.",
+            misconception: "A common issue is placing print(total) inside the loop or skipping initialization first.",
             next: "Order the blocks as initialize -> loop -> update total -> print."
         },
         tick2: {
             correct: "Correct modification. You adjusted only the loop range target.",
             incorrect: "Close, but the loop line is not exact yet.",
             misconception: "You may have changed the loop structure instead of only changing the range value.",
-            next: "Keep the same syntax and replace only `5` with `10`, including the colon."
+            next: "Keep the same syntax and replace only 5 with 10, including the colon."
         }
     },
     "assessment.html": {
         tick1: { correct: "Correct. The loop count matches the number of required inputs.", incorrect: "Not correct yet.", misconception: "You may be counting outputs instead of input iterations.", next: "Use the problem statement to confirm how many prices are entered." },
-        tick2: { correct: "Correct. `while` is appropriate for repeated validation.", incorrect: "That loop choice is not best here.", misconception: "You may be choosing `for` when the number of retries is unknown.", next: "Pick the loop that repeats until input is valid." },
+        tick2: { correct: "Correct. while is appropriate for repeated validation.", incorrect: "That loop choice is not best here.", misconception: "You may be choosing for when the number of retries is unknown.", next: "Pick the loop that repeats until input is valid." },
         tick3: { correct: "Correct. You identified the accumulator variable.", incorrect: "Not quite.", misconception: "You may be naming the list variable instead of the running total variable.", next: "Find the variable initialized to 0 and updated each iteration." },
-        tick4: { correct: "Correct. Valid values should be stored for traversal later.", incorrect: "Not correct yet.", misconception: "You may think total alone is enough, but printing each item requires stored values.", next: "Check the later step that loops through `items`." },
+        tick4: { correct: "Correct. Valid values should be stored for traversal later.", incorrect: "Not correct yet.", misconception: "You may think total alone is enough, but printing each item requires stored values.", next: "Check the later step that loops through items." },
         sgA1Tick: { correct: "Correct subgoal mapping.", incorrect: "That subgoal mapping is off.", misconception: "You may be mapping by line position rather than line purpose.", next: "Classify the line by what it does: setup, loop, process, traverse, output." },
         sgB1Tick: { correct: "Correct line selection for Subgoal B.", incorrect: "Wrong line selected.", misconception: "You may be selecting an update line instead of the repetition line.", next: "Find the line that controls repeated execution." },
         sgC1Tick: { correct: "Correct fill-in value.", incorrect: "That value is not right yet.", misconception: "You may be using the total variable on both sides instead of adding the current input.", next: "Use the current validated price variable." },
@@ -587,6 +589,54 @@ const checkRadioButton = (inputId, tickId) => {
     setTickState(tick, inputField.checked);
 };
 
+const initExample1PredictionDependency = () => {
+    const q1Yes = document.getElementById("tick1-yes");
+    const q1No = document.getElementById("tick1-no");
+    const q2None = document.getElementById("tick2-none");
+    const q2Block = document.getElementById("example1-loop-type-question");
+    const q2CheckBtn = document.getElementById("tick2-check-btn");
+
+    if (!q1Yes || !q1No || !q2None || !q2Block || !q2CheckBtn) return;
+
+    const q2Inputs = Array.from(q2Block.querySelectorAll("input[type='radio'][name='tick2']"));
+
+    const clearTick2State = () => {
+        const tick2 = document.getElementById("tick2");
+        if (!tick2) return;
+        delete tick2.dataset.correct;
+        tick2.style.display = "none";
+        tick2.classList.remove("is-correct", "is-incorrect");
+        tick2.textContent = "";
+
+        const rich = q2Block.querySelector('.rich-feedback[data-feedback-for="tick2"]');
+        if (rich) rich.remove();
+    };
+
+    const applyDependency = () => {
+        const disableQ2 = q1No.checked;
+
+        if (disableQ2) {
+            q2None.checked = true;
+            clearTick2State();
+        }
+
+        q2Inputs.forEach((input) => {
+            input.disabled = disableQ2;
+        });
+        q2CheckBtn.disabled = disableQ2;
+
+        updateStepperState();
+        saveStepperState();
+    };
+
+    if (!q1Yes.dataset.dependencyInit) {
+        q1Yes.addEventListener("change", applyDependency);
+        q1No.addEventListener("change", applyDependency);
+        q1Yes.dataset.dependencyInit = "true";
+    }
+    applyDependency();
+};
+
 function allowDrop(ev) {
     ev.preventDefault();
 }
@@ -961,6 +1011,7 @@ const resetAssessment = () => {
     const actualEl = document.getElementById("makeActual");
     if (actualEl) actualEl.textContent = "Run your program to see the output here.";
     enableRunButton();
+    initExample1PredictionDependency();
     showStepSection(0, { save: false });
     removeStorage(getHintStorageKey());
     hintState = { checkpoints: {} };
@@ -2292,5 +2343,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (statusEl) statusEl.textContent = "Python runtime ready when you run.";
     const spinner = document.querySelector(".spinner");
     if (spinner) spinner.classList.add("is-hidden");
+    initExample1PredictionDependency();
     initStepper();
 });
