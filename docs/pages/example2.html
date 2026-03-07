@@ -51,11 +51,12 @@
         </details>
         <details id="workedExample" class="card expander-card worked-example-panel hidden">
             <summary>Full Solution</summary>
-            <pre><code>total = 0 <span class="code-comment">                          # Subgoal A</span>
-for counter in range(5): <span class="code-comment">           # Subgoal D</span>
-    price = float(input("Price: ")) <span class="code-comment"># Subgoal B</span>
-    total = total + price <span class="code-comment">          # Subgoal C</span>
-print(total)</code></pre>
+            <p class="subgoal-intro">Complete program with subgoal labels.</p>
+            <pre><code>A: total = 0
+D: for counter in range(5):
+B:     price = float(input("Price: "))
+C:     total = total + price
+D: print(total)</code></pre>
         </details>
 
         <div class="stepper-header">
@@ -86,28 +87,28 @@ print(total)</code></pre>
         <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
             <h2>3. Step-by-Step Implementation</h2>
             <div id="step1" class="step-box">
-                <p><strong>Step 1:</strong> Initialize the total.</p>
-                <pre><code>total = 0 <span class="code-comment"># Subgoal A</span></code></pre>
+                <p><strong>Step 1:</strong> Set up the accumulator variable.</p>
+                <pre><code>A: total = 0</code></pre>
                 <button onclick="nextStep(1, 2)">Next Step</button>
             </div>
             <div id="step2" class="step-box hidden">
-                <p><strong>Step 2:</strong> Create a loop for 5 items.</p>
-                <pre><code>for counter in range(5): <span class="code-comment"># Subgoal D</span></code></pre>
+                <p><strong>Step 2:</strong> Repeat exactly 5 times to process each item.</p>
+                <pre><code>D: for counter in range(5):</code></pre>
                 <button onclick="nextStep(2, 3)">Next Step</button>
             </div>
             <div id="step3" class="step-box hidden">
-                <p><strong>Step 3:</strong> Add input to total.</p>
-                <pre><code>    price = float(input()) <span class="code-comment"># Subgoal B</span>
-    total = total + price <span class="code-comment"># Subgoal C</span></code></pre>
+                <p><strong>Step 3:</strong> Read each price and update the running total.</p>
+                <pre><code>B:     price = float(input("Price: "))
+C:     total = total + price</code></pre>
                 <button onclick="nextStep(3, 'full')">Show Full Code</button>
             </div>
             <div id="fullCode" class="step-box hidden">
-                <p><strong>Full Solution:</strong> Combine all steps into one complete program.</p>
-                <pre><code>total = 0 <span class="code-comment">                          # Subgoal A</span>
-for counter in range(5): <span class="code-comment">           # Subgoal D</span>
-    price = float(input("Price: ")) <span class="code-comment"># Subgoal B</span>
-    total = total + price <span class="code-comment">          # Subgoal C</span>
-print(total)</code></pre>
+                <p><strong>Full Solution:</strong> Combine all steps into one complete program with subgoal labels.</p>
+                <pre><code>A: total = 0
+D: for counter in range(5):
+B:     price = float(input("Price: "))
+C:     total = total + price
+D: print(total)</code></pre>
             </div>
         </section>
 
