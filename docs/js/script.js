@@ -1329,6 +1329,102 @@ const readBestHintPayloadForPathSuffixes = (pathSuffixes) => {
     return bestPayload;
 };
 
+const clearAllLocalProgress = () => {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith(STORAGE_PREFIX) || key.startsWith(HINT_STORAGE_PREFIX)) {
+            keys.push(key);
+        }
+    }
+    keys.forEach((key) => removeStorage(key));
+};
+
+const seedDemoProgress = () => {
+    const now = Date.now();
+    const minute = 60 * 1000;
+    const saveStep = (path, payload) => {
+        writeStorage(`${STORAGE_PREFIX}${path}`, JSON.stringify(payload));
+    };
+    const saveHint = (path, payload) => {
+        writeStorage(`${HINT_STORAGE_PREFIX}${path}`, JSON.stringify(payload));
+    };
+
+    saveStep("/docs/pages/example1.html", {
+        path: "/docs/pages/example1.html",
+        stepCount: 5,
+        index: 4,
+        isComplete: true,
+        updatedAt: now - 24 * minute,
+        completedChecks: ["tick1", "tick2", "tick3", "tick4", "fullCode"],
+        inputs: {
+            pred3: "len(username) < 5",
+            pred4: "retry"
+        },
+        showWorkedExample: true
+    });
+    saveHint("/docs/pages/example1.html", {
+        checkpoints: {
+            tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 25 * minute },
+            tick2: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 24 * minute },
+            tick3: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 23 * minute }
+        }
+    });
+
+    saveStep("/docs/pages/example2.html", {
+        path: "/docs/pages/example2.html",
+        stepCount: 6,
+        index: 3,
+        isComplete: false,
+        updatedAt: now - 12 * minute,
+        completedChecks: ["tick1"],
+        inputs: {},
+        showWorkedExample: false
+    });
+    saveHint("/docs/pages/example2.html", {
+        checkpoints: {
+            tick1: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 11 * minute },
+            parsonsFeedback: { attempts: 4, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 10 * minute }
+        }
+    });
+
+    saveStep("/docs/pages/example3.html", {
+        path: "/docs/pages/example3.html",
+        stepCount: 6,
+        index: 0,
+        isComplete: false,
+        updatedAt: now - 6 * minute,
+        completedChecks: [],
+        inputs: {},
+        showWorkedExample: false
+    });
+    saveHint("/docs/pages/example3.html", { checkpoints: {} });
+
+    saveStep("/docs/pages/assessment.html", {
+        path: "/docs/pages/assessment.html",
+        stepCount: 10,
+        index: 5,
+        isComplete: false,
+        updatedAt: now - 3 * minute,
+        completedChecks: ["tick1", "tick2", "tick3", "tick4", "sgA1Tick", "sgB1Tick"],
+        inputs: {
+            pred1: "5",
+            pred2: "while",
+            pred3: "total",
+            pred4: "yes"
+        },
+        showWorkedExample: false
+    });
+    saveHint("/docs/pages/assessment.html", {
+        checkpoints: {
+            tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 4 * minute },
+            sgC1Tick: { attempts: 5, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 2 * minute },
+            assessmentFeedback: { attempts: 6, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - minute }
+        }
+    });
+};
+
 const readBestPayloadForPathSuffixes = (pathSuffixes) => {
     let bestPayload = null;
     let bestUpdatedAt = -1;
@@ -1738,6 +1834,8 @@ const initTeacherSummaryPanel = () => {
     const mostMissedEl = document.getElementById("teacherMostMissedList");
     const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
     const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
+    const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
+    const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
@@ -1932,6 +2030,22 @@ const initTeacherSummaryPanel = () => {
             link.click();
             link.remove();
             URL.revokeObjectURL(url);
+        };
+    }
+
+    if (resetProgressBtn) {
+        resetProgressBtn.onclick = () => {
+            const proceed = window.confirm("Reset all local student progress and hint data on this device?");
+            if (!proceed) return;
+            clearAllLocalProgress();
+            initTeacherSummaryPanel();
+        };
+    }
+
+    if (seedDemoBtn) {
+        seedDemoBtn.onclick = () => {
+            seedDemoProgress();
+            initTeacherSummaryPanel();
         };
     }
 };
