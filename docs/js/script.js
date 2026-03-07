@@ -50,6 +50,64 @@ const removeStorage = (key) => {
     }
 };
 
+const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
+
+const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
+
+const readTeacherModeSession = () => {
+    try {
+        return sessionStorage.getItem(TEACHER_MODE_SESSION_KEY) === "true";
+    } catch {
+        return false;
+    }
+};
+
+const writeTeacherModeSession = (enabled) => {
+    try {
+        if (enabled) {
+            sessionStorage.setItem(TEACHER_MODE_SESSION_KEY, "true");
+        } else {
+            sessionStorage.removeItem(TEACHER_MODE_SESSION_KEY);
+        }
+    } catch {
+        // Ignore session storage errors.
+    }
+};
+
+const isTeacherMode = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("teacher")) {
+        return isTruthyFlag(params.get("teacher"));
+    }
+    return readTeacherModeSession();
+};
+
+const getHomeHref = () => {
+    const inPagesDir = window.location.pathname.includes("/docs/pages/");
+    return inPagesDir ? "../index.html" : "index.html";
+};
+
+const initTeacherMode = () => {
+    const body = document.body;
+    if (!body) return true;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("teacher")) {
+        writeTeacherModeSession(isTruthyFlag(params.get("teacher")));
+    }
+
+    const enabled = isTeacherMode();
+    body.classList.toggle("is-teacher-mode", enabled);
+    body.classList.toggle("is-student-mode", !enabled);
+
+    if (body.classList.contains("page-teacher") && !enabled) {
+        window.location.replace(getHomeHref());
+        return false;
+    }
+
+    return true;
+};
+
 const HINT_MODEL = {
     "example1.html": {
         tick1: {
@@ -2325,6 +2383,8 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    const teacherModeReady = initTeacherMode();
+    if (!teacherModeReady) return;
     initAccessibilityEnhancements();
     initAppbarEnhancements();
     initLearningDashboard();

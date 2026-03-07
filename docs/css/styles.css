@@ -2360,6 +2360,14 @@ body.is-modal-open {
   display: none !important;
 }
 
+body.is-student-mode [data-teacher-only] {
+  display: none !important;
+}
+
+body.is-teacher-mode [data-student-only] {
+  display: none !important;
+}
+
 .step-box {
   padding: var(--space-4);
   background: #f7fbff;

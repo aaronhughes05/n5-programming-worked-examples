@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teacher Mode</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body class="page page-inner page-teacher">
+    <div class="appbar" id="appbar">
+      <div class="appbar-brand-wrap">
+        <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+        <div class="appbar-brand-stack">
+          <div class="appbar-brand">Crack the Code</div>
+          <div class="appbar-subtitle">National 5 Computing Science</div>
+        </div>
+      </div>
+
+      <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
+
+      <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
+        <a class="appbar-nav-pill" href="../index.html">Home</a>
+        <a class="appbar-nav-pill" href="../index.html#examples">Examples</a>
+        <a class="appbar-nav-pill" href="worksheets.html">Worksheets</a>
+        <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
+        <a class="appbar-nav-pill is-active" href="teacher.html?teacher=1">Teacher Mode</a>
+      </nav>
+    </div>
+
+    <header class="hero hero-main">
+      <h1 class="hero-title">Teacher Mode</h1>
+      <p class="hero-summary">
+        Foundation page for teacher-only tools and reporting.
+      </p>
+    </header>
+
+    <main class="content">
+      <section class="card" data-teacher-only>
+        <h2>Teacher Space</h2>
+        <p>Teacher mode is active for this session.</p>
+        <p>This first block adds mode state and route gating. Analytics and export tools will be added next.</p>
+      </section>
+    </main>
+
+    <script src="../js/script.js"></script>
+  </body>
+</html>
