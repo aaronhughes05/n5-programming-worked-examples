@@ -1635,7 +1635,7 @@ const initExamplesShowcase = () => {
             description: "Use loops and accumulators to build totals step by step while handling multiple inputs.",
             href: "pages/example2.html",
             cta: "Start Example 2",
-            image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=960&q=80",
+            image: "https://images.unsplash.com/photo-1551033406-611cf9a28f67?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Numbers and calculator representing totals"
         },
         example3: {
@@ -1644,7 +1644,7 @@ const initExamplesShowcase = () => {
             description: "Work through list data item by item and apply the same logic cleanly across each value.",
             href: "pages/example3.html",
             cta: "Start Example 3",
-            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=960&q=80",
+            image: "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2978&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Data dashboard representing arrays and values"
         },
         assessment: {
@@ -1653,7 +1653,7 @@ const initExamplesShowcase = () => {
             description: "Bring validation, totals, and traversal together in one mixed challenge to check understanding.",
             href: "pages/assessment.html",
             cta: "Start Assessment",
-            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=960&q=80",
+            image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2938&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Notebook and study materials for assessment"
         }
     };
