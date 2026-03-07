@@ -1,182 +1,184 @@
 # Crack the Code
 ## National 5 Computing Science Worked Examples
 
-Crack the Code is an interactive web resource that supports National 5 learners in moving from a problem description to a working program through structured, guided activities.
+Crack the Code is an interactive web resource for National 5 learners, designed to move students from passive reading to active analysis through scaffolded programming activities.
 
-The site is intentionally built with plain HTML, CSS, and JavaScript so it runs well in typical school environments without framework dependencies.
-
----
-
-## Current Status
-
-- Home page, assessment page, and Example 2 are implemented and styled with a unified UI system.
-- Example 1 and Example 3 files currently exist but are empty:
-  - `docs/pages/example1.html`
-  - `docs/pages/example3.html`
-
-This affects some flows (for example, the assessment readiness warning expects all three examples to be completed).
+It is built with plain HTML, CSS, and JavaScript so it can run in typical school environments without build tooling.
 
 ---
 
-## Who This Is For
+## What The Project Does
 
-- National 5 Computing Science learners (typically ages 15–16)
-- Beginner programmers who need scaffolded problem-solving support
+The site provides:
 
-Expected prior knowledge:
-
-- Variables
-- Basic input/output
-- Simple arithmetic
-- Basic loop awareness
-
----
-
-## Learning Design
-
-Worked examples use a step-by-step flow with interactive checks to build confidence before independent coding.
-
-Typical activity types include:
-
-- Prediction questions
-- Step-by-step code reveal
-- Parsons puzzle reordering
-- Subgoal matching and code identification
-- Modify/extend tasks
-- Program run/output checking
-
-Each page uses a stepper that controls progression and shows completion state.
+- Structured worked examples following a step-by-step pipeline
+- Prediction and checkpoint tasks with immediate feedback
+- Persistent progress tracking across activities
+- A learning dashboard with completion and badges
+- Worksheet pages for print/download classroom use
+- A final assessment with gating and mixed activity types
+- A teacher mode with local analytics and admin tools
 
 ---
 
-## Pedagogical Intent
+## Current Pages
 
-The resource is designed to reduce cognitive load and improve transfer from guided examples to independent coding.
+### Home
+- `docs/index.html`
+- Learning dashboard
+- Example showcase with rotating previews
+- Badge summary actions (copy/download)
 
-Design choices include:
+### Learner Activities
+- `docs/pages/example1.html` (implemented)
+- `docs/pages/example2.html` (implemented)
+- `docs/pages/assessment.html` (implemented)
+- `docs/pages/example3.html` (placeholder file currently empty)
 
-- **Consistent structure** across examples so learners can focus on problem solving rather than interface changes.
-- **Small verification checkpoints** (checks, trace, code identification) to catch misconceptions early.
-- **Progressive release** from modelled solution steps to modification and output validation.
-- **Assessment gating warning** to encourage practice-first sequencing while still allowing learner autonomy.
+### Worksheets
+- `docs/pages/worksheets.html`
+- `docs/pages/worksheet-example1.html`
+- `docs/pages/worksheet-example2.html`
+- `docs/pages/worksheet-example3.html`
+- `docs/pages/worksheet-assessment.html`
+
+### Teacher Mode
+- `docs/pages/teacher.html`
+- Passcode-gated local teacher tools
 
 ---
 
-## Main Features
+## Learning Flow And Design
+
+Examples use a guided progression model with required checkpoints before moving forward.
+
+Typical activity types:
+
+- Prediction questions (radio/text/select)
+- Step-by-step implementation reveal
+- Parsons-style ordering tasks
+- Subgoal mapping and line identification
+- Trace/modify tasks
+- Output checking
+
+The design applies:
+
+- Consistent structure and wording across activities
+- Subgoal labeling to support mental mapping
+- Rich targeted feedback on errors
+- Adaptive hints with escalation by attempt count
+
+---
+
+## Core Features
 
 ### 1) Unified App Bar
 
-All active pages use a shared app bar with:
+- Shared top navigation across pages
+- Mobile menu support
+- Resume link shown when in-progress work exists
+- Teacher Mode nav entry injected across pages
 
-- quick links (`Home`, `Examples`, `Final Assessment`)
-- mobile menu behavior
-- resume link (shown when progress exists)
+### 2) Stepper + Required Checkpoints
 
-### 2) Home Examples Showcase
+- Next step is blocked until required checks are complete
+- Progress bar and step indicator update dynamically
+- Restart clears state for the current activity
 
-The home page has a tabbed examples preview section that:
+### 3) Rich Feedback + Adaptive Hints
 
-- auto-rotates through examples
-- supports manual tab selection
-- preloads preview images to reduce switching lag
+- Correct/incorrect status treatment is standardized
+- Rich feedback includes misconception and next-step guidance
+- Hint levels unlock after failed attempts
+- Worked hint reveal is tracked
 
-### 3) Progress Persistence
+### 4) Progress Persistence
 
-Learner progress is saved in `localStorage` per page using:
+Saved locally in `localStorage`:
 
 - `assessmentStepperState.v2:<pathname>`
+- `adaptiveHintState.v1:<pathname>`
 
-Saved state includes:
+Tracks:
 
-- current step index
-- completed checks
+- step index
+- completed checkpoints
 - input values
-- run/output fields where applicable
-- final completion flag when finish screen is reached
+- completion state
+- hint usage analytics
 
-### 4) Assessment Readiness Warning
+### 5) Learning Dashboard
 
-When a user tries to open the assessment without completing all three examples, a warning dialog appears.
+- Activity state cards: Not started / In progress / Complete
+- Progress bars + activity actions (Start/Continue/Review)
+- Badge rendering and summary
+- Summary copy/download actions
 
-Behavior:
+### 6) Assessment Access Gate
 
-- users are warned but can still proceed
-- includes progress indicator (`X of 3 examples complete`)
-- provides path to the next incomplete example
+When users open Final Assessment before finishing all worked examples:
 
-Completion rule:
+- modal warning appears
+- completion progress shown (`X of 3 examples complete`)
+- missing examples listed
+- options to proceed or jump to next incomplete example
 
-- an example counts as complete only after the user reaches that page’s finish screen
+### 7) Teacher Mode (Client-Side)
 
-### 5) Custom Glass Tooltips
+Teacher Mode includes:
 
-Reusable delayed tooltips are implemented centrally and auto-assigned to pill-style controls for short assistive guidance.
+- passcode unlock modal (session-based)
+- class progress summary cards
+- attempt analytics and difficulty signals
+- most-missed checkpoint highlights
+- report export (CSV and JSON)
+- admin actions:
+  - `Insert Test Data`
+  - `Reset all local progress` (custom confirmation popup)
 
-### 6) Back-to-Top FAB
+Notes:
 
-A floating action button appears after scrolling and smoothly returns the page to top.
-
----
-
-## UX and Interaction Model
-
-### Global Navigation
-
-- Sticky glass app bar on all active pages
-- Home/Examples/Assessment quick links
-- Resume link appears when valid progress data exists
-
-### Home Experience
-
-- Hero section with direct entry points
-- Tabbed preview module for examples and assessment
-- Auto-rotating preview with manual override
-- Scroll-reveal animation for home cards
-
-### Assessment Warning Flow
-
-When users attempt to open the assessment:
-
-1. Example completion is checked from persisted stepper state.
-2. If all examples are complete, navigation proceeds immediately.
-3. If not, a warning modal appears with:
-   - completion progress (`X of 3`)
-   - missing example chips
-   - two paths: proceed anyway or open the next incomplete example
+- This is client-side only (no backend auth)
+- It provides deterrence/convenience, not secure access control
 
 ---
 
-## Data and State Model
+## Teacher Mode Access
 
-Client-side persistence uses `localStorage` with the namespace:
+Open:
 
-- `assessmentStepperState.v2:<pathname>`
+- `docs/pages/teacher.html`
 
-Saved payload fields include:
+Unlock with passcode:
 
-- `index`: current step index
-- `completedChecks`: IDs marked correct
-- `inputs`: text input values
-- `makeProgram`, `makeCase`, `makeActual`: make-task state (where present)
-- `isComplete`: true only when finish screen is reached
+- current local passcode in code: `n5teacher`
 
-This model supports:
+Session behavior:
 
-- restoring in-progress work
-- resume-link targeting
-- assessment readiness checks
+- unlock persists for current browser tab/session via `sessionStorage`
+- lock/logout clears teacher session and returns to home
 
 ---
 
-## Accessibility Notes
+## Accessibility And UX
 
-Current implementation includes:
+Implemented UX/accessibility support includes:
 
-- Keyboard-usable controls across navigation and activities
-- Modal close by `Esc`, click-outside, and explicit close button
-- Focus trapping while modal is open
-- Reduced-motion fallbacks for animated UI paths
-- Tooltip support on focus, not hover-only
+- keyboard focus styles and interactive controls
+- ARIA labels for dynamic sections and tool groups
+- modal close affordances (close button/backdrop/Escape where implemented)
+- reduced-motion-aware animation patterns
+- consistent feedback iconography and color semantics
+
+---
+
+## Tech Stack
+
+- HTML
+- CSS
+- Vanilla JavaScript
+- Pyodide (browser Python runtime for run/check tasks where used)
+- GitHub Pages style deployment from `/docs`
 
 ---
 
@@ -185,6 +187,7 @@ Current implementation includes:
 ```text
 /docs
   index.html
+  favicon.svg
   /css
     styles.css
   /js
@@ -195,109 +198,50 @@ Current implementation includes:
     example1.html
     example2.html
     example3.html
+    teacher.html
+    worksheets.html
+    worksheet-example1.html
+    worksheet-example2.html
+    worksheet-example3.html
+    worksheet-assessment.html
 ```
-
----
-
-## Tech Stack
-
-- HTML
-- CSS
-- JavaScript (vanilla)
-- Pyodide (for browser-based Python execution in relevant activities)
-- GitHub Pages deployment from `/docs`
-
----
-
-## Key Front-End Modules
-
-### `docs/js/script.js`
-
-Main responsibilities:
-
-- Stepper progression and validation logic
-- Local storage save/load/reset
-- Parsons drag-and-drop ordering checks
-- Subgoal activity checks
-- Pyodide run/evaluate path for make tasks
-- App bar enhancements and resume-link handling
-- Glass tooltip generation and positioning
-- Assessment gate modal behavior and routing interception
-
-### `docs/css/styles.css`
-
-Main responsibilities:
-
-- Design tokens and color system
-- App bar, card, and edge-sweep visual language
-- Responsive layout behavior
-- Tooltip and modal visual system
-- Home preview interactions and reveal states
 
 ---
 
 ## Run Locally
 
-1. Clone the repository:
+1. Clone repository:
 
 ```bash
 git clone https://github.com/aaronhughes05/n5-programming-worked-examples.git
 ```
 
-2. Open:
-
-```text
-docs/index.html
-```
-
-in a web browser.
+2. Open `docs/index.html` in a browser.
 
 No build step is required.
 
 ---
 
-## Manual Test Checklist
+## Manual Smoke Test Checklist
 
-Recommended smoke tests after UI/logic changes:
-
-1. Home page loads with app bar, examples preview, and footer layout intact.
+1. Home page loads with app bar, dashboard, and examples preview.
 2. App bar links route correctly from both `/docs` and `/docs/pages`.
-3. Example/assessment stepper:
-   - next/back/restart work
-   - required checks gate step progression
-   - completion screen appears at final step
-4. Progress persistence:
-   - reload restores step + inputs
-   - resume link appears when progress exists
-5. Assessment gate:
-   - warning appears when any example incomplete
-   - proceed anyway opens assessment
-   - next incomplete example button routes correctly
-6. Tooltips:
-   - appear after delay
-   - position correctly near trigger
-   - disappear on leave/blur/escape paths
-7. Responsive behavior at mobile widths:
-   - app bar menu toggle
-   - modal layout
-   - examples preview tabs
+3. Stepper behavior works (Back/Next/Restart + required checks).
+4. Progress persists on reload for activities with saved data.
+5. Assessment gate appears correctly when examples are incomplete.
+6. Feedback/hints render correctly and update after failed attempts.
+7. Teacher mode lock/unlock flow works as expected.
+8. Teacher exports generate valid CSV and JSON files.
+9. Reset/Insert Test Data actions immediately refresh teacher analytics.
+10. Responsive layout remains usable on mobile widths.
 
 ---
 
 ## Known Limitations
 
-- `example1.html` and `example3.html` are currently empty, which impacts full end-to-end learner flow.
-- Completion checks are client-side only (local to browser/storage context).
-- No analytics/telemetry layer is currently included.
-
----
-
-## Suggested Next Improvements
-
-- Rebuild Example 1 and Example 3 pages using the shared template and current UI system.
-- Add automated UI regression checks (Playwright/Cypress) for critical user journeys.
-- Add versioned content metadata for examples to manage future curriculum updates.
-- Consider optional teacher mode (progress reset/overview controls).
+- `docs/pages/example3.html` is currently an empty placeholder.
+- All state and analytics are local to the browser (no backend sync).
+- Teacher mode protection is client-side only.
 
 ---
 
