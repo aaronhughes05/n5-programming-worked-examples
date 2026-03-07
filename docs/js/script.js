@@ -165,13 +165,13 @@ const initTeacherAccessNotice = () => {
 
 const initTeacherPasscodeGate = () => {
     const modal = document.getElementById("teacherGate");
-    const backdrop = modal?.querySelector(".teacher-gate__backdrop");
+    const closeTriggers = modal
+        ? Array.from(modal.querySelectorAll("[data-close-teacher-gate='true']"))
+        : [];
     const form = document.getElementById("teacherGateForm");
     const input = document.getElementById("teacherPasscodeInput");
     const error = document.getElementById("teacherGateError");
-    const unlockBtn = document.getElementById("teacherGateUnlock");
-    const cancelBtn = document.getElementById("teacherGateCancel");
-    if (!modal || !form || !input || !error || !unlockBtn || !cancelBtn) return;
+    if (!modal || !form || !input || !error) return;
 
     const closeGate = () => {
         modal.classList.remove("is-open");
@@ -184,6 +184,7 @@ const initTeacherPasscodeGate = () => {
         modal.setAttribute("aria-hidden", "false");
         document.body.classList.add("is-modal-open");
         error.textContent = "";
+        error.classList.remove("is-visible");
         input.value = "";
         setTimeout(() => input.focus(), 0);
     };
@@ -200,28 +201,25 @@ const initTeacherPasscodeGate = () => {
         if (attempt === TEACHER_MODE_PASSCODE) {
             writeTeacherModeSession(true);
             applyTeacherModeClasses(true);
+            error.textContent = "";
+            error.classList.remove("is-visible");
             closeGate();
             return;
         }
         writeTeacherModeSession(false);
         applyTeacherModeClasses(false);
         error.textContent = "Incorrect passcode. Try again.";
+        error.classList.add("is-visible");
         input.select();
     });
 
-    cancelBtn.addEventListener("click", () => {
-        writeTeacherModeSession(false);
-        applyTeacherModeClasses(false);
-        window.location.replace(getTeacherDeniedHomeHref());
-    });
-
-    if (backdrop) {
-        backdrop.addEventListener("click", () => {
+    closeTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", () => {
             writeTeacherModeSession(false);
             applyTeacherModeClasses(false);
             window.location.replace(getTeacherDeniedHomeHref());
         });
-    }
+    });
 
     document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
         btn.addEventListener("click", (event) => {
@@ -1836,6 +1834,11 @@ const initTeacherSummaryPanel = () => {
     const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
     const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
     const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
+    const resetModal = document.getElementById("teacherResetModal");
+    const resetConfirmBtn = document.getElementById("teacherResetConfirmBtn");
+    const resetCloseTriggers = resetModal
+        ? Array.from(resetModal.querySelectorAll("[data-close-reset-modal='true']"))
+        : [];
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
@@ -2035,12 +2038,36 @@ const initTeacherSummaryPanel = () => {
 
     if (resetProgressBtn) {
         resetProgressBtn.onclick = () => {
-            const proceed = window.confirm("Reset all local student progress and hint data on this device?");
-            if (!proceed) return;
+            if (!resetModal) return;
+            resetModal.classList.add("is-open");
+            resetModal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("is-modal-open");
+            if (resetConfirmBtn) {
+                window.setTimeout(() => resetConfirmBtn.focus(), 0);
+            }
+        };
+    }
+
+    if (resetConfirmBtn) {
+        resetConfirmBtn.onclick = () => {
             clearAllLocalProgress();
+            if (resetModal) {
+                resetModal.classList.remove("is-open");
+                resetModal.setAttribute("aria-hidden", "true");
+            }
+            document.body.classList.remove("is-modal-open");
             initTeacherSummaryPanel();
         };
     }
+
+    resetCloseTriggers.forEach((el) => {
+        el.onclick = () => {
+            if (!resetModal) return;
+            resetModal.classList.remove("is-open");
+            resetModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("is-modal-open");
+        };
+    });
 
     if (seedDemoBtn) {
         seedDemoBtn.onclick = () => {
