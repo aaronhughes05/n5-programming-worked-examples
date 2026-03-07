@@ -2852,10 +2852,30 @@ button[disabled] {
 
 .subgoals-panel {
   background: #ffffff;
+  overflow: visible;
 }
 
 .worked-example-panel {
   background: #ffffff;
+  overflow: visible;
+}
+
+.subgoals-panel + .worked-example-panel {
+  position: relative;
+  margin-top: 0;
+}
+
+.subgoals-panel + .worked-example-panel::before {
+  content: "";
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  transform: translateX(-50%);
+  border-left: 2px dashed rgba(37, 99, 235, 0.58);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .subgoals-panel[open] > summary {
