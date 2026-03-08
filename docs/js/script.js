@@ -259,6 +259,12 @@ const HINT_MODEL = {
         }
     },
     "example2.html": {
+        fullCode: {
+            l1: "Reveal each implementation step and connect it to subgoals A, B, C, and D.",
+            l2: "Check that setup appears before looping and output appears after updates.",
+            l3: "Use the full solution block to verify line order and subgoal labels.",
+            worked: "Correct flow: A setup -> D loop -> B input -> C update -> D output."
+        },
         tick1: {
             l1: "Focus on the loop line. How many item entries are required?",
             l2: "Check the worked code: range(5) means the loop runs 5 times.",
@@ -306,12 +312,6 @@ const HINT_MODEL = {
             l2: "A running total should start at the identity value for addition.",
             l3: "Starting with any non-zero value shifts every result.",
             worked: "Set total to 0 before entering the loop."
-        },
-        parsonsFeedback: {
-            l1: "Think setup first, then loop, then update, then final output.",
-            l2: "Initialize total before the loop starts.",
-            l3: "Order pattern: initialize -> loop header -> update inside loop -> print after loop.",
-            worked: "Correct order: total = 0, for ..., total = total + price, print(total)."
         },
         tick2: {
             l1: "Build the flow in order: setup, loop, input, update, output.",
@@ -363,6 +363,12 @@ const FEEDBACK_MAP = {
         }
     },
     "example2.html": {
+        fullCode: {
+            correct: "Correct. You completed the full step-by-step implementation flow.",
+            incorrect: "Try again.",
+            misconception: "You may be skipping a stage or placing output before all updates are complete.",
+            next: "Follow the order shown in the worked steps and then reveal the full solution."
+        },
         tick1: {
             correct: "Good prediction. You matched the fixed loop count.",
             incorrect: "Not quite yet.",
@@ -411,17 +417,12 @@ const FEEDBACK_MAP = {
             misconception: "Starting the total at a non-zero value adds an offset to every result.",
             next: "Initialize total to the neutral value for addition before the loop."
         },
-        parsonsFeedback: {
-            correct: "Great ordering. The logic now flows from setup to output correctly.",
-            incorrect: "The sequence is still off.",
-            misconception: "A common issue is placing print(total) inside the loop or skipping initialization first.",
-            next: "Order the blocks as initialize -> loop -> update total -> print."
-        },
         tick2: {
-            correct: "Great modification. The updated 10-item program flow is correct.",
-            incorrect: "The modified program order is still off.",
+            correct: "Correct. The modified 10-item program logic is in the right order.",
+            incorrect: "Try again.",
             misconception: "A common issue is placing print(total) inside the loop or moving setup below the loop.",
-            next: "Rebuild the order as setup -> loop(10) -> input -> update total -> final output."
+            next: "Rebuild as setup -> loop(10) -> input -> update total -> final output.",
+            alwaysShowMisconception: true
         }
     },
     "assessment.html": {
@@ -509,7 +510,7 @@ const buildTargetedFeedback = (checkpointId, correct, fallbackMessage) => {
         return `${entry.correct}\nNext: continue to the next checkpoint.`;
     }
     const lines = [entry.incorrect];
-    if (attemptCount >= 2 && entry.misconception) {
+    if (entry.misconception && (attemptCount >= 2 || entry.alwaysShowMisconception === true)) {
         lines.push(`Possible mix-up: ${entry.misconception}`);
     }
     lines.push(`Next: ${entry.next}`);
@@ -1313,6 +1314,7 @@ const CHECKPOINT_LABELS = {
         tick4: "Prediction Q4: Retry behavior"
     },
     example2: {
+        fullCode: "Implementation: full solution sequence",
         tick1: "Prediction Q1: Loop count",
         sgA2Tick: "Subgoal mapping: initialization line",
         sgB2Tick: "Code identification: input line",
@@ -1321,7 +1323,6 @@ const CHECKPOINT_LABELS = {
         tick2Pred: "Prediction Q2: Loop type",
         tick3Pred: "Prediction Q3: Running total variable",
         tick4Pred: "Prediction Q4: Initial total value",
-        parsonsFeedback: "Parsons logic ordering",
         tick2: "Modify program: reorder 10-item flow"
     },
     example3: {},
@@ -1474,7 +1475,8 @@ const seedDemoProgress = () => {
     saveHint("/docs/pages/example2.html", {
         checkpoints: {
             tick1: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 11 * minute },
-            parsonsFeedback: { attempts: 4, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 10 * minute }
+            sgB2Tick: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 10 * minute },
+            tick2: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 9 * minute }
         }
     });
 
