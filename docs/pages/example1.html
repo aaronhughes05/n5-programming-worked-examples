@@ -59,7 +59,7 @@ D:     username = input("Enter username: ")
 D: print("Your username is: " + username)</code></pre>
         </details>
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 9</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -266,6 +266,45 @@ D: print("Your username is: " + username)</code></pre>
             <p id="ex1ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
+            <h2>10. Make Your Own Program</h2>
+            <p>Write your own program below, select a test case, then run and check the output.</p>
+
+            <p><strong>Your Program</strong></p>
+            <textarea class="code-area" id="makeProgram" rows="12" placeholder="Write your program here..."></textarea>
+
+            <div class="question-block">
+                <p><strong>Test Case</strong></p>
+                <div class="question-input">
+                    <select id="makeCase" onchange="updateExpectedOutput()">
+                        <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+                        <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+                        <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <p><strong>Expected Output</strong></p>
+            <pre><code id="makeExpected">Scores: 5, 6, 7
+Total: 18
+Average: 6.0</code></pre>
+
+            <p><strong>Your Output</strong></p>
+            <div class="run-row">
+                <button class="check-btn" id="runProgramBtn" onclick="runProgram()" disabled>Run Program</button>
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="runStatus" class="run-status">Python runtime loading...</span>
+            </div>
+            <pre><code id="makeActual">Run your program to see the output here.</code></pre>
+
+            <div class="question-block">
+                <div class="question-input">
+                    <button class="check-btn" onclick="checkActualOutput('makeCase', 'makeActual', 'makeOutputTick')">Check Output</button>
+                    <span id="makeOutputTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
         <div class="stepper-controls">
             <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
             <button class="check-btn reset-btn" id="stepReset" onclick="resetAssessment()">Restart</button>
@@ -286,6 +325,7 @@ D: print("Your username is: " + username)</code></pre>
         </div>
     </section>
 
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <script src="../js/script.js"></script>
 </body>
 </html>

@@ -1058,11 +1058,7 @@ const checkOutput = (caseSelectId, outputId, tickId) => {
 
     if (!caseSelect || !outputEl || !tick) return;
 
-    const expectedOutputs = {
-        case1: "Scores: 2, 3, 4, 5, 6, 7\nTotal: 27\nAverage: 4.5",
-        case2: "Scores: 0, 10, 20, 30, 40, 50\nTotal: 150\nAverage: 25.0",
-        case3: "Scores: 5, 5, 5, 5, 5, 5\nTotal: 30\nAverage: 5.0"
-    };
+    const expectedOutputs = getMakeExpectedOutputs();
 
     const selectedCase = caseSelect.value;
     const expected = expectedOutputs[selectedCase] || "";
@@ -1076,11 +1072,7 @@ const updateExpectedOutput = () => {
     const expectedEl = document.getElementById("makeExpected");
     if (!caseSelect || !expectedEl) return;
 
-    const expectedOutputs = {
-        case1: "Scores: 2, 3, 4, 5, 6, 7\nTotal: 27\nAverage: 4.5",
-        case2: "Scores: 0, 10, 20, 30, 40, 50\nTotal: 150\nAverage: 25.0",
-        case3: "Scores: 5, 5, 5, 5, 5, 5\nTotal: 30\nAverage: 5.0"
-    };
+    const expectedOutputs = getMakeExpectedOutputs();
 
     expectedEl.textContent = expectedOutputs[caseSelect.value] || "";
 };
@@ -1091,11 +1083,7 @@ const checkActualOutput = (caseSelectId, actualOutputId, tickId) => {
     const tick = document.getElementById(tickId);
     if (!caseSelect || !actualEl || !tick) return;
 
-    const expectedOutputs = {
-        case1: "Scores: 2, 3, 4, 5, 6, 7\nTotal: 27\nAverage: 4.5",
-        case2: "Scores: 0, 10, 20, 30, 40, 50\nTotal: 150\nAverage: 25.0",
-        case3: "Scores: 5, 5, 5, 5, 5, 5\nTotal: 30\nAverage: 5.0"
-    };
+    const expectedOutputs = getMakeExpectedOutputs();
 
     const expected = expectedOutputs[caseSelect.value] || "";
     const actual = actualEl.textContent || "";
@@ -1312,6 +1300,22 @@ const getMakeInputs = (caseValue) => {
     if (caseValue === "case2") return ["0", "10", "20", "30", "40", "50"];
     if (caseValue === "case3") return ["5", "5", "5", "5", "5", "5"];
     return [];
+};
+
+const getMakeExpectedOutputs = () => {
+    if (ACTIVITY_PAGE_NAME === "example1.html") {
+        return {
+            case1: "Scores: 5, 6, 7\nTotal: 18\nAverage: 6.0",
+            case2: "Scores: 10, 20, 30\nTotal: 60\nAverage: 20.0",
+            case3: "Scores: 5, 5, 5\nTotal: 15\nAverage: 5.0"
+        };
+    }
+
+    return {
+        case1: "Scores: 2, 3, 4, 5, 6, 7\nTotal: 27\nAverage: 4.5",
+        case2: "Scores: 0, 10, 20, 30, 40, 50\nTotal: 150\nAverage: 25.0",
+        case3: "Scores: 5, 5, 5, 5, 5, 5\nTotal: 30\nAverage: 5.0"
+    };
 };
 
 const enableRunButton = () => {
