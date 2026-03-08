@@ -318,6 +318,12 @@ const HINT_MODEL = {
             l2: "Use range(10) in the loop header, then keep input/update inside that loop.",
             l3: "print(total) should come after the loop, not inside it.",
             worked: "Correct order: total = 0 -> for counter in range(10): -> price input -> total update -> print(total)."
+        },
+        makeOutputTick: {
+            l1: "Compare formatting and values against expected output.",
+            l2: "Check spacing, commas, and line order exactly.",
+            l3: "Ensure totals and average are calculated from the selected test case.",
+            worked: "Match expected output exactly after running your program."
         }
     },
     "assessment.html": {
@@ -423,6 +429,12 @@ const FEEDBACK_MAP = {
             misconception: "A common issue is placing print(total) inside the loop or moving setup below the loop.",
             next: "Rebuild as setup -> loop(10) -> input -> update total -> final output.",
             alwaysShowMisconception: true
+        },
+        makeOutputTick: {
+            correct: "Output matches expected values and formatting.",
+            incorrect: "Output does not match expected yet.",
+            misconception: "Likely formatting mismatch, wrong total/average formula, or missing lines.",
+            next: "Compare your output line-by-line with expected output and rerun."
         }
     },
     "assessment.html": {
@@ -1333,7 +1345,8 @@ const CHECKPOINT_LABELS = {
         tick2Pred: "Prediction Q2: Loop type",
         tick3Pred: "Prediction Q3: Running total variable",
         tick4Pred: "Prediction Q4: Initial total value",
-        tick2: "Modify program: reorder 10-item flow"
+        tick2: "Modify program: reorder 10-item flow",
+        makeOutputTick: "Output verification"
     },
     example3: {},
     assessment: {
@@ -1474,7 +1487,7 @@ const seedDemoProgress = () => {
 
     saveStep("/docs/pages/example2.html", {
         path: "/docs/pages/example2.html",
-        stepCount: 8,
+        stepCount: 9,
         index: 5,
         isComplete: false,
         updatedAt: now - 12 * minute,
