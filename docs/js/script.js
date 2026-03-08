@@ -1657,6 +1657,7 @@ const buildBadgeStates = (summaries) => {
 const createBadgeChip = (badge) => {
     const chip = document.createElement("span");
     chip.className = `dashboard-badge${badge.earned ? " is-earned" : ""}`;
+    chip.dataset.badgeKey = badge.key;
     chip.textContent = badge.label;
     return chip;
 };
