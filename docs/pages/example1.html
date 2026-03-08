@@ -59,7 +59,7 @@ D:     username = input("Enter username: ")
 D: print("Your username is: " + username)</code></pre>
         </details>
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 5</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -161,30 +161,149 @@ D: print("Your username is: " + username)</code></pre>
             </div>
         </section>
 
-        <!-- <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="parsonsFeedback">
-            <h2>4. Parsons Puzzle</h2>
-            <p>Drag the lines into the correct logical order:</p>
-            <div id="parsons-area" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="p3" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
-                <div id="p1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
-                <div id="p4" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
-                <div id="p2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(5):</div>
-            </div>
-            <button onclick="verifyParsons('parsons-area', ['p1', 'p2', 'p3', 'p4'], 'parsonsFeedback')">Verify Logic</button>
-            <p id="parsonsFeedback"></p>
-        </section>
-
-        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="tick3">
-            <h2>6. Modify Task</h2>
-            <div class="question-block">
-                <p>Change the code to ask for 10 items. What would the loop line look like?</p>
-                <div class="question-input">
-                    <input type="text" id="modAns" class="w-full" placeholder="for counter in range...">
-                    <button onclick="checkAnswer('modAns', 'for counter in range(10):', 'tick3')">Check Answer</button>
-                    <span id="tick3" class="tick-mark"></span>
+        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="ex1SgATick">
+            <h2>4. Match The Subgoal</h2>
+            <div class="question-block" data-choice-group="ex1sgA">
+                <p>Which subgoal does this line belong to? <span class="inline-code"><strong>username = input("Enter username: ")</strong></span></p>
+                <div class="mc-buttons">
+                    <button type="button" onclick="setChoice('ex1sgA', 'A', this)">A</button>
+                    <button type="button" onclick="setChoice('ex1sgA', 'B', this)">B</button>
+                    <button type="button" onclick="setChoice('ex1sgA', 'C', this)">C</button>
+                    <button type="button" onclick="setChoice('ex1sgA', 'D', this)">D</button>
+                    <button type="button" class="check-btn" onclick="checkChoice('ex1sgA', 'A', 'ex1SgATick')">Check</button>
+                    <span id="ex1SgATick" class="tick-mark"></span>
                 </div>
             </div>
-        </section> -->
+        </section>
+
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="ex1SgBTick">
+            <h2>5. Identify The Code</h2>
+            <div class="question-block" data-line-group="ex1sgB">
+                <p>Click the line that matches Subgoal B (check if input is valid).</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex1sgB', 'username = input(\"Enter username: \")', this)">username = input("Enter username: ")</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex1sgB', 'while len(username) < 5:', this)">while len(username) &lt; 5:</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex1sgB', 'print(\"Your username is: \" + username)', this)">print("Your username is: " + username)</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex1sgB', 'while len(username) < 5:', 'ex1SgBTick')">Check</button>
+                <span id="ex1SgBTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="ex1SgCTick">
+            <h2>6. Fill In The Blank</h2>
+            <div class="question-block">
+                <p>Complete the validation condition: <span class="inline-code"><strong>while len(username) &lt; ___:</strong></span></p>
+                <div class="question-input">
+                    <input type="text" id="ex1SgCInput" class="w-80" placeholder="Enter value...">
+                    <button onclick="checkAnswer('ex1SgCInput', '5', 'ex1SgCTick')">Check</button>
+                    <span id="ex1SgCTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="ex1SgDTick">
+            <h2>7. Identify The Subgoal</h2>
+            <div class="question-block">
+                <p>Which subgoal does this line represent? <span class="inline-code"><strong>print("Username must be at least 5 characters long.")</strong></span></p>
+                <div class="question-input">
+                    <input type="text" id="ex1SgDInput" class="w-120" placeholder="A, B, C, or D">
+                    <button onclick="checkAnswer('ex1SgDInput', 'C', 'ex1SgDTick')">Check</button>
+                    <span id="ex1SgDTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="ex1TraceTick">
+            <h2>8. Trace The Validation</h2>
+            <div class="question-block">
+                <p>Trace the program behavior for inputs: first <strong>sam</strong>, then <strong>alex1</strong>.</p>
+                <table class="trace-table">
+                    <thead>
+                        <tr>
+                            <th>Check</th>
+                            <th>Your Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Is <code>sam</code> valid? (yes/no)</td>
+                            <td><input type="text" id="ex1Trace1" class="w-100"></td>
+                        </tr>
+                        <tr>
+                            <td>Is <code>alex1</code> valid? (yes/no)</td>
+                            <td><input type="text" id="ex1Trace2" class="w-100"></td>
+                        </tr>
+                        <tr>
+                            <td>How many retries were needed?</td>
+                            <td><input type="text" id="ex1Trace3" class="w-100"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="check-btn" onclick="checkTrace(['ex1Trace1','ex1Trace2','ex1Trace3'], ['no','yes','1'], 'ex1TraceTick')">Check</button>
+                <span id="ex1TraceTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="ex1ModifyTick">
+            <h2>9. Modify The Program</h2>
+            <p>Rearrange the lines to build a complete username-validation program.</p>
+            <p>Your modified program should:</p>
+            <ul>
+                <li>Read a username from the user</li>
+                <li>Repeat while the username is shorter than 5 and longer than 20 characters</li>
+                <li>Display an error message for invalid input</li>
+                <li>Print the accepted username at the end</li>
+            </ul>
+            <div id="ex1-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="ex1m4" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
+                <div id="ex1m2" class="draggable" draggable="true" ondragstart="drag(event)">while len(username) &lt; 5 or len(username) &gt; 20:</div>
+                <div id="ex1m5" class="draggable" draggable="true" ondragstart="drag(event)">print("Your username is: " + username)</div>
+                <div id="ex1m3" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter a valid username: ")</div>
+                <div id="ex1m1" class="draggable" draggable="true" ondragstart="drag(event)">print("Username must be between 5 and 20 characters long.")</div>
+            </div>
+            <button onclick="verifyParsons('ex1-modify-parsons', ['ex1m4', 'ex1m2', 'ex1m1', 'ex1m3', 'ex1m5'], 'ex1ModifyTick')">Verify Logic</button>
+            <p id="ex1ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
+            <h2>10. Make Your Own Program</h2>
+            <p>Write your own program below, select a test case, then run and check the output.</p>
+
+            <p><strong>Your Program</strong></p>
+            <textarea class="code-area" id="makeProgram" rows="12" placeholder="Write your program here..."></textarea>
+
+            <div class="question-block">
+                <p><strong>Test Case</strong></p>
+                <div class="question-input">
+                    <select id="makeCase" onchange="updateExpectedOutput()">
+                        <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+                        <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+                        <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <p><strong>Expected Output</strong></p>
+            <pre><code id="makeExpected">Scores: 5, 6, 7
+Total: 18
+Average: 6.0</code></pre>
+
+            <p><strong>Your Output</strong></p>
+            <div class="run-row">
+                <button class="check-btn" id="runProgramBtn" onclick="runProgram()" disabled>Run Program</button>
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="runStatus" class="run-status">Python runtime loading...</span>
+            </div>
+            <pre><code id="makeActual">Run your program to see the output here.</code></pre>
+
+            <div class="question-block">
+                <div class="question-input">
+                    <button class="check-btn" onclick="checkActualOutput('makeCase', 'makeActual', 'makeOutputTick')">Check Output</button>
+                    <span id="makeOutputTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
 
         <div class="stepper-controls">
             <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
@@ -199,6 +318,8 @@ D: print("Your username is: " + username)</code></pre>
             <h2>Example Finished</h2>
             <p>You have completed this example.</p>
             <p class="completion-note">Use Restart to try again or return home.</p>
+            <div class="completion-badges" data-completion-badges aria-label="Earned badges"></div>
+            <p class="completion-badge-summary" data-completion-badge-summary></p>
             <div class="completion-actions">
                 <a class="check-btn nav-btn back-btn" href="../index.html">Back to Home</a>
                 <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
@@ -206,6 +327,7 @@ D: print("Your username is: " + username)</code></pre>
         </div>
     </section>
 
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <script src="../js/script.js"></script>
 </body>
 </html>
