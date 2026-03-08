@@ -59,7 +59,7 @@ D:     username = input("Enter username: ")
 D: print("Your username is: " + username)</code></pre>
         </details>
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 5</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 9</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -161,30 +161,103 @@ D: print("Your username is: " + username)</code></pre>
             </div>
         </section>
 
-        <!-- <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="parsonsFeedback">
-            <h2>4. Parsons Puzzle</h2>
-            <p>Drag the lines into the correct logical order:</p>
-            <div id="parsons-area" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="p3" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
-                <div id="p1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
-                <div id="p4" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
-                <div id="p2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(5):</div>
-            </div>
-            <button onclick="verifyParsons('parsons-area', ['p1', 'p2', 'p3', 'p4'], 'parsonsFeedback')">Verify Logic</button>
-            <p id="parsonsFeedback"></p>
-        </section>
-
-        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="tick3">
-            <h2>6. Modify Task</h2>
-            <div class="question-block">
-                <p>Change the code to ask for 10 items. What would the loop line look like?</p>
-                <div class="question-input">
-                    <input type="text" id="modAns" class="w-full" placeholder="for counter in range...">
-                    <button onclick="checkAnswer('modAns', 'for counter in range(10):', 'tick3')">Check Answer</button>
-                    <span id="tick3" class="tick-mark"></span>
+        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="ex1SgATick">
+            <h2>4. Match The Subgoal</h2>
+            <div class="question-block" data-choice-group="ex1sgA">
+                <p>Which subgoal does this line belong to? <span class="inline-code"><strong>username = input("Enter username: ")</strong></span></p>
+                <div class="mc-buttons">
+                    <button type="button" onclick="setChoice('ex1sgA', 'A', this)">A</button>
+                    <button type="button" onclick="setChoice('ex1sgA', 'B', this)">B</button>
+                    <button type="button" onclick="setChoice('ex1sgA', 'C', this)">C</button>
+                    <button type="button" onclick="setChoice('ex1sgA', 'D', this)">D</button>
+                    <button type="button" class="check-btn" onclick="checkChoice('ex1sgA', 'A', 'ex1SgATick')">Check</button>
+                    <span id="ex1SgATick" class="tick-mark"></span>
                 </div>
             </div>
-        </section> -->
+        </section>
+
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="ex1SgBTick">
+            <h2>5. Identify The Code</h2>
+            <div class="question-block" data-line-group="ex1sgB">
+                <p>Click the line that matches Subgoal B (check if input is valid).</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex1sgB', 'username = input(\"Enter username: \")', this)">username = input("Enter username: ")</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex1sgB', 'while len(username) < 5:', this)">while len(username) &lt; 5:</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex1sgB', 'print(\"Your username is: \" + username)', this)">print("Your username is: " + username)</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex1sgB', 'while len(username) < 5:', 'ex1SgBTick')">Check</button>
+                <span id="ex1SgBTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="ex1SgCTick">
+            <h2>6. Fill In The Blank</h2>
+            <div class="question-block">
+                <p>Complete the validation condition: <span class="inline-code"><strong>while len(username) &lt; ___:</strong></span></p>
+                <div class="question-input">
+                    <input type="text" id="ex1SgCInput" class="w-80" placeholder="Enter value...">
+                    <button onclick="checkAnswer('ex1SgCInput', '5', 'ex1SgCTick')">Check</button>
+                    <span id="ex1SgCTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="ex1SgDTick">
+            <h2>7. Identify The Subgoal</h2>
+            <div class="question-block">
+                <p>Which subgoal does this line represent? <span class="inline-code"><strong>print("Username must be at least 5 characters long.")</strong></span></p>
+                <div class="question-input">
+                    <input type="text" id="ex1SgDInput" class="w-120" placeholder="A, B, C, or D">
+                    <button onclick="checkAnswer('ex1SgDInput', 'C', 'ex1SgDTick')">Check</button>
+                    <span id="ex1SgDTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="ex1TraceTick">
+            <h2>8. Trace The Validation</h2>
+            <div class="question-block">
+                <p>Trace the program behavior for inputs: first <strong>sam</strong>, then <strong>alex1</strong>.</p>
+                <table class="trace-table">
+                    <thead>
+                        <tr>
+                            <th>Check</th>
+                            <th>Your Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Is <code>sam</code> valid? (yes/no)</td>
+                            <td><input type="text" id="ex1Trace1" class="w-100"></td>
+                        </tr>
+                        <tr>
+                            <td>Is <code>alex1</code> valid? (yes/no)</td>
+                            <td><input type="text" id="ex1Trace2" class="w-100"></td>
+                        </tr>
+                        <tr>
+                            <td>How many retries were needed?</td>
+                            <td><input type="text" id="ex1Trace3" class="w-100"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="check-btn" onclick="checkTrace(['ex1Trace1','ex1Trace2','ex1Trace3'], ['no','yes','1'], 'ex1TraceTick')">Check</button>
+                <span id="ex1TraceTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="ex1OrderTick">
+            <h2>9. Verify The Logic Order</h2>
+            <p>Drag the lines into the correct logical order:</p>
+            <div id="ex1-order-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="ex1p4" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
+                <div id="ex1p2" class="draggable" draggable="true" ondragstart="drag(event)">while len(username) &lt; 5:</div>
+                <div id="ex1p5" class="draggable" draggable="true" ondragstart="drag(event)">print("Your username is: " + username)</div>
+                <div id="ex1p3" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
+                <div id="ex1p1" class="draggable" draggable="true" ondragstart="drag(event)">print("Username must be at least 5 characters long.")</div>
+            </div>
+            <button onclick="verifyParsons('ex1-order-parsons', ['ex1p4', 'ex1p2', 'ex1p1', 'ex1p3', 'ex1p5'], 'ex1OrderTick')">Verify Logic</button>
+            <p id="ex1OrderTick" class="result-feedback" role="status" aria-live="polite"></p>
+        </section>
 
         <div class="stepper-controls">
             <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
