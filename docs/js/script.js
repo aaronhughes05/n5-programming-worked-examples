@@ -2694,6 +2694,17 @@ const initDefaultTooltipCopy = () => {
 
         if (lower.includes("show full code")) return "Reveal the full solution";
 
+        if (onclick.includes("checkradiobutton('tick1-yes', 'tick1')")) return "Check whether a loop is needed";
+        if (onclick.includes("checkradiobutton('tick2-while', 'tick2')")) return "Check the best loop type for validation";
+        if (onclick.includes("checkanswer('pred3'")) return "Check your validation condition";
+        if (onclick.includes("checkanswer('pred4'")) return "Check your retry-behavior prediction";
+        if (onclick.includes("checkchoice('ex1sga'")) return "Check your subgoal mapping for the input line";
+        if (onclick.includes("checklinechoice('ex1sgb'")) return "Check your line selection for Subgoal B";
+        if (onclick.includes("checkanswer('ex1sgcinput'")) return "Check your fill-in value for the threshold";
+        if (onclick.includes("checkanswer('ex1sgdinput'")) return "Check your subgoal identification";
+        if (onclick.includes("checktrace(['ex1trace1','ex1trace2','ex1trace3']")) return "Check your validation trace answers";
+        if (onclick.includes("verifyparsons('ex1-modify-parsons'")) return "Verify your modified validation program order";
+        if (onclick.includes("checkactualoutput('makecase', 'makeactual', 'makeoutputtick')")) return "Check output for your custom program";
         if (onclick.includes("setchoice")) return `Select ${label}${sectionLabel}`;
         if (onclick.includes("selectline")) return `Select this line${sectionLabel}`;
         if (onclick.includes("verifyparsons")) return `Verify your order${sectionLabel}`;
