@@ -683,9 +683,12 @@ const saveStepperState = () => {
     });
 
     const inputs = {};
-    document.querySelectorAll("input[type='text']").forEach((input) => {
-        if (input.id) {
-            inputs[input.id] = input.value;
+    document.querySelectorAll("input[id], select[id], textarea[id]").forEach((field) => {
+        const type = (field.getAttribute("type") || "").toLowerCase();
+        if (type === "radio" || type === "checkbox") {
+            inputs[field.id] = field.checked ? "__checked__" : "";
+        } else {
+            inputs[field.id] = field.value;
         }
     });
 
@@ -749,7 +752,11 @@ const loadStepperState = () => {
     if (payload.inputs && typeof payload.inputs === "object") {
         Object.entries(payload.inputs).forEach(([id, value]) => {
             const input = document.getElementById(id);
-            if (input) {
+            if (!input) return;
+            const type = (input.getAttribute("type") || "").toLowerCase();
+            if (type === "radio" || type === "checkbox") {
+                input.checked = value === "__checked__" || value === true;
+            } else {
                 input.value = value;
             }
         });
@@ -1253,8 +1260,11 @@ const resetAssessment = () => {
         tick.classList.remove("is-correct", "is-incorrect");
         tick.textContent = "";
     });
-    document.querySelectorAll("input[type='text']").forEach((input) => {
+    document.querySelectorAll("input[type='text'], textarea").forEach((input) => {
         input.value = "";
+    });
+    document.querySelectorAll("select").forEach((select) => {
+        select.selectedIndex = 0;
     });
     document.querySelectorAll("input[type='radio'], input[type='checkbox']").forEach((input) => {
         input.checked = false;
@@ -3023,7 +3033,14 @@ document.addEventListener("input", (event) => {
     if (event.target && event.target.id === "makeProgram") {
         enableRunButton();
     }
-    if (event.target && (event.target.matches("input[type='text']") || event.target.id === "makeProgram")) {
+    if (event.target && (event.target.matches("input[type='text'], textarea") || event.target.id === "makeProgram")) {
+        saveStepperState();
+    }
+});
+
+document.addEventListener("change", (event) => {
+    if (!event.target) return;
+    if (event.target.matches("input[type='radio'], input[type='checkbox'], select")) {
         saveStepperState();
     }
 });
