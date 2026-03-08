@@ -2531,6 +2531,8 @@ const initDefaultTooltipCopy = () => {
 
         if (el.classList.contains("appbar-menu-toggle")) return "Show quick links";
         if (el.classList.contains("appbar-resume")) return "Resume your saved progress";
+        if (el.classList.contains("hint-panel__btn-show")) return `Show a progressive hint${sectionLabel}`;
+        if (el.classList.contains("hint-panel__btn-reveal")) return `Reveal a worked hint${sectionLabel}`;
         if (el.hasAttribute("data-print-worksheet")) return "Print this worksheet";
         if (el.hasAttribute("data-download-worksheet")) return "Download this worksheet";
 
@@ -2539,6 +2541,25 @@ const initDefaultTooltipCopy = () => {
         if (id === "stepreset") return "Restart from step 1";
         if (id === "runprogrambtn") return "Run your code with the selected test case";
         if (id === "examplepreviewlink") return "Open this previewed activity";
+        if (id === "copybadgesummarybtn") return "Copy your progress summary to clipboard";
+        if (id === "downloadbadgesummarybtn") return "Download your progress summary as a text file";
+        if (id === "dashboardcontinuecta") return "Continue your latest in-progress activity";
+        if (id === "dashboardrecommendedbtn") return "Open the recommended next activity";
+        if (id === "teacherexportcsvbtn") return "Export class progress and hints as CSV";
+        if (id === "teacherexportjsonbtn") return "Export class progress and hints as JSON";
+        if (id === "teacherseeddemobtn") return "Insert demo progress data for presentation";
+        if (id === "teacherresetprogressbtn") return "Open confirmation to clear all local progress";
+        if (id === "teacherresetconfirmbtn") return "Permanently clear all local progress on this device";
+        if (id === "teachergateunlock") return "Unlock teacher mode with the passcode";
+        if (id === "assessmentgatereview") return "Open the next incomplete example";
+        if (id === "assessmentgateproceed") return "Continue to the assessment without prerequisites";
+
+        if (el.classList.contains("teacher-gate__close")) return "Close teacher mode login";
+        if (el.classList.contains("teacher-reset-modal__close")) return "Close reset confirmation dialog";
+        if (el.classList.contains("assessment-gate__close")) return "Close assessment warning";
+        if (el.hasAttribute("data-close-reset-modal")) return "Close reset confirmation dialog";
+        if (el.hasAttribute("data-close-gate")) return "Close assessment warning";
+        if (el.hasAttribute("data-teacher-lock")) return "Lock teacher mode and return to student view";
 
         if (el.classList.contains("examples-tab")) {
             const key = (el.dataset.exampleKey || "").toLowerCase();
@@ -2549,6 +2570,10 @@ const initDefaultTooltipCopy = () => {
             return "Preview this activity";
         }
 
+        if (lower.includes("show full code")) return "Reveal the full solution";
+
+        if (onclick.includes("setchoice")) return `Select ${label}${sectionLabel}`;
+        if (onclick.includes("selectline")) return `Select this line${sectionLabel}`;
         if (onclick.includes("verifyparsons")) return `Verify your order${sectionLabel}`;
         if (onclick.includes("checkactualoutput")) return "Check your program output";
         if (onclick.includes("checktrace")) return `Check your trace${sectionLabel}`;
@@ -2558,11 +2583,12 @@ const initDefaultTooltipCopy = () => {
         if (onclick.includes("runprogram")) return "Run your code with the selected test case";
         if (onclick.includes("resetassessment")) return "Restart this activity";
         if (onclick.includes("nextstep")) return "Show the next code step";
-        if (onclick.includes("show full code")) return "Reveal the full solution";
 
         if (lower.includes("menu")) return "Show quick links";
         if (lower.includes("home")) return "Go to homepage";
         if (lower.includes("examples")) return "Jump to examples";
+        if (lower.includes("worksheets")) return "Open worksheets";
+        if (lower.includes("teacher mode")) return "Open teacher mode";
         if (lower.includes("assessment")) return "Open assessment";
         if (lower.includes("print worksheet")) return "Print this worksheet";
         if (lower.includes("download worksheet")) return "Download this worksheet";
@@ -2576,11 +2602,23 @@ const initDefaultTooltipCopy = () => {
         if (lower.includes("check answer")) return "Check your answer";
         if (lower.includes("verify")) return "Verify your solution";
         if (lower.includes("run program")) return "Run your code";
+        if (lower.includes("copy summary")) return "Copy your progress summary to clipboard";
+        if (lower.includes("download summary")) return "Download your progress summary as a text file";
+        if (lower.includes("open recommendation")) return "Open the recommended next activity";
+        if (lower.includes("insert test data")) return "Insert demo progress data for presentation";
+        if (lower.includes("export csv")) return "Export class progress and hints as CSV";
+        if (lower.includes("export json")) return "Export class progress and hints as JSON";
+        if (lower.includes("proceed anyway")) return "Continue to the assessment without prerequisites";
+        if (lower.includes("go to next incomplete example")) return "Open the next incomplete example";
+        if (lower.includes("unlock")) return "Unlock teacher mode with the passcode";
+        if (lower.includes("lock")) return "Lock teacher mode and return to student view";
         if (lower.includes("preview")) return "Preview this section";
         if (lower.includes("example 1")) return "Preview example 1";
         if (lower.includes("example 2")) return "Preview example 2";
         if (lower.includes("example 3")) return "Preview example 3";
         if (href.includes("#examples")) return "Jump to examples";
+        if (href.includes("worksheets")) return "Open worksheets";
+        if (href.includes("teacher")) return "Open teacher mode";
         if (href.includes("assessment")) return "Open assessment";
         if (href.includes("example1")) return "Open example 1";
         if (href.includes("example2")) return "Open example 2";
