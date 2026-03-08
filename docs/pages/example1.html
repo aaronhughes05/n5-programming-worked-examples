@@ -245,18 +245,25 @@ D: print("Your username is: " + username)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="ex1OrderTick">
-            <h2>9. Verify The Logic Order</h2>
-            <p>Drag the lines into the correct logical order:</p>
-            <div id="ex1-order-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="ex1p4" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
-                <div id="ex1p2" class="draggable" draggable="true" ondragstart="drag(event)">while len(username) &lt; 5:</div>
-                <div id="ex1p5" class="draggable" draggable="true" ondragstart="drag(event)">print("Your username is: " + username)</div>
-                <div id="ex1p3" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
-                <div id="ex1p1" class="draggable" draggable="true" ondragstart="drag(event)">print("Username must be at least 5 characters long.")</div>
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="ex1ModifyTick">
+            <h2>9. Modify The Program</h2>
+            <p>Rearrange the lines to build a complete username-validation program.</p>
+            <p>Your modified program should:</p>
+            <ul>
+                <li>Read a username from the user</li>
+                <li>Repeat while the username is shorter than 5 and longer than 20 characters</li>
+                <li>Display an error message for invalid input</li>
+                <li>Print the accepted username at the end</li>
+            </ul>
+            <div id="ex1-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="ex1m4" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
+                <div id="ex1m2" class="draggable" draggable="true" ondragstart="drag(event)">while len(username) &lt; 5 or len(username) &gt; 20:</div>
+                <div id="ex1m5" class="draggable" draggable="true" ondragstart="drag(event)">print("Your username is: " + username)</div>
+                <div id="ex1m3" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter a valid username: ")</div>
+                <div id="ex1m1" class="draggable" draggable="true" ondragstart="drag(event)">print("Username must be between 5 and 20 characters long.")</div>
             </div>
-            <button onclick="verifyParsons('ex1-order-parsons', ['ex1p4', 'ex1p2', 'ex1p1', 'ex1p3', 'ex1p5'], 'ex1OrderTick')">Verify Logic</button>
-            <p id="ex1OrderTick" class="result-feedback" role="status" aria-live="polite"></p>
+            <button onclick="verifyParsons('ex1-modify-parsons', ['ex1m4', 'ex1m2', 'ex1m1', 'ex1m3', 'ex1m5'], 'ex1ModifyTick')">Verify Logic</button>
+            <p id="ex1ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>
         </section>
 
         <div class="stepper-controls">
