@@ -233,6 +233,12 @@ const initTeacherPasscodeGate = () => {
 
 const HINT_MODEL = {
     "example1.html": {
+        fullCode: {
+            l1: "Reveal each implementation step and connect it to subgoals A, B, C, and D.",
+            l2: "Check the validation flow: input -> while check -> error -> retry -> final output.",
+            l3: "Confirm each line is in the right stage of the process.",
+            worked: "Correct sequence: receive input, validate in loop, show error, retry input, print accepted username."
+        },
         tick1: {
             l1: "Consider the subgoals. How would you go about implementing Subgoal D?",
             l2: "Consider the subgoals. How would you go about implementing Subgoal D?",
@@ -256,6 +262,48 @@ const HINT_MODEL = {
             l2: "Validation usually gives feedback, then asks again.",
             l3: "Do not accept invalid data and do not terminate immediately.",
             worked: "Show an error message and ask again until valid input is provided."
+        },
+        ex1SgATick: {
+            l1: "Subgoal A is about taking input from the user.",
+            l2: "Look for the line where username is assigned from input().",
+            l3: "Choose the line that starts the process by receiving data.",
+            worked: "username = input(\"Enter username: \") maps to Subgoal A."
+        },
+        ex1SgBTick: {
+            l1: "Subgoal B checks validity conditions.",
+            l2: "Find the line that evaluates username length in a loop condition.",
+            l3: "The validation condition should use len(username) and 5.",
+            worked: "while len(username) < 5: is the Subgoal B validation check."
+        },
+        ex1SgCTick: {
+            l1: "The rule says minimum length is 5.",
+            l2: "The blank is the threshold used in len(username) < ___.",
+            l3: "Use the exact minimum allowed length.",
+            worked: "Fill in 5."
+        },
+        ex1SgDTick: {
+            l1: "Subgoal C is feedback for invalid input.",
+            l2: "Find which subgoal matches the error-message line.",
+            l3: "Classify by purpose: this line informs the user input is invalid.",
+            worked: "The error message line belongs to Subgoal C."
+        },
+        ex1TraceTick: {
+            l1: "sam has length 3, so it fails the minimum-length rule.",
+            l2: "alex1 has length 5, so it passes validation.",
+            l3: "One failed entry means exactly one retry is needed.",
+            worked: "Trace answers: no, yes, 1."
+        },
+        ex1ModifyTick: {
+            l1: "Build the flow in order: input -> validation loop -> error -> retry -> final output.",
+            l2: "Keep error+retry inside the loop and final print after the loop.",
+            l3: "Do not place the accepted-username print inside the validation loop.",
+            worked: "Correct order: input, while invalid, print error, re-input, final success print."
+        },
+        makeOutputTick: {
+            l1: "Compare formatting and values against expected output.",
+            l2: "Check commas, spacing, and line order exactly.",
+            l3: "For this activity, outputs should reflect 3 accepted scores after validation.",
+            worked: "Match expected output exactly after running your program."
         }
     },
     "example2.html": {
@@ -343,6 +391,12 @@ const HINT_MODEL = {
 
 const FEEDBACK_MAP = {
     "example1.html": {
+        fullCode: {
+            correct: "Correct. You completed the full step-by-step validation flow.",
+            incorrect: "Try again.",
+            misconception: "You may be skipping part of the looped validation cycle.",
+            next: "Walk through each stage in order, then reveal the full solution."
+        },
         tick1: {
             correct: "Correct. A loop is required because the user may need multiple attempts before entering a valid username.",
             incorrect: "Not quite right yet.",
@@ -366,6 +420,49 @@ const FEEDBACK_MAP = {
             incorrect: "That behavior breaks the validation flow.",
             misconception: "If you accept invalid input or terminate immediately, the user never gets a proper retry cycle.",
             next: "Pick the action that keeps the loop active until a valid username is entered."
+        },
+        ex1SgATick: {
+            correct: "Correct subgoal mapping.",
+            incorrect: "That subgoal mapping is off.",
+            misconception: "A common mix-up is mapping by line position rather than purpose.",
+            next: "Pick the line that receives data from input()."
+        },
+        ex1SgBTick: {
+            correct: "Correct line selection for Subgoal B.",
+            incorrect: "That is not the validation line.",
+            misconception: "You may be selecting input/output lines instead of the condition check.",
+            next: "Choose the line that checks length with len(username) < 5."
+        },
+        ex1SgCTick: {
+            correct: "Correct. 5 is the minimum valid length.",
+            incorrect: "Not quite right.",
+            misconception: "You may be mixing up valid threshold with an example username length.",
+            next: "Use the exact rule threshold in len(username) < ___."
+        },
+        ex1SgDTick: {
+            correct: "Correct. The error message line maps to Subgoal C.",
+            incorrect: "That subgoal is not the best match.",
+            misconception: "You may be confusing repetition behavior with feedback behavior.",
+            next: "Identify the subgoal focused on telling the user their input is invalid."
+        },
+        ex1TraceTick: {
+            correct: "Correct trace. You followed the validation cycle accurately.",
+            incorrect: "Trace values are off.",
+            misconception: "You may be treating a short username as valid or miscounting retries.",
+            next: "Re-check each input against the minimum length of 5."
+        },
+        ex1ModifyTick: {
+            correct: "Correct. The modified validation program logic is in the right order.",
+            incorrect: "Try again.",
+            misconception: "A common issue is placing the final print inside the loop or moving retry outside it.",
+            next: "Rebuild as input -> while invalid -> error -> retry -> final accepted output.",
+            alwaysShowMisconception: true
+        },
+        makeOutputTick: {
+            correct: "Output matches expected values and formatting.",
+            incorrect: "Output does not match expected yet.",
+            misconception: "Likely formatting mismatch, wrong accepted-score set, or incorrect total/average.",
+            next: "Compare output line-by-line and ensure only valid scores are included."
         }
     },
     "example2.html": {
@@ -1334,10 +1431,18 @@ const ACTIVITY_DEFINITIONS = [
 
 const CHECKPOINT_LABELS = {
     example1: {
+        fullCode: "Implementation: full solution sequence",
         tick1: "Prediction Q1: Need a loop",
         tick2: "Prediction Q2: Loop type",
         tick3: "Prediction Q3: Validation condition",
-        tick4: "Prediction Q4: Retry behavior"
+        tick4: "Prediction Q4: Retry behavior",
+        ex1SgATick: "Subgoal match: input stage",
+        ex1SgBTick: "Code identification: validation condition",
+        ex1SgCTick: "Fill blank: validation threshold",
+        ex1SgDTick: "Subgoal identification: feedback stage",
+        ex1TraceTick: "Trace validation behavior",
+        ex1ModifyTick: "Modify program: validation ordering",
+        makeOutputTick: "Output verification"
     },
     example2: {
         fullCode: "Implementation: full solution sequence",
@@ -1470,14 +1575,25 @@ const seedDemoProgress = () => {
 
     saveStep("/docs/pages/example1.html", {
         path: "/docs/pages/example1.html",
-        stepCount: 5,
-        index: 4,
+        stepCount: 10,
+        index: 9,
         isComplete: true,
         updatedAt: now - 24 * minute,
-        completedChecks: ["tick1", "tick2", "tick3", "tick4", "fullCode"],
+        completedChecks: [
+            "tick1", "tick2", "tick3", "tick4",
+            "fullCode",
+            "ex1SgATick", "ex1SgBTick", "ex1SgCTick", "ex1SgDTick",
+            "ex1TraceTick", "ex1ModifyTick", "makeOutputTick"
+        ],
         inputs: {
             pred3: "len(username) < 5",
-            pred4: "retry"
+            pred4: "retry",
+            ex1SgCInput: "5",
+            ex1SgDInput: "C",
+            ex1Trace1: "no",
+            ex1Trace2: "yes",
+            ex1Trace3: "1",
+            makeProgram: "scores = []\ntotal = 0\n\nwhile len(scores) < 3:\n    score = int(input(\"Score: \"))\n    while score < 5:\n        score = int(input(\"Enter a valid score: \"))\n    scores.append(score)\n    total = total + score\n\naverage = total / len(scores)\n\nprint(\"Scores:\", \", \".join(str(s) for s in scores))\nprint(\"Total:\", total)\nprint(\"Average:\", average)"
         },
         showWorkedExample: true
     });
@@ -1485,7 +1601,9 @@ const seedDemoProgress = () => {
         checkpoints: {
             tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 25 * minute },
             tick2: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 24 * minute },
-            tick3: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 23 * minute }
+            tick3: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 23 * minute },
+            ex1SgBTick: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 22 * minute },
+            ex1ModifyTick: { attempts: 3, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 21 * minute }
         }
     });
 
