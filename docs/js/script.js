@@ -1474,12 +1474,18 @@ const seedDemoProgress = () => {
 
     saveStep("/docs/pages/example2.html", {
         path: "/docs/pages/example2.html",
-        stepCount: 6,
-        index: 3,
+        stepCount: 8,
+        index: 5,
         isComplete: false,
         updatedAt: now - 12 * minute,
-        completedChecks: ["tick1"],
-        inputs: {},
+        completedChecks: ["tick1", "tick2Pred", "tick3Pred", "tick4Pred", "fullCode", "sgA2Tick"],
+        inputs: {
+            pred1: "5",
+            "pred2-for": "__checked__",
+            pred3: "total",
+            pred4: "0",
+            sgC2: ""
+        },
         showWorkedExample: false
     });
     saveHint("/docs/pages/example2.html", {
