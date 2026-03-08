@@ -51,15 +51,16 @@
         </details>
         <details id="workedExample" class="card expander-card worked-example-panel hidden">
             <summary>Full Solution</summary>
-            <pre><code>total = 0 <span class="code-comment">                          # Subgoal A</span>
-for counter in range(5): <span class="code-comment">           # Subgoal D</span>
-    price = float(input("Price: ")) <span class="code-comment"># Subgoal B</span>
-    total = total + price <span class="code-comment">          # Subgoal C</span>
-print(total)</code></pre>
+            <p class="subgoal-intro">Complete program with subgoal labels.</p>
+            <pre><code>A: total = 0
+D: for counter in range(5):
+B:     price = float(input("Price: "))
+C:     total = total + price
+D: print(total)</code></pre>
         </details>
 
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 5</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 9</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -71,14 +72,45 @@ print(total)</code></pre>
             <p>Calculate the total cost of 5 items entered by a user.</p>
         </section>
 
-        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1">
+        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2Pred,tick3Pred,tick4Pred">
             <h2>2. Prediction Activity</h2>
             <div class="question-block">
                 <p>How many times will the loop repeat?</p>
                 <div class="question-input">
-                    <input type="text" id="pred1" class="w-80">
+                    <input type="text" id="pred1" class="w-80" placeholder="Enter a number...">
                     <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
                     <span id="tick1" class="tick-mark"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Which loop structure best fits this fixed-count task?</p>
+                <div class="question-input question-input--stacked">
+                    <label><input type="radio" name="pred2LoopType" id="pred2-for"> for loop</label>
+                    <label><input type="radio" name="pred2LoopType" id="pred2-while"> while loop</label>
+                    <label><input type="radio" name="pred2LoopType" id="pred2-if"> if statement only</label>
+                    <button onclick="checkRadioButton('pred2-for', 'tick2Pred')">Check</button>
+                    <span id="tick2Pred" class="tick-mark"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Which variable stores the running total?</p>
+                <div class="question-input">
+                    <select id="pred3">
+                        <option value="">Select a variable...</option>
+                        <option value="counter">counter</option>
+                        <option value="price">price</option>
+                        <option value="total">total</option>
+                    </select>
+                    <button onclick="checkAnswer('pred3', 'total', 'tick3Pred')">Check</button>
+                    <span id="tick3Pred" class="tick-mark"></span>
+                </div>
+            </div>
+            <div class="question-block">
+                <p>Before the loop starts, what value should <code>total</code> be set to?</p>
+                <div class="question-input">
+                    <input type="text" id="pred4" class="w-80" placeholder="Enter a number...">
+                    <button onclick="checkAnswer('pred4', '0', 'tick4Pred')">Check</button>
+                    <span id="tick4Pred" class="tick-mark"></span>
                 </div>
             </div>
         </section>
@@ -86,52 +118,142 @@ print(total)</code></pre>
         <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
             <h2>3. Step-by-Step Implementation</h2>
             <div id="step1" class="step-box">
-                <p><strong>Step 1:</strong> Initialize the total.</p>
-                <pre><code>total = 0 <span class="code-comment"># Subgoal A</span></code></pre>
+                <p><strong>Step 1:</strong> Set up the accumulator variable.</p>
+                <pre><code>A: total = 0</code></pre>
                 <button onclick="nextStep(1, 2)">Next Step</button>
             </div>
             <div id="step2" class="step-box hidden">
-                <p><strong>Step 2:</strong> Create a loop for 5 items.</p>
-                <pre><code>for counter in range(5): <span class="code-comment"># Subgoal D</span></code></pre>
+                <p><strong>Step 2:</strong> Repeat exactly 5 times to process each item.</p>
+                <pre><code>D: for counter in range(5):</code></pre>
                 <button onclick="nextStep(2, 3)">Next Step</button>
             </div>
             <div id="step3" class="step-box hidden">
-                <p><strong>Step 3:</strong> Add input to total.</p>
-                <pre><code>    price = float(input()) <span class="code-comment"># Subgoal B</span>
-    total = total + price <span class="code-comment"># Subgoal C</span></code></pre>
+                <p><strong>Step 3:</strong> Read each price and update the running total.</p>
+                <pre><code>B:     price = float(input("Price: "))
+C:     total = total + price</code></pre>
                 <button onclick="nextStep(3, 'full')">Show Full Code</button>
             </div>
             <div id="fullCode" class="step-box hidden">
-                <p><strong>Full Solution:</strong> Combine all steps into one complete program.</p>
-                <pre><code>total = 0 <span class="code-comment">                          # Subgoal A</span>
-for counter in range(5): <span class="code-comment">           # Subgoal D</span>
-    price = float(input("Price: ")) <span class="code-comment"># Subgoal B</span>
-    total = total + price <span class="code-comment">          # Subgoal C</span>
-print(total)</code></pre>
+                <p><strong>Full Solution:</strong> Combine all steps into one complete program with subgoal labels.</p>
+                <pre><code>A: total = 0
+D: for counter in range(5):
+B:     price = float(input("Price: "))
+C:     total = total + price
+D: print(total)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="parsonsFeedback">
-            <h2>4. Parsons Puzzle</h2>
-            <p>Drag the lines into the correct logical order:</p>
-            <div id="parsons-area" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="p3" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
-                <div id="p1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
-                <div id="p4" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
-                <div id="p2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(5):</div>
+        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="sgA2Tick">
+            <h2>4. Match The Subgoal</h2>
+            <div class="question-block" data-choice-group="ex2sgA">
+                <p>Which subgoal does this line belong to? <span class="inline-code"><strong>total = 0</strong></span></p>
+                <div class="mc-buttons">
+                    <button type="button" onclick="setChoice('ex2sgA', 'A', this)">A</button>
+                    <button type="button" onclick="setChoice('ex2sgA', 'B', this)">B</button>
+                    <button type="button" onclick="setChoice('ex2sgA', 'C', this)">C</button>
+                    <button type="button" onclick="setChoice('ex2sgA', 'D', this)">D</button>
+                    <button type="button" class="check-btn" onclick="checkChoice('ex2sgA', 'A', 'sgA2Tick')">Check</button>
+                    <span id="sgA2Tick" class="tick-mark"></span>
+                </div>
             </div>
-            <button onclick="verifyParsons('parsons-area', ['p1', 'p2', 'p3', 'p4'], 'parsonsFeedback')">Verify Logic</button>
-            <p id="parsonsFeedback" class="result-feedback" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="tick2">
-            <h2>6. Modify Task</h2>
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="sgB2Tick">
+            <h2>5. Identify The Code</h2>
+            <div class="question-block" data-line-group="ex2sgB">
+                <p>Click the line that matches Subgoal B (take in a value).</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex2sgB', 'total = 0', this)">total = 0</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex2sgB', 'price = float(input(&quot;Price: &quot;))', this)">price = float(input("Price: "))</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex2sgB', 'total = total + price', this)">total = total + price</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex2sgB', 'price = float(input(&quot;Price: &quot;))', 'sgB2Tick')">Check</button>
+                <span id="sgB2Tick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="sgC2Tick">
+            <h2>6. Fill In The Blank</h2>
             <div class="question-block">
-                <p>Change the code to ask for 10 items. What would the loop line look like?</p>
+                <p>Fill in the blank to complete Subgoal C: <span class="inline-code"><strong>total = total + ___</strong></span></p>
                 <div class="question-input">
-                    <input type="text" id="modAns" class="w-full" placeholder="for counter in range...">
-                    <button onclick="checkAnswer('modAns', 'for counter in range(10):', 'tick2')">Check Answer</button>
-                    <span id="tick2" class="tick-mark"></span>
+                    <input type="text" id="sgC2" class="w-140" placeholder="Enter variable name...">
+                    <button onclick="checkAnswer('sgC2', 'price', 'sgC2Tick')">Check</button>
+                    <span id="sgC2Tick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="sgD2Tick">
+            <h2>7. Identify The Code</h2>
+            <div class="question-block" data-line-group="ex2sgD">
+                <p>Click the line that matches Subgoal D (the repetition stage).</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex2sgD', 'total = 0', this)">total = 0</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex2sgD', 'for counter in range(5):', this)">for counter in range(5):</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex2sgD', 'print(total)', this)">print(total)</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex2sgD', 'for counter in range(5):', 'sgD2Tick')">Check</button>
+                <span id="sgD2Tick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="tick2">
+            <h2>8. Modify The Program</h2>
+            <p>Rearrange the code lines to build a working program that uses 10 prices instead of 5.</p>
+            <p>Your updated program should:</p>
+            <ul>
+                <li>Initialize the running total</li>
+                <li>Repeat input exactly 10 times</li>
+                <li>Update the running total each cycle</li>
+                <li>Print the final total after the loop</li>
+            </ul>
+            <div id="example2-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="m3" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
+                <div id="m1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
+                <div id="m5" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
+                <div id="m4" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
+                <div id="m2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(10):</div>
+            </div>
+            <button onclick="verifyParsons('example2-modify-parsons', ['m1', 'm2', 'm3', 'm4', 'm5'], 'tick2')">Verify Logic</button>
+            <p id="tick2" class="result-feedback" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="makeOutputTick">
+            <h2>9. Make Your Own Program</h2>
+            <p>Write your own running-total program below, select a test case, then run and check the output.</p>
+
+            <p><strong>Your Program</strong></p>
+            <textarea class="code-area" id="makeProgram" rows="12" placeholder="Write your program here..."></textarea>
+
+            <div class="question-block">
+                <p><strong>Test Case</strong></p>
+                <div class="question-input">
+                    <select id="makeCase" onchange="updateExpectedOutput()">
+                        <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+                        <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+                        <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <p><strong>Expected Output</strong></p>
+            <pre><code id="makeExpected">Scores: 2, 3, 4, 5, 6, 7
+Total: 27
+Average: 4.5</code></pre>
+
+            <p><strong>Your Output</strong></p>
+            <div class="run-row">
+                <button class="check-btn" id="runProgramBtn" onclick="runProgram()" disabled>Run Program</button>
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="runStatus" class="run-status">Python runtime loading...</span>
+            </div>
+            <pre><code id="makeActual">Run your program to see the output here.</code></pre>
+
+            <div class="question-block">
+                <div class="question-input">
+                    <button class="check-btn" onclick="checkActualOutput('makeCase', 'makeActual', 'makeOutputTick')">Check Output</button>
+                    <span id="makeOutputTick" class="tick-mark"></span>
                 </div>
             </div>
         </section>
@@ -158,6 +280,7 @@ print(total)</code></pre>
         </div>
     </section>
 
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <script src="../js/script.js"></script>
 </body>
 </html>
