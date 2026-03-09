@@ -1,13 +1,15 @@
 import json
+import csv
 
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpRequest, JsonResponse
+from django.db.models import Sum
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from core.models import ActivityProgress, HintAnalytics, UserProgressSummary
+from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, UserProgressSummary
 
 
 @require_GET
@@ -30,6 +32,16 @@ def _require_authenticated_user(request: HttpRequest):
     if request.user.is_authenticated:
         return request.user, None
     return None, _json_error("Authentication required.", status=401)
+
+
+def _require_teacher_user(request: HttpRequest):
+    user, error = _require_authenticated_user(request)
+    if error:
+        return None, error
+    role = getattr(getattr(user, "profile", None), "role", "student")
+    if role != "teacher":
+        return None, _json_error("Teacher role required.", status=403)
+    return user, None
 
 
 def _normalize_activity_key(activity_key: str) -> str:
@@ -77,6 +89,51 @@ def _refresh_summary_for_user(user):
     return summary
 
 
+def _is_progress_started(progress: ActivityProgress) -> bool:
+    if progress.is_complete:
+        return True
+    if int(progress.step_index or 0) > 0:
+        return True
+    if bool(progress.completed_checks):
+        return True
+    if bool(progress.inputs):
+        return True
+    if progress.show_worked_example:
+        return True
+    return False
+
+
+def _parse_client_timestamp(raw_value):
+    if raw_value in (None, ""):
+        return None
+
+    if isinstance(raw_value, (int, float)):
+        value = float(raw_value)
+        if value > 10_000_000_000:
+            value = value / 1000.0
+        dt = timezone.datetime.fromtimestamp(value, tz=timezone.utc)
+        return dt
+
+    if isinstance(raw_value, str):
+        text = raw_value.strip()
+        if not text:
+            return None
+
+        if text.isdigit():
+            value = float(text)
+            if value > 10_000_000_000:
+                value = value / 1000.0
+            return timezone.datetime.fromtimestamp(value, tz=timezone.utc)
+
+        parsed = parse_datetime(text)
+        if parsed is not None:
+            if timezone.is_naive(parsed):
+                return timezone.make_aware(parsed, timezone.get_current_timezone())
+            return parsed
+
+    return None
+
+
 def _serialize_progress(progress: ActivityProgress):
     return {
         "activityKey": progress.activity_key,
@@ -98,6 +155,141 @@ def _serialize_summary(summary: UserProgressSummary):
         "allExamplesCompleted": summary.all_examples_completed,
         "assessmentCompleted": summary.assessment_completed,
         "updatedAt": summary.updated_at.isoformat(),
+    }
+
+
+def _collect_teacher_student_ids(teacher_user):
+    classroom_ids = list(
+        Classroom.objects.filter(teacher=teacher_user).values_list("id", flat=True)
+    )
+    if not classroom_ids:
+        return [], {}
+
+    enrollment_rows = Enrollment.objects.filter(classroom_id__in=classroom_ids).select_related(
+        "student", "classroom"
+    )
+    class_students = {}
+    student_ids = set()
+    for row in enrollment_rows:
+        class_students.setdefault(row.classroom_id, []).append(row.student)
+        student_ids.add(row.student_id)
+    return sorted(student_ids), class_students
+
+
+def _build_teacher_class_summary(teacher_user):
+    student_ids, class_students = _collect_teacher_student_ids(teacher_user)
+    classrooms = list(Classroom.objects.filter(teacher=teacher_user).order_by("name", "id"))
+    progress_rows = ActivityProgress.objects.filter(user_id__in=student_ids)
+    progress_by_user = {}
+    for row in progress_rows:
+        key = _normalize_activity_key(row.activity_key)
+        if not key:
+            continue
+        progress_by_user.setdefault(row.user_id, {})[key] = row
+
+    activity_keys = ("example1", "example2", "example3", "assessment")
+    class_cards = []
+    overall_totals = {
+        "students": len(student_ids),
+        "activitiesCompleted": 0,
+        "activitiesInProgress": 0,
+        "activitiesNotStarted": 0,
+        "hintsUsed": 0,
+        "workedHintsRevealed": 0,
+    }
+
+    hint_totals_map = HintAnalytics.objects.filter(user_id__in=student_ids).aggregate(
+        hints_used=Sum("show_count"),
+        worked_revealed=Sum("reveal_count"),
+    )
+    overall_totals["hintsUsed"] = int(hint_totals_map.get("hints_used") or 0)
+    overall_totals["workedHintsRevealed"] = int(hint_totals_map.get("worked_revealed") or 0)
+
+    for classroom in classrooms:
+        students = class_students.get(classroom.id, [])
+        student_progress = [progress_by_user.get(student.id, {}) for student in students]
+
+        by_activity = []
+        for activity_key in activity_keys:
+            completed = 0
+            in_progress = 0
+            not_started = 0
+            for sp in student_progress:
+                row = sp.get(activity_key)
+                if row is None:
+                    not_started += 1
+                elif row.is_complete:
+                    completed += 1
+                elif _is_progress_started(row):
+                    in_progress += 1
+                else:
+                    not_started += 1
+
+            overall_totals["activitiesCompleted"] += completed
+            overall_totals["activitiesInProgress"] += in_progress
+            overall_totals["activitiesNotStarted"] += not_started
+            by_activity.append(
+                {
+                    "activityKey": activity_key,
+                    "completed": completed,
+                    "inProgress": in_progress,
+                    "notStarted": not_started,
+                }
+            )
+
+        class_cards.append(
+            {
+                "classroomId": classroom.id,
+                "classroomName": classroom.name,
+                "studentCount": len(students),
+                "activityCounts": by_activity,
+            }
+        )
+
+    return {
+        "generatedAt": timezone.now().isoformat(),
+        "overall": overall_totals,
+        "classes": class_cards,
+    }
+
+
+def _build_teacher_attempt_analytics(teacher_user):
+    student_ids, _ = _collect_teacher_student_ids(teacher_user)
+    hint_rows = list(HintAnalytics.objects.filter(user_id__in=student_ids))
+    by_activity_checkpoint = {}
+    for row in hint_rows:
+        key = (_normalize_activity_key(row.activity_key), row.checkpoint_id)
+        bucket = by_activity_checkpoint.setdefault(
+            key,
+            {
+                "activityKey": _normalize_activity_key(row.activity_key),
+                "checkpointId": row.checkpoint_id,
+                "studentsAttempted": 0,
+                "attempts": 0,
+                "hintsShown": 0,
+                "workedHintsRevealed": 0,
+                "missSignals": 0,
+            },
+        )
+        bucket["studentsAttempted"] += 1
+        bucket["attempts"] += int(row.attempts or 0)
+        bucket["hintsShown"] += int(row.show_count or 0)
+        bucket["workedHintsRevealed"] += int(row.reveal_count or 0)
+        bucket["missSignals"] += max(0, int(row.attempts or 0) - 1)
+
+    checkpoints = sorted(
+        by_activity_checkpoint.values(),
+        key=lambda x: (x["activityKey"], -x["missSignals"], -x["attempts"], x["checkpointId"]),
+    )
+    most_missed = sorted(
+        checkpoints,
+        key=lambda x: (-x["missSignals"], -x["attempts"], x["activityKey"], x["checkpointId"]),
+    )[:10]
+
+    return {
+        "generatedAt": timezone.now().isoformat(),
+        "checkpointAnalytics": checkpoints,
+        "mostMissed": most_missed,
     }
 
 
@@ -327,13 +519,8 @@ def hints_checkpoint(request: HttpRequest, activity_key: str, checkpoint_id: str
     if not changed:
         hint.attempts += 1
 
-    last_used_raw = payload.get("lastUsedAt")
-    if isinstance(last_used_raw, str) and last_used_raw.strip():
-        parsed = parse_datetime(last_used_raw.strip())
-        if parsed is not None:
-            hint.last_used_at = parsed
-    else:
-        hint.last_used_at = timezone.now()
+    parsed_last_used = _parse_client_timestamp(payload.get("lastUsedAt"))
+    hint.last_used_at = parsed_last_used or timezone.now()
 
     hint.save()
 
@@ -351,3 +538,94 @@ def hints_checkpoint(request: HttpRequest, activity_key: str, checkpoint_id: str
             }
         }
     )
+
+
+@require_GET
+def teacher_class_summary(request: HttpRequest):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+    payload = _build_teacher_class_summary(teacher)
+    return JsonResponse(payload)
+
+
+@require_GET
+def teacher_attempt_analytics(request: HttpRequest):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+    payload = _build_teacher_attempt_analytics(teacher)
+    return JsonResponse(payload)
+
+
+@require_GET
+def teacher_export_json(request: HttpRequest):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+    payload = {
+        "generatedAt": timezone.now().isoformat(),
+        "classSummary": _build_teacher_class_summary(teacher),
+        "attemptAnalytics": _build_teacher_attempt_analytics(teacher),
+    }
+    return JsonResponse(payload, json_dumps_params={"indent": 2})
+
+
+@require_GET
+def teacher_export_csv(request: HttpRequest):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    class_summary = _build_teacher_class_summary(teacher)
+    attempt_analytics = _build_teacher_attempt_analytics(teacher)
+
+    response = HttpResponse(content_type="text/csv")
+    timestamp = timezone.now().strftime("%Y%m%d-%H%M%S")
+    response["Content-Disposition"] = f'attachment; filename="teacher-progress-report-{timestamp}.csv"'
+    writer = csv.writer(response)
+
+    writer.writerow(["Generated At", timezone.now().isoformat()])
+    writer.writerow([])
+    writer.writerow(["Class Summary"])
+    writer.writerow(["Classroom", "Students", "Activity", "Completed", "In Progress", "Not Started"])
+    for class_row in class_summary["classes"]:
+        for activity in class_row["activityCounts"]:
+            writer.writerow(
+                [
+                    class_row["classroomName"],
+                    class_row["studentCount"],
+                    activity["activityKey"],
+                    activity["completed"],
+                    activity["inProgress"],
+                    activity["notStarted"],
+                ]
+            )
+
+    writer.writerow([])
+    writer.writerow(["Attempt Analytics"])
+    writer.writerow(
+        [
+            "Activity",
+            "Checkpoint ID",
+            "Students Attempted",
+            "Attempts",
+            "Hints Shown",
+            "Worked Hints Revealed",
+            "Miss Signals",
+        ]
+    )
+    for checkpoint in attempt_analytics["checkpointAnalytics"]:
+        writer.writerow(
+            [
+                checkpoint["activityKey"],
+                checkpoint["checkpointId"],
+                checkpoint["studentsAttempted"],
+                checkpoint["attempts"],
+                checkpoint["hintsShown"],
+                checkpoint["workedHintsRevealed"],
+                checkpoint["missSignals"],
+            ]
+        )
+
+    return response

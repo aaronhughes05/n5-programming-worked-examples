@@ -10,6 +10,10 @@ from core.views import (
     progress_checkpoint,
     progress_detail,
     progress_summary,
+    teacher_attempt_analytics,
+    teacher_class_summary,
+    teacher_export_csv,
+    teacher_export_json,
 )
 
 
@@ -25,6 +29,10 @@ urlpatterns = [
     path("api/progress/<str:activity_key>", progress_detail, name="progress-detail"),
     path("api/progress/<str:activity_key>/checkpoint", progress_checkpoint, name="progress-checkpoint"),
     path("api/hints/<str:activity_key>/<str:checkpoint_id>", hints_checkpoint, name="hints-checkpoint"),
+    path("api/teacher/class-summary", teacher_class_summary, name="teacher-class-summary"),
+    path("api/teacher/attempt-analytics", teacher_attempt_analytics, name="teacher-attempt-analytics"),
+    path("api/teacher/export.json", teacher_export_json, name="teacher-export-json"),
+    path("api/teacher/export.csv", teacher_export_csv, name="teacher-export-csv"),
     path("auth/login", auth_login, name="auth-login"),
     path("auth/logout", auth_logout, name="auth-logout"),
     path("auth/me", auth_me, name="auth-me"),

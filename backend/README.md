@@ -19,6 +19,18 @@ python manage.py runserver
 - `GET /health/`
 - `GET /api/`
 
+## Seed demo teacher data
+
+```bash
+python manage.py seed_teacher_demo
+```
+
+Reset and reseed:
+
+```bash
+python manage.py seed_teacher_demo --reset
+```
+
 ## Notes
 
 - Database defaults to SQLite for local boot if `DATABASE_URL` is not set.
