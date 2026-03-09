@@ -1,5 +1,5 @@
 from django.contrib import admin
-from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, Profile
+from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, Profile, UserProgressSummary
 
 
 @admin.register(Profile)
@@ -43,3 +43,17 @@ class HintAnalyticsAdmin(admin.ModelAdmin):
     )
     list_filter = ("activity_key", "revealed_worked")
     search_fields = ("user__username", "user__email", "activity_key", "checkpoint_id")
+
+
+@admin.register(UserProgressSummary)
+class UserProgressSummaryAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "activities_started",
+        "activities_completed",
+        "examples_completed",
+        "all_examples_completed",
+        "assessment_completed",
+        "updated_at",
+    )
+    search_fields = ("user__username", "user__email")

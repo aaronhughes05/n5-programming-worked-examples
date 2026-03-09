@@ -92,6 +92,27 @@ class ActivityProgress(models.Model):
         return f"{self.user.username} - {self.activity_key}"
 
 
+class UserProgressSummary(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="progress_summary",
+    )
+    activities_started = models.PositiveIntegerField(default=0)
+    activities_completed = models.PositiveIntegerField(default=0)
+    examples_completed = models.PositiveIntegerField(default=0)
+    assessment_completed = models.BooleanField(default=False)
+    all_examples_completed = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("user_id",)
+
+    def __str__(self) -> str:
+        return f"{self.user.username} summary"
+
+
 class HintAnalytics(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -125,3 +146,4 @@ class HintAnalytics(models.Model):
 def ensure_user_profile(sender, instance, created, **_kwargs):
     if created:
         Profile.objects.create(user=instance)
+        UserProgressSummary.objects.create(user=instance)
