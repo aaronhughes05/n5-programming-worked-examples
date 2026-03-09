@@ -294,85 +294,13 @@ const hydrateProgressFromApi = async () => {
     }
 };
 
-const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
-const TEACHER_MODE_PASSCODE = "n5teacher";
-
 const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
-const isTeacherDemoFallbackMode = () => {
-    const params = new URLSearchParams(window.location.search);
-    return isTruthyFlag(params.get("teacherDemo"));
-};
-
-const readTeacherModeSession = () => {
-    try {
-        return sessionStorage.getItem(TEACHER_MODE_SESSION_KEY) === "true";
-    } catch {
-        return false;
-    }
-};
-
-const writeTeacherModeSession = (enabled) => {
-    try {
-        if (enabled) {
-            sessionStorage.setItem(TEACHER_MODE_SESSION_KEY, "true");
-        } else {
-            sessionStorage.removeItem(TEACHER_MODE_SESSION_KEY);
-        }
-    } catch {
-        // Ignore session storage errors.
-    }
-};
-
-const isTeacherMode = () => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("teacher")) {
-        return isTruthyFlag(params.get("teacher"));
-    }
-    return readTeacherModeSession();
-};
 
 const isInPagesDirectory = () => /\/pages\//.test(window.location.pathname);
 
 const getHomeHref = () => (isInPagesDirectory() ? "../index.html" : "index.html");
 
 const getTeacherHref = () => (isInPagesDirectory() ? "teacher.html" : "pages/teacher.html");
-
-const getTeacherDeniedHomeHref = () => {
-    const target = new URL(getHomeHref(), window.location.href);
-    target.searchParams.set("teacherDenied", "1");
-    return target.toString();
-};
-
-const applyTeacherModeClasses = (enabled) => {
-    const body = document.body;
-    if (!body) return;
-    body.classList.toggle("is-teacher-mode", !!enabled);
-    body.classList.toggle("is-student-mode", !enabled);
-};
-
-const initTeacherMode = () => {
-    const body = document.body;
-    if (!body) return false;
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("teacher")) {
-        writeTeacherModeSession(isTruthyFlag(params.get("teacher")));
-    }
-
-    const enabled = isTeacherMode();
-    applyTeacherModeClasses(enabled);
-    return true;
-};
-
-const initTeacherNavEntry = () => {
-    // Legacy cleanup: Teacher Mode now lives in the avatar menu.
-    document.querySelectorAll(".appbar-nav-actions").forEach((nav) => {
-        nav.querySelectorAll('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"], [data-teacher-lock]').forEach((el) => {
-            if (el.closest("[data-avatar-menu='true']")) return;
-            el.remove();
-        });
-    });
-};
 
 const enforceRoleAccess = () => {
     if (!hasApiAdapter()) return;
@@ -591,8 +519,6 @@ const initAuthUX = () => {
                 } catch {
                     // Force local unauth state regardless of transport issues.
                 }
-                writeTeacherModeSession(false);
-                applyTeacherModeClasses(false);
                 window.location.href = getHomeHref();
             };
             actionsEl.appendChild(signOutBtn);
@@ -629,96 +555,6 @@ const initTeacherAccessNotice = () => {
     const nextQuery = params.toString();
     const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
     window.history.replaceState(null, "", cleanUrl);
-};
-
-const initTeacherPasscodeGate = () => {
-    const isDemoFallback = isTeacherDemoFallbackMode();
-    if (hasApiAdapter() && !isDemoFallback) {
-        const loggedIn = isApiLoggedIn();
-        const role = getApiUserRole();
-        if (loggedIn && role === "teacher") {
-            writeTeacherModeSession(true);
-            applyTeacherModeClasses(true);
-            return;
-        }
-        // If account auth is available, require role-based account access rather than passcode.
-        writeTeacherModeSession(false);
-        applyTeacherModeClasses(false);
-        return;
-    }
-
-    const allowPasscodeFallback = !hasApiAdapter() || isDemoFallback;
-    if (!allowPasscodeFallback) {
-        writeTeacherModeSession(false);
-        applyTeacherModeClasses(false);
-        return;
-    }
-
-    const modal = document.getElementById("teacherGate");
-    const closeTriggers = modal
-        ? Array.from(modal.querySelectorAll("[data-close-teacher-gate='true']"))
-        : [];
-    const form = document.getElementById("teacherGateForm");
-    const input = document.getElementById("teacherPasscodeInput");
-    const error = document.getElementById("teacherGateError");
-    if (!modal || !form || !input || !error) return;
-
-    const closeGate = () => {
-        modal.classList.remove("is-open");
-        modal.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("is-modal-open");
-    };
-
-    const openGate = () => {
-        modal.classList.add("is-open");
-        modal.setAttribute("aria-hidden", "false");
-        document.body.classList.add("is-modal-open");
-        error.textContent = "";
-        error.classList.remove("is-visible");
-        input.value = "";
-        setTimeout(() => input.focus(), 0);
-    };
-
-    if (!readTeacherModeSession()) {
-        openGate();
-    } else {
-        applyTeacherModeClasses(true);
-    }
-
-    form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const attempt = (input.value || "").trim();
-        if (attempt === TEACHER_MODE_PASSCODE) {
-            writeTeacherModeSession(true);
-            applyTeacherModeClasses(true);
-            error.textContent = "";
-            error.classList.remove("is-visible");
-            closeGate();
-            return;
-        }
-        writeTeacherModeSession(false);
-        applyTeacherModeClasses(false);
-        error.textContent = "Incorrect passcode. Try again.";
-        error.classList.add("is-visible");
-        input.select();
-    });
-
-    closeTriggers.forEach((trigger) => {
-        trigger.addEventListener("click", () => {
-            writeTeacherModeSession(false);
-            applyTeacherModeClasses(false);
-            window.location.replace(getTeacherDeniedHomeHref());
-        });
-    });
-
-    document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
-        btn.addEventListener("click", (event) => {
-            event.preventDefault();
-            writeTeacherModeSession(false);
-            applyTeacherModeClasses(false);
-            window.location.replace(getTeacherDeniedHomeHref());
-        });
-    });
 };
 
 const HINT_MODEL = {
@@ -4365,8 +4201,6 @@ document.addEventListener("change", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const teacherModeReady = initTeacherMode();
-    if (!teacherModeReady) return;
     if (hasApiAdapter()) {
         try {
             await window.N5Api.init();
@@ -4376,11 +4210,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
     initAuthUX();
-    initTeacherNavEntry();
     enforceRoleAccess();
     initTeacherAccessNotice();
     if (document.body.classList.contains("page-teacher")) {
-        initTeacherPasscodeGate();
         const canUseTeacherPanel = !hasApiAdapter() || (isApiLoggedIn() && getApiUserRole() === "teacher");
         if (hasApiAdapter() && !canUseTeacherPanel) {
             const lockedCard = document.querySelector("[data-student-only] p");
