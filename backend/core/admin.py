@@ -1,5 +1,5 @@
 from django.contrib import admin
-from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, Profile, UserProgressSummary
+from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, Profile, TeacherStudent, UserProgressSummary
 
 
 @admin.register(Profile)
@@ -21,6 +21,13 @@ class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ("classroom", "student", "created_at")
     list_filter = ("classroom",)
     search_fields = ("classroom__name", "student__username", "student__email")
+
+
+@admin.register(TeacherStudent)
+class TeacherStudentAdmin(admin.ModelAdmin):
+    list_display = ("teacher", "student", "created_at")
+    list_filter = ("teacher",)
+    search_fields = ("teacher__username", "student__username", "student__email")
 
 
 @admin.register(ActivityProgress)

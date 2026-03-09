@@ -10,7 +10,7 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, UserProgressSummary
+from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, TeacherStudent, UserProgressSummary
 
 PAGE_TEMPLATE_MAP = {
     "example1": "pages/example1.html",
@@ -643,7 +643,21 @@ def teacher_classes(request: HttpRequest):
 
     classes = list(Classroom.objects.filter(teacher=teacher).order_by("name", "id"))
     data = [_serialize_classroom_with_students(item) for item in classes]
-    return JsonResponse({"classes": data})
+    teacher_students = list(
+        TeacherStudent.objects.filter(teacher=teacher)
+        .select_related("student")
+        .order_by("student__username")
+    )
+    directory = [
+        {
+            "id": row.student.id,
+            "username": row.student.username,
+            "email": row.student.email,
+            "role": getattr(getattr(row.student, "profile", None), "role", "student"),
+        }
+        for row in teacher_students
+    ]
+    return JsonResponse({"classes": data, "teacherStudents": directory})
 
 
 @csrf_exempt
@@ -701,6 +715,7 @@ def teacher_add_student(request: HttpRequest, classroom_id: int):
         classroom=classroom,
         student=user,
     )
+    TeacherStudent.objects.get_or_create(teacher=teacher, student=user)
 
     return JsonResponse(
         {

@@ -100,35 +100,49 @@
       <section class="card teacher-summary-card" data-teacher-only aria-label="Class and roster management">
         <h2>Class And Roster Management</h2>
         <p class="teacher-summary-intro">Create classes and add student accounts directly from Teacher Mode.</p>
+        <div class="teacher-roster-layout">
+          <section class="teacher-form-card" aria-label="Create class">
+            <h3 class="teacher-form-title">Create Class</h3>
+            <p class="teacher-form-copy">Set up a class group before adding students.</p>
+            <form id="teacherCreateClassForm" class="teacher-gate__form teacher-roster-form">
+              <label for="teacherClassNameInput">New class name</label>
+              <input id="teacherClassNameInput" class="teacher-gate__input" type="text" maxlength="120" placeholder="e.g. N5 Period 3" required />
+              <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+                <button type="submit" class="check-btn">Create class</button>
+              </div>
+              <p id="teacherCreateClassFeedback" class="teacher-gate__error" aria-live="polite"></p>
+            </form>
+          </section>
 
-        <form id="teacherCreateClassForm" class="teacher-gate__form">
-          <label for="teacherClassNameInput">New class name</label>
-          <input id="teacherClassNameInput" class="teacher-gate__input" type="text" maxlength="120" placeholder="e.g. N5 Period 3" required />
-          <div class="teacher-summary-actions teacher-summary-actions--in-summary">
-            <button type="submit" class="check-btn">Create class</button>
-          </div>
-          <p id="teacherCreateClassFeedback" class="teacher-gate__error" aria-live="polite"></p>
-        </form>
+          <section class="teacher-form-card" aria-label="Add student">
+            <h3 class="teacher-form-title">Add Student</h3>
+            <p class="teacher-form-copy">Enroll a student account into a selected class.</p>
+            <form id="teacherAddStudentForm" class="teacher-gate__form teacher-roster-form">
+              <label for="teacherClassSelect">Class</label>
+              <select id="teacherClassSelect" class="teacher-gate__input" required>
+                <option value="">Select class</option>
+              </select>
+              <label for="teacherKnownStudentSelect">Existing student</label>
+              <select id="teacherKnownStudentSelect" class="teacher-gate__input">
+                <option value="">Choose existing student (optional)</option>
+              </select>
+              <label for="teacherStudentUsernameInput">Student username</label>
+              <input id="teacherStudentUsernameInput" class="teacher-gate__input" type="text" maxlength="150" placeholder="student username" required />
+              <label for="teacherStudentEmailInput">Student email</label>
+              <input id="teacherStudentEmailInput" class="teacher-gate__input" type="email" placeholder="student@example.com" />
+              <label for="teacherStudentPasswordInput">Password</label>
+              <input id="teacherStudentPasswordInput" class="teacher-gate__input" type="password" placeholder="set for new students" />
+              <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+                <button type="submit" class="check-btn">Add student</button>
+              </div>
+              <p id="teacherAddStudentFeedback" class="teacher-gate__error" aria-live="polite"></p>
+            </form>
+          </section>
+        </div>
 
-        <form id="teacherAddStudentForm" class="teacher-gate__form">
-          <label for="teacherClassSelect">Class</label>
-          <select id="teacherClassSelect" class="teacher-gate__input" required>
-            <option value="">Select class</option>
-          </select>
-          <label for="teacherStudentUsernameInput">Student username</label>
-          <input id="teacherStudentUsernameInput" class="teacher-gate__input" type="text" maxlength="150" placeholder="student username" required />
-          <label for="teacherStudentEmailInput">Student email (optional)</label>
-          <input id="teacherStudentEmailInput" class="teacher-gate__input" type="email" placeholder="student@example.com" />
-          <label for="teacherStudentPasswordInput">Password (required for new accounts)</label>
-          <input id="teacherStudentPasswordInput" class="teacher-gate__input" type="password" placeholder="set for new students" />
-          <div class="teacher-summary-actions teacher-summary-actions--in-summary">
-            <button type="submit" class="check-btn">Add student</button>
-          </div>
-          <p id="teacherAddStudentFeedback" class="teacher-gate__error" aria-live="polite"></p>
-        </form>
-
-        <h3>Current Classes</h3>
-        <ul id="teacherClassRosterList" class="teacher-summary-list" aria-live="polite"></ul>
+        <h3 class="teacher-roster-heading">Current Classes</h3>
+        <p class="teacher-form-copy teacher-roster-copy">Review class lists and remove students when needed.</p>
+        <ul id="teacherClassRosterList" class="teacher-summary-list teacher-roster-list" aria-live="polite"></ul>
       </section>
     </main>
 
@@ -158,6 +172,22 @@
         <div class="teacher-reset-modal__actions">
           <button type="button" class="check-btn reset-btn" id="teacherResetConfirmBtn">Reset all local progress</button>
           <button type="button" class="check-btn outline-btn" data-close-reset-modal="true">Keep current data</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-reset-modal" id="teacherDeleteClassModal" aria-hidden="true">
+      <div class="teacher-reset-modal__backdrop" data-close-delete-modal="true" aria-hidden="true"></div>
+      <div class="teacher-reset-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherDeleteTitle" aria-describedby="teacherDeleteBody">
+        <button type="button" class="teacher-reset-modal__close" aria-label="Close delete class dialog" data-close-delete-modal="true">&times;</button>
+        <h3 id="teacherDeleteTitle">Delete Class</h3>
+        <p id="teacherDeleteBody">This will remove the class and unenroll all students from it. This cannot be undone.</p>
+        <div class="teacher-reset-modal__actions">
+          <button type="button" class="teacher-delete-class-btn" id="teacherDeleteClassConfirmBtn" aria-label="Delete class" title="Delete class">
+            <span class="teacher-delete-class-btn__icon" aria-hidden="true"></span>
+            <span>Delete class</span>
+          </button>
+          <button type="button" class="check-btn outline-btn" data-close-delete-modal="true">Keep class</button>
         </div>
       </div>
     </div>

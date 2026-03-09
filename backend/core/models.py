@@ -64,6 +64,27 @@ class Enrollment(models.Model):
         return f"{self.student.username} in {self.classroom.name}"
 
 
+class TeacherStudent(models.Model):
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="teacher_students",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="student_teachers",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("teacher_id", "student_id")
+        unique_together = ("teacher", "student")
+
+    def __str__(self) -> str:
+        return f"{self.teacher.username} -> {self.student.username}"
+
+
 class ActivityProgress(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

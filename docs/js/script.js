@@ -2573,6 +2573,7 @@ const initTeacherSummaryPanel = async () => {
     const createClassFeedback = document.getElementById("teacherCreateClassFeedback");
     const addStudentForm = document.getElementById("teacherAddStudentForm");
     const classSelect = document.getElementById("teacherClassSelect");
+    const knownStudentSelect = document.getElementById("teacherKnownStudentSelect");
     const studentUsernameInput = document.getElementById("teacherStudentUsernameInput");
     const studentEmailInput = document.getElementById("teacherStudentEmailInput");
     const studentPasswordInput = document.getElementById("teacherStudentPasswordInput");
@@ -2583,6 +2584,13 @@ const initTeacherSummaryPanel = async () => {
     const resetCloseTriggers = resetModal
         ? Array.from(resetModal.querySelectorAll("[data-close-reset-modal='true']"))
         : [];
+    const deleteClassModal = document.getElementById("teacherDeleteClassModal");
+    const deleteClassConfirmBtn = document.getElementById("teacherDeleteClassConfirmBtn");
+    const deleteClassCloseTriggers = deleteClassModal
+        ? Array.from(deleteClassModal.querySelectorAll("[data-close-delete-modal='true']"))
+        : [];
+    let pendingDeleteClassId = "";
+    let pendingDeleteTrigger = null;
 
     const shouldUseTeacherApi = hasApiAdapter() && isApiLoggedIn() && getApiUserRole() === "teacher";
     const currentUser = getApiUser();
@@ -2813,7 +2821,10 @@ const initTeacherSummaryPanel = async () => {
                               <p class="teacher-summary-list__title">${item.name} (${item.studentCount} students)</p>
                               <p class="teacher-summary-list__meta">${studentsHtml}</p>
                               <div class="teacher-summary-actions teacher-summary-actions--in-summary">
-                                <button type="button" class="check-btn reset-btn" data-delete-class data-class-id="${item.id}">Delete class</button>
+                                <button type="button" class="teacher-delete-class-btn" data-delete-class data-class-id="${item.id}" aria-label="Delete class" title="Delete class">
+                                  <span class="teacher-delete-class-btn__icon" aria-hidden="true"></span>
+                                  <span>Delete class</span>
+                                </button>
                               </div>
                             `;
                             classRosterList.appendChild(li);
@@ -2824,6 +2835,23 @@ const initTeacherSummaryPanel = async () => {
 
             const loadClasses = async () => {
                 const payload = await window.N5Api.getTeacherClasses();
+                const knownStudents = Array.isArray(payload?.teacherStudents) ? payload.teacherStudents : [];
+                if (knownStudentSelect) {
+                    const current = knownStudentSelect.value;
+                    knownStudentSelect.innerHTML = '<option value="">Choose existing student (optional)</option>';
+                    knownStudents.forEach((student) => {
+                        const option = document.createElement("option");
+                        option.value = String(student.username || "");
+                        option.textContent = student.email
+                            ? `${student.username} (${student.email})`
+                            : String(student.username || "");
+                        option.dataset.email = String(student.email || "");
+                        knownStudentSelect.appendChild(option);
+                    });
+                    if (current && knownStudents.some((student) => String(student.username || "") === current)) {
+                        knownStudentSelect.value = current;
+                    }
+                }
                 renderClasses(payload?.classes || []);
             };
 
@@ -2868,6 +2896,21 @@ const initTeacherSummaryPanel = async () => {
                 });
             }
 
+            if (knownStudentSelect && knownStudentSelect.dataset.bound !== "true") {
+                knownStudentSelect.dataset.bound = "true";
+                knownStudentSelect.addEventListener("change", () => {
+                    const selectedUsername = String(knownStudentSelect.value || "").trim();
+                    const selectedOption = knownStudentSelect.options[knownStudentSelect.selectedIndex];
+                    const selectedEmail = String(selectedOption?.dataset?.email || "").trim();
+                    if (selectedUsername && studentUsernameInput) {
+                        studentUsernameInput.value = selectedUsername;
+                    }
+                    if (selectedEmail && studentEmailInput) {
+                        studentEmailInput.value = selectedEmail;
+                    }
+                });
+            }
+
             if (classRosterList && !classRosterList.dataset.bound) {
                 classRosterList.dataset.bound = "true";
                 classRosterList.addEventListener("click", async (event) => {
@@ -2897,21 +2940,68 @@ const initTeacherSummaryPanel = async () => {
                     if (deleteBtn) {
                         const classId = String(deleteBtn.getAttribute("data-class-id") || "").trim();
                         if (!classId) return;
-                        const confirmed = window.confirm("Delete this class and all enrollments?");
-                        if (!confirmed) return;
-                        deleteBtn.setAttribute("disabled", "true");
-                        try {
-                            await window.N5Api.deleteTeacherClass(classId);
-                            setRosterFeedback(createClassFeedback, "Class deleted.", false);
-                            await loadClasses();
-                            await initTeacherSummaryPanel();
-                        } catch (err) {
-                            setRosterFeedback(createClassFeedback, err?.message || "Unable to delete class.", true);
-                        } finally {
-                            deleteBtn.removeAttribute("disabled");
+                        if (!deleteClassModal || !deleteClassConfirmBtn) {
+                            deleteBtn.setAttribute("disabled", "true");
+                            try {
+                                await window.N5Api.deleteTeacherClass(classId);
+                                setRosterFeedback(createClassFeedback, "Class deleted.", false);
+                                await loadClasses();
+                                await initTeacherSummaryPanel();
+                            } catch (err) {
+                                setRosterFeedback(createClassFeedback, err?.message || "Unable to delete class.", true);
+                            } finally {
+                                deleteBtn.removeAttribute("disabled");
+                            }
+                            return;
                         }
+                        pendingDeleteClassId = classId;
+                        pendingDeleteTrigger = deleteBtn;
+                        deleteClassModal.classList.add("is-open");
+                        deleteClassModal.setAttribute("aria-hidden", "false");
+                        document.body.classList.add("is-modal-open");
+                        window.setTimeout(() => deleteClassConfirmBtn.focus(), 0);
                     }
                 });
+            }
+
+            const closeDeleteClassModal = () => {
+                if (!deleteClassModal) return;
+                deleteClassModal.classList.remove("is-open");
+                deleteClassModal.setAttribute("aria-hidden", "true");
+                document.body.classList.remove("is-modal-open");
+                pendingDeleteClassId = "";
+                pendingDeleteTrigger = null;
+            };
+
+            deleteClassCloseTriggers.forEach((el) => {
+                if (el.dataset.bound === "true") return;
+                el.dataset.bound = "true";
+                el.onclick = closeDeleteClassModal;
+            });
+
+            if (deleteClassConfirmBtn && deleteClassConfirmBtn.dataset.bound !== "true") {
+                deleteClassConfirmBtn.dataset.bound = "true";
+                deleteClassConfirmBtn.onclick = async () => {
+                    const classId = String(pendingDeleteClassId || "").trim();
+                    if (!classId) {
+                        closeDeleteClassModal();
+                        return;
+                    }
+                    if (pendingDeleteTrigger) pendingDeleteTrigger.setAttribute("disabled", "true");
+                    deleteClassConfirmBtn.setAttribute("disabled", "true");
+                    try {
+                        await window.N5Api.deleteTeacherClass(classId);
+                        setRosterFeedback(createClassFeedback, "Class deleted.", false);
+                        closeDeleteClassModal();
+                        await loadClasses();
+                        await initTeacherSummaryPanel();
+                    } catch (err) {
+                        setRosterFeedback(createClassFeedback, err?.message || "Unable to delete class.", true);
+                    } finally {
+                        deleteClassConfirmBtn.removeAttribute("disabled");
+                        if (pendingDeleteTrigger) pendingDeleteTrigger.removeAttribute("disabled");
+                    }
+                };
             }
 
             await loadClasses();

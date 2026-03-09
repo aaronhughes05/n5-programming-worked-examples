@@ -2642,6 +2642,133 @@ body.is-teacher-mode [data-student-only] {
   color: var(--ink-600);
 }
 
+.teacher-roster-layout {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.teacher-form-card {
+  border: 1px solid rgba(159, 176, 201, 0.34);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 255, 0.96));
+  padding: 12px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.teacher-form-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--ink-900);
+}
+
+.teacher-form-copy {
+  margin: 4px 0 0;
+  font-size: 0.87rem;
+  color: var(--ink-600);
+}
+
+.teacher-roster-form {
+  margin-top: 10px;
+  max-width: none;
+  gap: 9px;
+}
+
+.teacher-roster-heading {
+  margin: 14px 0 0;
+  font-size: 1rem;
+  color: var(--ink-900);
+}
+
+.teacher-roster-copy {
+  margin-top: 5px;
+}
+
+.teacher-roster-list {
+  margin-top: 8px;
+}
+
+.teacher-roster-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 6px 0 0;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(238, 245, 255, 0.82);
+  color: var(--ink-800);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.teacher-roster-chip .check-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.teacher-roster-chip .check-btn.reset-btn {
+  padding-right: 10px;
+}
+
+.teacher-roster-chip .check-btn.reset-btn::after {
+  display: none;
+}
+
+.teacher-delete-class-btn {
+  border: 1px solid rgba(185, 76, 76, 0.36) !important;
+  background: rgba(255, 245, 245, 0.96) !important;
+  color: #b94c4c !important;
+  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-delete-class-btn__icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  position: relative;
+  color: currentColor;
+}
+
+.teacher-delete-class-btn__icon::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  width: 10px;
+  height: 8px;
+  border: 1.8px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 2px 2px;
+  box-sizing: border-box;
+}
+
+.teacher-delete-class-btn__icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 6px;
+  background:
+    linear-gradient(currentColor, currentColor) center 0 / 6px 1.8px no-repeat,
+    linear-gradient(currentColor, currentColor) center 4px / 14px 1.8px no-repeat;
+}
+
+.teacher-delete-class-btn:hover,
+.teacher-delete-class-btn:focus-visible {
+  background: rgba(255, 236, 236, 0.98) !important;
+  border-color: rgba(185, 76, 76, 0.55) !important;
+  color: #a23c3c !important;
+}
+
 .teacher-gate {
   position: fixed;
   inset: 0;
@@ -2888,6 +3015,10 @@ body.is-teacher-mode [data-student-only] {
   }
 
   .teacher-summary-grid--hints {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-roster-layout {
     grid-template-columns: 1fr;
   }
 }
