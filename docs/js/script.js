@@ -24,7 +24,21 @@ const STORAGE_NAMESPACE = "assessmentStepperState.v2";
 const getStorageKey = () => `${STORAGE_NAMESPACE}:${window.location.pathname}`;
 const HINT_STORAGE_NAMESPACE = "adaptiveHintState.v1";
 const getHintStorageKey = () => `${HINT_STORAGE_NAMESPACE}:${window.location.pathname}`;
-const ACTIVITY_PAGE_NAME = (window.location.pathname.split("/").pop() || "").toLowerCase();
+const getPathLeaf = (pathname) => {
+    const parts = String(pathname || "")
+        .split("/")
+        .filter(Boolean);
+    return (parts.pop() || "").toLowerCase();
+};
+const ACTIVITY_PAGE_NAME = (() => {
+    const leaf = getPathLeaf(window.location.pathname);
+    if (leaf && leaf.endsWith(".html")) return leaf;
+    if (leaf === "assessment") return "assessment.html";
+    if (/^example[0-9]+$/.test(leaf)) return `${leaf}.html`;
+    if (leaf === "teacher") return "teacher.html";
+    if (leaf === "worksheets") return "worksheets.html";
+    return leaf;
+})();
 
 const readStorage = (key) => {
     try {
@@ -63,7 +77,7 @@ const importedProgressRuntimeKeys = new Set();
 const normalizeActivityKeyFromPath = (pathValue) => {
     const raw = String(pathValue || "").trim().toLowerCase();
     if (!raw) return "";
-    const fromPath = raw.includes("/") ? raw.split("/").pop() : raw;
+    const fromPath = getPathLeaf(raw) || raw;
     return fromPath.endsWith(".html") ? fromPath.slice(0, -5) : fromPath;
 };
 
@@ -296,11 +310,9 @@ const hydrateProgressFromApi = async () => {
 
 const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
 
-const isInPagesDirectory = () => /\/pages\//.test(window.location.pathname);
+const getHomeHref = () => "/";
 
-const getHomeHref = () => (isInPagesDirectory() ? "../index.html" : "index.html");
-
-const getTeacherHref = () => (isInPagesDirectory() ? "teacher.html" : "pages/teacher.html");
+const getTeacherHref = () => "/teacher/";
 
 const enforceRoleAccess = () => {
     if (!hasApiAdapter()) return;
@@ -1734,10 +1746,10 @@ const enableRunButton = () => {
 };
 
 const ACTIVITY_DEFINITIONS = [
-    { key: "example1", label: "Example 1", title: "Input Validation", path: "/docs/pages/example1.html" },
-    { key: "example2", label: "Example 2", title: "Running Total", path: "/docs/pages/example2.html" },
-    { key: "example3", label: "Example 3", title: "Array Traversal", path: "/docs/pages/example3.html" },
-    { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/docs/pages/assessment.html" }
+    { key: "example1", label: "Example 1", title: "Input Validation", path: "/examples/example1/" },
+    { key: "example2", label: "Example 2", title: "Running Total", path: "/examples/example2/" },
+    { key: "example3", label: "Example 3", title: "Array Traversal", path: "/examples/example3/" },
+    { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/assessment/" }
 ];
 const ACTIVITY_META_BY_KEY = new Map(ACTIVITY_DEFINITIONS.map((item) => [item.key, item]));
 
@@ -1790,9 +1802,14 @@ const HINT_STORAGE_PREFIX = `${HINT_STORAGE_NAMESPACE}:`;
 
 const getActivityPathSuffixes = (activityPath) => {
     const lower = String(activityPath || "").toLowerCase();
-    const fileName = lower.split("/").pop() || "";
+    const fileName = getPathLeaf(lower);
     const suffixes = new Set();
     if (fileName) suffixes.add(`/${fileName}`);
+    if (fileName && !fileName.endsWith(".html")) {
+        suffixes.add(`/pages/${fileName}.html`);
+        suffixes.add(`/docs/pages/${fileName}.html`);
+        suffixes.add(`/${fileName}.html`);
+    }
     if (lower.startsWith("/docs/")) {
         suffixes.add(lower.slice("/docs".length));
     }
@@ -1801,17 +1818,7 @@ const getActivityPathSuffixes = (activityPath) => {
 };
 
 const resolveActivityHref = (activityPath) => {
-    const inPagesDir = /\/pages\//.test(window.location.pathname);
-    const marker = "/docs/";
-    const markerIndex = activityPath.lastIndexOf(marker);
-    let relative = "pages/example1.html";
-    if (markerIndex !== -1) {
-        relative = activityPath.slice(markerIndex + marker.length);
-    }
-    if (inPagesDir && relative.startsWith("pages/")) {
-        return `../${relative}`;
-    }
-    return relative;
+    return activityPath;
 };
 
 const getCheckpointLabel = (activityKey, checkpointId) => {
@@ -1885,8 +1892,8 @@ const seedDemoProgress = () => {
         writeStorage(`${HINT_STORAGE_PREFIX}${path}`, JSON.stringify(payload));
     };
 
-    saveStep("/docs/pages/example1.html", {
-        path: "/docs/pages/example1.html",
+    saveStep("/examples/example1/", {
+        path: "/examples/example1/",
         stepCount: 10,
         index: 9,
         isComplete: true,
@@ -1909,7 +1916,7 @@ const seedDemoProgress = () => {
         },
         showWorkedExample: true
     });
-    saveHint("/docs/pages/example1.html", {
+    saveHint("/examples/example1/", {
         checkpoints: {
             tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 25 * minute },
             tick2: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 24 * minute },
@@ -1919,8 +1926,8 @@ const seedDemoProgress = () => {
         }
     });
 
-    saveStep("/docs/pages/example2.html", {
-        path: "/docs/pages/example2.html",
+    saveStep("/examples/example2/", {
+        path: "/examples/example2/",
         stepCount: 9,
         index: 5,
         isComplete: false,
@@ -1935,7 +1942,7 @@ const seedDemoProgress = () => {
         },
         showWorkedExample: false
     });
-    saveHint("/docs/pages/example2.html", {
+    saveHint("/examples/example2/", {
         checkpoints: {
             tick1: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 11 * minute },
             sgB2Tick: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 10 * minute },
@@ -1943,8 +1950,8 @@ const seedDemoProgress = () => {
         }
     });
 
-    saveStep("/docs/pages/example3.html", {
-        path: "/docs/pages/example3.html",
+    saveStep("/examples/example3/", {
+        path: "/examples/example3/",
         stepCount: 6,
         index: 0,
         isComplete: false,
@@ -1953,10 +1960,10 @@ const seedDemoProgress = () => {
         inputs: {},
         showWorkedExample: false
     });
-    saveHint("/docs/pages/example3.html", { checkpoints: {} });
+    saveHint("/examples/example3/", { checkpoints: {} });
 
-    saveStep("/docs/pages/assessment.html", {
-        path: "/docs/pages/assessment.html",
+    saveStep("/assessment/", {
+        path: "/assessment/",
         stepCount: 10,
         index: 5,
         isComplete: false,
@@ -1970,7 +1977,7 @@ const seedDemoProgress = () => {
         },
         showWorkedExample: false
     });
-    saveHint("/docs/pages/assessment.html", {
+    saveHint("/assessment/", {
         checkpoints: {
             tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 4 * minute },
             sgC1Tick: { attempts: 5, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 2 * minute },
@@ -2349,7 +2356,7 @@ const initLearningDashboard = () => {
         };
     } else {
         recommendation = {
-            href: assessment ? assessment.href : "pages/assessment.html",
+            href: assessment ? assessment.href : "/assessment/",
             text: "Everything is complete. You can review any activity whenever needed.",
             button: "Review Assessment"
         };
@@ -3417,7 +3424,7 @@ const initExamplesShowcase = () => {
             kicker: "Example 1",
             title: "Input Validation",
             description: "Design checks that keep user input safe, sensible, and in range before processing.",
-            href: "pages/example1.html",
+            href: "/examples/example1/",
             cta: "Start Example 1",
             image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=960&q=80",
             alt: "Student coding at a laptop"
@@ -3426,7 +3433,7 @@ const initExamplesShowcase = () => {
             kicker: "Example 2",
             title: "Running Total",
             description: "Use loops and accumulators to build totals step by step while handling multiple inputs.",
-            href: "pages/example2.html",
+            href: "/examples/example2/",
             cta: "Start Example 2",
             image: "https://images.unsplash.com/photo-1551033406-611cf9a28f67?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Numbers and calculator representing totals"
@@ -3435,7 +3442,7 @@ const initExamplesShowcase = () => {
             kicker: "Example 3",
             title: "Array Traversal",
             description: "Work through list data item by item and apply the same logic cleanly across each value.",
-            href: "pages/example3.html",
+            href: "/examples/example3/",
             cta: "Start Example 3",
             image: "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2978&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Data dashboard representing arrays and values"
@@ -3444,7 +3451,7 @@ const initExamplesShowcase = () => {
             kicker: "Final Assessment",
             title: "Combining Concepts",
             description: "Bring validation, totals, and traversal together in one mixed challenge to check understanding.",
-            href: "pages/assessment.html",
+            href: "/assessment/",
             cta: "Start Assessment",
             image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2938&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Notebook and study materials for assessment"
@@ -3817,16 +3824,14 @@ const initGlassTooltips = () => {
 };
 
 const initAssessmentGate = () => {
-    const isAssessmentPage = /\/assessment\.html$/i.test(window.location.pathname);
+    const isAssessmentPage = /\/assessment\/?$/i.test(window.location.pathname) || /\/assessment\.html$/i.test(window.location.pathname);
     if (isAssessmentPage) return;
 
     const STORAGE_PREFIX = "assessmentStepperState.v2:";
-    const inPagesDir = /\/pages\//.test(window.location.pathname);
-    const toExampleHref = (fileName) => (inPagesDir ? fileName : `pages/${fileName}`);
     const requiredExamples = [
-        { path: "/docs/pages/example1.html", label: "Example 1", href: toExampleHref("example1.html") },
-        { path: "/docs/pages/example2.html", label: "Example 2", href: toExampleHref("example2.html") },
-        { path: "/docs/pages/example3.html", label: "Example 3", href: toExampleHref("example3.html") }
+        { path: "/examples/example1/", label: "Example 1", href: "/examples/example1/" },
+        { path: "/examples/example2/", label: "Example 2", href: "/examples/example2/" },
+        { path: "/examples/example3/", label: "Example 3", href: "/examples/example3/" }
     ];
 
     const readExampleCompletion = (pathSuffixes) => {

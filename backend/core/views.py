@@ -82,23 +82,6 @@ def examples_page(request: HttpRequest, page_key: str):
     return render(request, template_name)
 
 
-@require_GET
-def pages_alias(request: HttpRequest, file_name: str):
-    if not request.user.is_authenticated:
-        return _redirect_to_login(request)
-    normalized = str(file_name or "").strip().lower()
-    if normalized.endswith(".html"):
-        normalized = normalized[:-5]
-    template_name = PAGE_TEMPLATE_MAP.get(normalized)
-    if not template_name:
-        return _json_error("Page not found.", status=404)
-    if normalized == "teacher":
-        role = getattr(getattr(request.user, "profile", None), "role", "student")
-        if role != "teacher":
-            return redirect("/")
-    return render(request, template_name)
-
-
 def _safe_next_url(request: HttpRequest, fallback="/"):
     candidate = str(
         request.POST.get("next")
