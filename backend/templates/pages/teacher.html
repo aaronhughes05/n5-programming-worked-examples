@@ -146,23 +146,6 @@
       </section>
     </main>
 
-    <div class="teacher-gate" id="teacherGate" aria-hidden="true">
-      <div class="teacher-gate__backdrop" data-close-teacher-gate="true" aria-hidden="true"></div>
-      <div class="teacher-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherGateTitle" aria-describedby="teacherGateBody">
-        <button type="button" class="teacher-gate__close" aria-label="Close teacher mode" data-close-teacher-gate="true">&times;</button>
-        <h2 id="teacherGateTitle">Unlock Teacher Mode</h2>
-        <p id="teacherGateBody">Enter the teacher passcode to access teacher tools in demo mode.</p>
-        <form id="teacherGateForm" class="teacher-gate__form">
-          <label for="teacherPasscodeInput">Passcode</label>
-          <input id="teacherPasscodeInput" class="teacher-gate__input" type="password" autocomplete="current-password" required />
-          <p id="teacherGateError" class="teacher-gate__error tick-mark is-incorrect" aria-live="polite"></p>
-          <div class="teacher-gate__actions">
-            <button type="submit" class="check-btn" id="teacherGateUnlock">Unlock</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
     <div class="teacher-reset-modal" id="teacherResetModal" aria-hidden="true">
       <div class="teacher-reset-modal__backdrop" data-close-reset-modal="true" aria-hidden="true"></div>
       <div class="teacher-reset-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherResetTitle" aria-describedby="teacherResetBody">

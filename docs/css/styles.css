@@ -2504,19 +2504,6 @@ body.is-modal-open {
   display: none !important;
 }
 
-body.is-student-mode [data-teacher-only] {
-  display: none !important;
-}
-
-body.is-teacher-mode [data-student-only] {
-  display: none !important;
-}
-
-.teacher-access-notice {
-  border-color: rgba(37, 99, 235, 0.42);
-  background: linear-gradient(120deg, rgba(37, 99, 235, 0.1), rgba(20, 184, 166, 0.08));
-}
-
 .teacher-summary-card h2 {
   margin-bottom: 0;
 }
@@ -2912,101 +2899,6 @@ body.is-teacher-mode [data-student-only] {
   color: var(--ink-700);
 }
 
-.teacher-gate {
-  position: fixed;
-  inset: 0;
-  z-index: 1300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 240ms ease, visibility 0ms linear 240ms;
-}
-
-.teacher-gate.is-open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transition: opacity 260ms ease;
-}
-
-.teacher-gate__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(11, 19, 36, 0.2);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-
-.teacher-gate__dialog {
-  --edge-angle: 0deg;
-  position: relative;
-  width: min(96vw, 760px);
-  margin: 0;
-  border: 1px solid rgba(37, 99, 235, 0.25);
-  border-radius: 24px;
-  background:
-    linear-gradient(125deg, rgba(255, 255, 255, 0.74), rgba(245, 250, 255, 0.68)),
-    linear-gradient(120deg, rgba(37, 99, 235, 0.13), rgba(20, 184, 166, 0.09));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 22px 20px 18px;
-  color: var(--ink-900);
-  box-shadow: 0 22px 44px rgba(11, 19, 36, 0.2);
-  overflow: clip;
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 280ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.teacher-gate.is-open .teacher-gate__dialog {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.teacher-gate__dialog::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(
-    from calc(-45deg + var(--edge-angle)),
-    transparent 0deg,
-    transparent 300deg,
-    rgba(37, 99, 235, 0.85) 322deg,
-    rgba(37, 99, 235, 0.98) 340deg,
-    rgba(20, 184, 166, 0.9) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 1;
-  pointer-events: none;
-  animation: edgeSweepBalanced 1.9s linear infinite;
-  filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.2)) drop-shadow(0 0 10px rgba(20, 184, 166, 0.14));
-}
-
-.teacher-gate__dialog h2 {
-  margin: 2px 0 8px;
-  font-size: clamp(1.25rem, 3.2vw, 1.58rem);
-  line-height: 1.2;
-  max-width: 34ch;
-}
-
-.teacher-gate__dialog p {
-  margin: 0;
-  color: var(--ink-800);
-}
-
 .teacher-gate__form {
   margin-top: 12px;
   display: grid;
@@ -3032,39 +2924,6 @@ body.is-teacher-mode [data-student-only] {
   display: inline-flex;
   align-items: center;
   margin-top: 2px;
-}
-
-.teacher-gate__actions {
-  margin-top: 4px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.teacher-gate__close {
-  position: absolute;
-  top: 2px;
-  right: 12px;
-  border: none;
-  background: transparent;
-  color: var(--ink-700);
-  font-size: 1.95rem;
-  font-weight: 600;
-  line-height: 1;
-  box-shadow: none;
-  z-index: 2;
-  padding: 0;
-  min-width: 0;
-  height: auto;
-  border-radius: 0;
-  transition: color 180ms ease;
-}
-
-.teacher-gate__close:hover,
-.teacher-gate__close:focus-visible {
-  background: transparent !important;
-  color: var(--accent-700);
-  box-shadow: none !important;
 }
 
 .teacher-reset-modal {
@@ -3167,17 +3026,6 @@ body.is-teacher-mode [data-student-only] {
 }
 
 @media (max-width: 700px) {
-  .teacher-gate {
-    padding: 8px;
-  }
-
-  .teacher-gate__dialog {
-    width: min(98vw, 760px);
-    border-radius: 20px;
-    padding: 18px 16px 14px;
-  }
-
-  .teacher-gate__actions .check-btn,
   .teacher-reset-modal__actions .check-btn {
     width: 100%;
   }

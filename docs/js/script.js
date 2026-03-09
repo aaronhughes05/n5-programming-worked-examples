@@ -441,7 +441,7 @@ const initAuthUX = () => {
 
     const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
     navs.forEach((nav) => {
-        nav.querySelectorAll("[data-auth-state], [data-auth-action], [data-auth-import], [data-teacher-lock]").forEach((el) => el.remove());
+        nav.querySelectorAll("[data-auth-state], [data-auth-action], [data-auth-import]").forEach((el) => el.remove());
         nav.querySelectorAll('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"]').forEach((el) => el.remove());
 
         let avatarWrap = nav.querySelector("[data-avatar-wrap]");
@@ -3630,16 +3630,13 @@ const initDefaultTooltipCopy = () => {
         if (id === "teacherseeddemobtn") return "Insert demo progress data for presentation";
         if (id === "teacherresetprogressbtn") return "Open confirmation to clear all local progress";
         if (id === "teacherresetconfirmbtn") return "Permanently clear all local progress on this device";
-        if (id === "teachergateunlock") return "Unlock teacher mode with the passcode";
         if (id === "assessmentgatereview") return "Open the next incomplete example";
         if (id === "assessmentgateproceed") return "Continue to the assessment without prerequisites";
 
-        if (el.classList.contains("teacher-gate__close")) return "Close teacher mode login";
         if (el.classList.contains("teacher-reset-modal__close")) return "Close reset confirmation dialog";
         if (el.classList.contains("assessment-gate__close")) return "Close assessment warning";
         if (el.hasAttribute("data-close-reset-modal")) return "Close reset confirmation dialog";
         if (el.hasAttribute("data-close-gate")) return "Close assessment warning";
-        if (el.hasAttribute("data-teacher-lock")) return "Sign out of teacher mode";
 
         if (el.classList.contains("examples-tab")) {
             const key = (el.dataset.exampleKey || "").toLowerCase();
