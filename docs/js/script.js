@@ -536,27 +536,6 @@ const initAuthUX = () => {
     });
 };
 
-const initTeacherAccessNotice = () => {
-    const params = new URLSearchParams(window.location.search);
-    if (!isTruthyFlag(params.get("teacherDenied"))) return;
-
-    const main = document.querySelector("main.content");
-    if (!main) return;
-
-    const notice = document.createElement("section");
-    notice.className = "card teacher-access-notice";
-    notice.innerHTML = `
-      <h2>Teacher Mode Locked</h2>
-      <p>Access denied. Sign in with a teacher account to access Teacher Mode.</p>
-    `;
-    main.prepend(notice);
-
-    params.delete("teacherDenied");
-    const nextQuery = params.toString();
-    const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
-    window.history.replaceState(null, "", cleanUrl);
-};
-
 const HINT_MODEL = {
     "example1.html": {
         fullCode: {
@@ -4211,7 +4190,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     initAuthUX();
     enforceRoleAccess();
-    initTeacherAccessNotice();
     if (document.body.classList.contains("page-teacher")) {
         const canUseTeacherPanel = !hasApiAdapter() || (isApiLoggedIn() && getApiUserRole() === "teacher");
         if (hasApiAdapter() && !canUseTeacherPanel) {

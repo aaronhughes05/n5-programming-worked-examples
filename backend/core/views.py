@@ -78,7 +78,7 @@ def examples_page(request: HttpRequest, page_key: str):
     if page_key == "teacher":
         role = getattr(getattr(request.user, "profile", None), "role", "student")
         if role != "teacher":
-            return redirect("/?teacherDenied=1")
+            return redirect("/")
     return render(request, template_name)
 
 
@@ -95,7 +95,7 @@ def pages_alias(request: HttpRequest, file_name: str):
     if normalized == "teacher":
         role = getattr(getattr(request.user, "profile", None), "role", "student")
         if role != "teacher":
-            return redirect("/?teacherDenied=1")
+            return redirect("/")
     return render(request, template_name)
 
 
