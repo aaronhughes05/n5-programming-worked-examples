@@ -59,6 +59,33 @@
             return state;
         },
 
+        async me() {
+            const payload = await jsonFetch("/auth/me", { method: "GET" });
+            state.checked = true;
+            state.authenticated = !!payload?.authenticated;
+            state.user = payload?.user || null;
+            return payload;
+        },
+
+        async login(username, password) {
+            const payload = await jsonFetch("/auth/login", {
+                method: "POST",
+                body: JSON.stringify({ username, password }),
+            });
+            state.checked = true;
+            state.authenticated = !!payload?.ok;
+            state.user = payload?.user || null;
+            return payload;
+        },
+
+        async logout() {
+            await jsonFetch("/auth/logout", { method: "POST", body: JSON.stringify({}) });
+            state.checked = true;
+            state.authenticated = false;
+            state.user = null;
+            return { ok: true };
+        },
+
         isLoggedIn() {
             return !!state.authenticated;
         },

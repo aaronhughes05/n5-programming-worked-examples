@@ -52,6 +52,11 @@ const removeStorage = (key) => {
 
 const hasApiAdapter = () => typeof window !== "undefined" && !!window.N5Api;
 const isApiLoggedIn = () => hasApiAdapter() && typeof window.N5Api.isLoggedIn === "function" && window.N5Api.isLoggedIn();
+const getApiUser = () => (hasApiAdapter() && typeof window.N5Api.getUser === "function" ? window.N5Api.getUser() : null);
+const getApiUserRole = () => {
+    const user = getApiUser();
+    return String(user?.role || "").toLowerCase();
+};
 
 const toLocalProgressPayload = (remoteProgress, path) => {
     const inputs = remoteProgress?.inputs && typeof remoteProgress.inputs === "object"
@@ -202,11 +207,19 @@ const initTeacherMode = () => {
 };
 
 const initTeacherNavEntry = () => {
+    const isAuthenticated = isApiLoggedIn();
+    const role = getApiUserRole();
+    const showTeacherLink = !isAuthenticated || role === "teacher";
     const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
     if (!navs.length) return;
 
     navs.forEach((nav) => {
-        if (nav.querySelector('a[href*="teacher.html"]')) return;
+        const existing = nav.querySelector('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"]');
+        if (!showTeacherLink) {
+            if (existing) existing.remove();
+            return;
+        }
+        if (existing) return;
 
         const link = document.createElement("a");
         link.className = "appbar-nav-pill";
@@ -223,6 +236,145 @@ const initTeacherNavEntry = () => {
             nav.insertBefore(link, resumeLink);
         } else {
             nav.appendChild(link);
+        }
+    });
+
+    if (isAuthenticated) {
+        document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
+            btn.onclick = async (event) => {
+                event.preventDefault();
+                try {
+                    await window.N5Api.logout();
+                } catch {
+                    // Continue with local session cleanup.
+                }
+                writeTeacherModeSession(false);
+                applyTeacherModeClasses(false);
+                window.location.href = getHomeHref();
+            };
+        });
+    }
+};
+
+const initAuthUX = () => {
+    if (!hasApiAdapter()) return;
+
+    const user = getApiUser();
+    const isAuthenticated = isApiLoggedIn();
+    const role = getApiUserRole();
+    document.body.classList.toggle("is-authenticated", isAuthenticated);
+    document.body.classList.toggle("is-role-teacher", isAuthenticated && role === "teacher");
+    document.body.classList.toggle("is-role-student", isAuthenticated && role === "student");
+
+    let modal = document.getElementById("authLoginModal");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "authLoginModal";
+        modal.className = "assessment-gate";
+        modal.setAttribute("aria-hidden", "true");
+        modal.innerHTML = `
+          <div class="assessment-gate__backdrop" data-auth-close="true"></div>
+          <div class="assessment-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="authLoginTitle">
+            <button type="button" class="assessment-gate__close" aria-label="Close login" data-auth-close="true">&times;</button>
+            <h3 id="authLoginTitle">Sign in</h3>
+            <p id="authLoginBody">Use your account credentials to load your saved progress.</p>
+            <form id="authLoginForm" class="teacher-gate__form">
+              <label for="authUsernameInput" class="teacher-gate__label">Username</label>
+              <input id="authUsernameInput" class="teacher-gate__input" name="username" autocomplete="username" required />
+              <label for="authPasswordInput" class="teacher-gate__label">Password</label>
+              <input id="authPasswordInput" class="teacher-gate__input" type="password" name="password" autocomplete="current-password" required />
+              <p id="authLoginError" class="teacher-gate__error" aria-live="polite"></p>
+              <div class="assessment-gate__actions">
+                <button type="submit" class="check-btn">Login</button>
+              </div>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const closeModal = () => {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+    };
+    const openModal = () => {
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+        const usernameInput = document.getElementById("authUsernameInput");
+        const errorEl = document.getElementById("authLoginError");
+        if (errorEl) {
+            errorEl.textContent = "";
+            errorEl.classList.remove("is-visible");
+        }
+        if (usernameInput) window.setTimeout(() => usernameInput.focus(), 0);
+    };
+
+    modal.querySelectorAll("[data-auth-close='true']").forEach((el) => {
+        el.onclick = closeModal;
+    });
+
+    const loginForm = document.getElementById("authLoginForm");
+    if (loginForm && !loginForm.dataset.bound) {
+        loginForm.dataset.bound = "true";
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const usernameInput = document.getElementById("authUsernameInput");
+            const passwordInput = document.getElementById("authPasswordInput");
+            const errorEl = document.getElementById("authLoginError");
+            const username = (usernameInput?.value || "").trim();
+            const password = passwordInput?.value || "";
+            if (!username || !password) return;
+
+            try {
+                await window.N5Api.login(username, password);
+                closeModal();
+                window.location.reload();
+            } catch (err) {
+                if (errorEl) {
+                    errorEl.textContent = err?.message || "Login failed.";
+                    errorEl.classList.add("is-visible");
+                }
+            }
+        });
+    }
+
+    const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
+    navs.forEach((nav) => {
+        let stateEl = nav.querySelector("[data-auth-state]");
+        if (!stateEl) {
+            stateEl = document.createElement("span");
+            stateEl.className = "appbar-nav-pill";
+            stateEl.dataset.authState = "true";
+            stateEl.style.cursor = "default";
+            nav.appendChild(stateEl);
+        }
+
+        let actionBtn = nav.querySelector("[data-auth-action]");
+        if (!actionBtn) {
+            actionBtn = document.createElement("button");
+            actionBtn.type = "button";
+            actionBtn.className = "appbar-nav-pill";
+            actionBtn.dataset.authAction = "true";
+            nav.appendChild(actionBtn);
+        }
+
+        if (isAuthenticated && user) {
+            stateEl.textContent = `${user.username} (${role || "student"})`;
+            actionBtn.textContent = "Logout";
+            actionBtn.onclick = async () => {
+                try {
+                    await window.N5Api.logout();
+                } catch {
+                    // Force local unauth state regardless of transport issues.
+                }
+                window.location.href = getHomeHref();
+            };
+        } else {
+            stateEl.textContent = "Guest";
+            actionBtn.textContent = "Login";
+            actionBtn.onclick = openModal;
         }
     });
 };
@@ -249,6 +401,20 @@ const initTeacherAccessNotice = () => {
 };
 
 const initTeacherPasscodeGate = () => {
+    if (hasApiAdapter()) {
+        const loggedIn = isApiLoggedIn();
+        const role = getApiUserRole();
+        if (loggedIn && role === "teacher") {
+            writeTeacherModeSession(true);
+            applyTeacherModeClasses(true);
+            return;
+        }
+        // If account auth is available, require role-based account access rather than passcode.
+        writeTeacherModeSession(false);
+        applyTeacherModeClasses(false);
+        return;
+    }
+
     const modal = document.getElementById("teacherGate");
     const closeTriggers = modal
         ? Array.from(modal.querySelectorAll("[data-close-teacher-gate='true']"))
@@ -2772,7 +2938,7 @@ const initDefaultTooltipCopy = () => {
         if (el.classList.contains("assessment-gate__close")) return "Close assessment warning";
         if (el.hasAttribute("data-close-reset-modal")) return "Close reset confirmation dialog";
         if (el.hasAttribute("data-close-gate")) return "Close assessment warning";
-        if (el.hasAttribute("data-teacher-lock")) return "Lock teacher mode and return to student view";
+        if (el.hasAttribute("data-teacher-lock")) return "Sign out of teacher mode";
 
         if (el.classList.contains("examples-tab")) {
             const key = (el.dataset.exampleKey || "").toLowerCase();
@@ -2835,7 +3001,8 @@ const initDefaultTooltipCopy = () => {
         if (lower.includes("proceed anyway")) return "Continue to the assessment without prerequisites";
         if (lower.includes("go to next incomplete example")) return "Open the next incomplete example";
         if (lower.includes("unlock")) return "Unlock teacher mode with the passcode";
-        if (lower.includes("lock")) return "Lock teacher mode and return to student view";
+        if (lower.includes("lock")) return "Sign out of teacher mode";
+        if (lower.includes("sign out")) return "Sign out of teacher mode";
         if (lower.includes("preview")) return "Preview this section";
         if (lower.includes("example 1")) return "Preview example 1";
         if (lower.includes("example 2")) return "Preview example 2";
@@ -3329,8 +3496,6 @@ document.addEventListener("change", (event) => {
 document.addEventListener("DOMContentLoaded", async () => {
     const teacherModeReady = initTeacherMode();
     if (!teacherModeReady) return;
-    initTeacherNavEntry();
-    initTeacherAccessNotice();
     if (hasApiAdapter()) {
         try {
             await window.N5Api.init();
@@ -3339,9 +3504,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Keep local-only mode when backend auth/API is unavailable.
         }
     }
+    initAuthUX();
+    initTeacherNavEntry();
+    initTeacherAccessNotice();
     if (document.body.classList.contains("page-teacher")) {
         initTeacherPasscodeGate();
-        initTeacherSummaryPanel();
+        const canUseTeacherPanel = !hasApiAdapter() || (isApiLoggedIn() && getApiUserRole() === "teacher");
+        if (hasApiAdapter() && !canUseTeacherPanel) {
+            const lockedCard = document.querySelector("[data-student-only] p");
+            if (lockedCard) {
+                lockedCard.textContent = isApiLoggedIn()
+                    ? "A teacher account is required to access this page."
+                    : "Please sign in with a teacher account to continue.";
+            }
+        }
+        if (canUseTeacherPanel) initTeacherSummaryPanel();
     }
     initAccessibilityEnhancements();
     initAppbarEnhancements();
