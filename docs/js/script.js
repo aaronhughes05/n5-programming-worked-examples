@@ -57,6 +57,143 @@ const getApiUserRole = () => {
     const user = getApiUser();
     return String(user?.role || "").toLowerCase();
 };
+const LOCAL_IMPORT_MARKER_PREFIX = "dbImportDone.v1:";
+
+const normalizeActivityKeyFromPath = (pathValue) => {
+    const raw = String(pathValue || "").trim().toLowerCase();
+    if (!raw) return "";
+    const fromPath = raw.includes("/") ? raw.split("/").pop() : raw;
+    return fromPath.endsWith(".html") ? fromPath.slice(0, -5) : fromPath;
+};
+
+const getImportMarkerKeyForUser = (user) => {
+    const userId = user?.id != null ? String(user.id) : String(user?.username || "unknown");
+    return `${LOCAL_IMPORT_MARKER_PREFIX}${userId}`;
+};
+
+const hasImportedLocalProgressForUser = (user) => {
+    try {
+        return localStorage.getItem(getImportMarkerKeyForUser(user)) === "1";
+    } catch {
+        return false;
+    }
+};
+
+const markImportedLocalProgressForUser = (user) => {
+    try {
+        localStorage.setItem(getImportMarkerKeyForUser(user), "1");
+    } catch {
+        // Ignore storage failures.
+    }
+};
+
+const collectStoredProgressRecords = () => {
+    const rows = [];
+    try {
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
+            const path = key.slice(STORAGE_PREFIX.length);
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            try {
+                const payload = JSON.parse(raw);
+                rows.push({ path, payload });
+            } catch {
+                // Ignore malformed entries.
+            }
+        }
+    } catch {
+        // Ignore storage read failures.
+    }
+    return rows;
+};
+
+const collectStoredHintRecords = () => {
+    const rows = [];
+    try {
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
+            const path = key.slice(HINT_STORAGE_PREFIX.length);
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            try {
+                const payload = JSON.parse(raw);
+                rows.push({ path, payload });
+            } catch {
+                // Ignore malformed entries.
+            }
+        }
+    } catch {
+        // Ignore storage read failures.
+    }
+    return rows;
+};
+
+const importLocalProgressToDb = async () => {
+    if (!isApiLoggedIn()) return { imported: false, reason: "not_logged_in" };
+    const user = getApiUser();
+    if (!user) return { imported: false, reason: "missing_user" };
+    if (hasImportedLocalProgressForUser(user)) return { imported: false, reason: "already_imported" };
+
+    const progressRows = collectStoredProgressRecords();
+    const hintRows = collectStoredHintRecords();
+
+    for (const row of progressRows) {
+        const payload = row?.payload;
+        if (!payload || typeof payload !== "object") continue;
+        const activityKey = normalizeActivityKeyFromPath(payload.path || row.path);
+        if (!activityKey) continue;
+
+        const mergedInputs = payload.inputs && typeof payload.inputs === "object"
+            ? { ...payload.inputs }
+            : {};
+        if (typeof payload.makeProgram === "string" && !("makeProgram" in mergedInputs)) {
+            mergedInputs.makeProgram = payload.makeProgram;
+        }
+        if (typeof payload.makeCase === "string" && !("makeCase" in mergedInputs)) {
+            mergedInputs.makeCase = payload.makeCase;
+        }
+        if (typeof payload.makeActual === "string" && !("makeActual" in mergedInputs)) {
+            mergedInputs.makeActual = payload.makeActual;
+        }
+
+        await window.N5Api.putActivityProgress(activityKey, {
+            stepIndex: Number(payload.index || 0),
+            stepCount: Number(payload.stepCount || 0),
+            isComplete: payload.isComplete === true || payload.completed === true,
+            completedChecks: Array.isArray(payload.completedChecks) ? payload.completedChecks : [],
+            inputs: mergedInputs,
+            showWorkedExample: payload.showWorkedExample === true
+        });
+    }
+
+    for (const row of hintRows) {
+        const payload = row?.payload;
+        if (!payload || typeof payload !== "object") continue;
+        const activityKey = normalizeActivityKeyFromPath(row.path);
+        if (!activityKey) continue;
+        const checkpoints = payload.checkpoints && typeof payload.checkpoints === "object"
+            ? payload.checkpoints
+            : {};
+        const entries = Object.entries(checkpoints);
+        for (const [checkpointId, bucket] of entries) {
+            if (!checkpointId || !bucket || typeof bucket !== "object") continue;
+            await window.N5Api.postHint(activityKey, checkpointId, {
+                attempts: Number(bucket.attempts || 0),
+                shownLevel: Number(bucket.shownLevel || 0),
+                showCount: Number(bucket.showCount || 0),
+                revealCount: Number(bucket.revealCount || 0),
+                revealedWorked: bucket.revealedWorked === true,
+                lastUsedAt: Number(bucket.lastUsedAt || 0)
+            });
+        }
+    }
+
+    markImportedLocalProgressForUser(user);
+    return { imported: true, progressCount: progressRows.length, hintCount: hintRows.length };
+};
 
 const toLocalProgressPayload = (remoteProgress, path) => {
     const inputs = remoteProgress?.inputs && typeof remoteProgress.inputs === "object"
@@ -359,10 +496,48 @@ const initAuthUX = () => {
             actionBtn.dataset.authAction = "true";
             nav.appendChild(actionBtn);
         }
+        let importBtn = nav.querySelector("[data-auth-import]");
+        if (!importBtn) {
+            importBtn = document.createElement("button");
+            importBtn.type = "button";
+            importBtn.className = "appbar-nav-pill";
+            importBtn.dataset.authImport = "true";
+            importBtn.id = "authImportBtn";
+            importBtn.textContent = "Import local progress";
+            nav.appendChild(importBtn);
+        }
 
         if (isAuthenticated && user) {
             stateEl.textContent = `${user.username} (${role || "student"})`;
             actionBtn.textContent = "Logout";
+            const alreadyImported = hasImportedLocalProgressForUser(user);
+            importBtn.hidden = alreadyImported;
+            importBtn.disabled = false;
+            if (!alreadyImported) {
+                importBtn.onclick = async () => {
+                    importBtn.disabled = true;
+                    const originalLabel = importBtn.textContent;
+                    importBtn.textContent = "Importing...";
+                    try {
+                        await importLocalProgressToDb();
+                        importBtn.textContent = "Imported";
+                        window.setTimeout(() => {
+                            importBtn.hidden = true;
+                            importBtn.textContent = originalLabel;
+                            initLearningDashboard();
+                            if (document.body.classList.contains("page-teacher")) initTeacherSummaryPanel();
+                        }, 800);
+                    } catch {
+                        importBtn.disabled = false;
+                        importBtn.textContent = "Import failed";
+                        window.setTimeout(() => {
+                            importBtn.textContent = originalLabel;
+                        }, 1200);
+                    }
+                };
+            } else {
+                importBtn.onclick = null;
+            }
             actionBtn.onclick = async () => {
                 try {
                     await window.N5Api.logout();
@@ -373,6 +548,8 @@ const initAuthUX = () => {
             };
         } else {
             stateEl.textContent = "Guest";
+            importBtn.hidden = true;
+            importBtn.onclick = null;
             actionBtn.textContent = "Login";
             actionBtn.onclick = openModal;
         }
@@ -3073,6 +3250,7 @@ const initDefaultTooltipCopy = () => {
         if (id === "dashboardrecommendedbtn") return "Open the recommended next activity";
         if (id === "teacherexportcsvbtn") return "Export class progress and hints as CSV";
         if (id === "teacherexportjsonbtn") return "Export class progress and hints as JSON";
+        if (id === "authimportbtn") return "Import one-time local progress into your account";
         if (id === "teacherseeddemobtn") return "Insert demo progress data for presentation";
         if (id === "teacherresetprogressbtn") return "Open confirmation to clear all local progress";
         if (id === "teacherresetconfirmbtn") return "Permanently clear all local progress on this device";
@@ -3143,6 +3321,7 @@ const initDefaultTooltipCopy = () => {
         if (lower.includes("download summary")) return "Download your progress summary as a text file";
         if (lower.includes("open recommendation")) return "Open the recommended next activity";
         if (lower.includes("insert test data")) return "Insert demo progress data for presentation";
+        if (lower.includes("import local progress")) return "Import one-time local progress into your account";
         if (lower.includes("export csv")) return "Export class progress and hints as CSV";
         if (lower.includes("export json")) return "Export class progress and hints as JSON";
         if (lower.includes("proceed anyway")) return "Continue to the assessment without prerequisites";
