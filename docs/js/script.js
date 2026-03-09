@@ -346,7 +346,9 @@ const initTeacherMode = () => {
 const initTeacherNavEntry = () => {
     const isAuthenticated = isApiLoggedIn();
     const role = getApiUserRole();
-    const showTeacherLink = !isAuthenticated || role === "teacher";
+    const showTeacherLink = hasApiAdapter()
+        ? (isAuthenticated && role === "teacher")
+        : (!isAuthenticated || role === "teacher");
     const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
     if (!navs.length) return;
 
@@ -390,6 +392,41 @@ const initTeacherNavEntry = () => {
                 window.location.href = getHomeHref();
             };
         });
+    }
+};
+
+const enforceRoleAccess = () => {
+    if (!hasApiAdapter()) return;
+    const isTeacher = isApiLoggedIn() && getApiUserRole() === "teacher";
+    const isTeacherPage = document.body.classList.contains("page-teacher");
+
+    document.querySelectorAll("[data-teacher-only]").forEach((el) => {
+        if (isTeacher) {
+            el.removeAttribute("hidden");
+            el.removeAttribute("aria-hidden");
+        } else {
+            el.setAttribute("hidden", "true");
+            el.setAttribute("aria-hidden", "true");
+        }
+    });
+
+    document.querySelectorAll("[data-student-only]").forEach((el) => {
+        if (isTeacher) {
+            el.setAttribute("hidden", "true");
+            el.setAttribute("aria-hidden", "true");
+        } else {
+            el.removeAttribute("hidden");
+            el.removeAttribute("aria-hidden");
+        }
+    });
+
+    if (!isTeacherPage || isTeacher) return;
+
+    const lockedCard = document.querySelector("[data-student-only] p");
+    if (lockedCard) {
+        lockedCard.textContent = isApiLoggedIn()
+            ? "Teacher-only area. Your account does not have teacher access."
+            : "Please sign in with a teacher account to access this page.";
     }
 };
 
@@ -3832,6 +3869,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     initAuthUX();
     initTeacherNavEntry();
+    enforceRoleAccess();
     initTeacherAccessNotice();
     if (document.body.classList.contains("page-teacher")) {
         initTeacherPasscodeGate();
