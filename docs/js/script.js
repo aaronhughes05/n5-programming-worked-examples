@@ -390,13 +390,9 @@ const enforceRoleAccess = () => {
     });
 
     document.querySelectorAll("[data-student-only]").forEach((el) => {
-        if (isTeacher) {
-            el.setAttribute("hidden", "true");
-            el.setAttribute("aria-hidden", "true");
-        } else {
-            el.removeAttribute("hidden");
-            el.removeAttribute("aria-hidden");
-        }
+        // Teachers should retain student-side access.
+        el.removeAttribute("hidden");
+        el.removeAttribute("aria-hidden");
     });
 
     if (!isTeacherPage || isTeacher) return;

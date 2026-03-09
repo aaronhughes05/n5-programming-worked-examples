@@ -9,6 +9,7 @@ from core.views import (
     examples_page,
     hints_checkpoint,
     home_page,
+    login_page,
     pages_alias,
     progress_checkpoint,
     progress_detail,
@@ -29,6 +30,8 @@ def health(_request):
 
 
 urlpatterns = [
+    path("login", login_page, name="login-page-noslash"),
+    path("login/", login_page, name="login-page"),
     path("", home_page, name="home"),
     path("index.html", home_page, name="home-index"),
     path("pages/index.html", home_page, name="home-pages-index"),

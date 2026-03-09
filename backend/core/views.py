@@ -1,12 +1,15 @@
 import json
 import csv
+from urllib.parse import urlencode
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
@@ -32,28 +35,88 @@ def api_root(_request: HttpRequest):
     return JsonResponse({"message": "API scaffold ready"})
 
 
+@require_http_methods(["GET", "POST"])
+def login_page(request: HttpRequest):
+    if request.user.is_authenticated:
+        return redirect(_safe_next_url(request, fallback="/"))
+
+    if request.method == "POST":
+        username = str(request.POST.get("username", "")).strip()
+        password = str(request.POST.get("password", ""))
+        if username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect(_safe_next_url(request, fallback="/"))
+        return render(
+            request,
+            "login.html",
+            {
+                "error": "Invalid username or password.",
+                "next": _safe_next_url(request, fallback="/"),
+            },
+            status=401,
+        )
+
+    return render(request, "login.html", {"next": _safe_next_url(request, fallback="/")})
+
+
 @require_GET
 def home_page(request: HttpRequest):
+    if not request.user.is_authenticated:
+        return _redirect_to_login(request)
     return render(request, "index.html")
 
 
 @require_GET
 def examples_page(request: HttpRequest, page_key: str):
+    if not request.user.is_authenticated:
+        return _redirect_to_login(request)
     template_name = PAGE_TEMPLATE_MAP.get(page_key)
     if not template_name:
         return _json_error("Page not found.", status=404)
+    if page_key == "teacher":
+        role = getattr(getattr(request.user, "profile", None), "role", "student")
+        if role != "teacher":
+            return redirect("/?teacherDenied=1")
     return render(request, template_name)
 
 
 @require_GET
 def pages_alias(request: HttpRequest, file_name: str):
+    if not request.user.is_authenticated:
+        return _redirect_to_login(request)
     normalized = str(file_name or "").strip().lower()
     if normalized.endswith(".html"):
         normalized = normalized[:-5]
     template_name = PAGE_TEMPLATE_MAP.get(normalized)
     if not template_name:
         return _json_error("Page not found.", status=404)
+    if normalized == "teacher":
+        role = getattr(getattr(request.user, "profile", None), "role", "student")
+        if role != "teacher":
+            return redirect("/?teacherDenied=1")
     return render(request, template_name)
+
+
+def _safe_next_url(request: HttpRequest, fallback="/"):
+    candidate = str(
+        request.POST.get("next")
+        or request.GET.get("next")
+        or fallback
+    ).strip() or fallback
+    if url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return fallback
+
+
+def _redirect_to_login(request: HttpRequest):
+    query = urlencode({"next": request.get_full_path()})
+    return redirect(f"{reverse('login-page')}?{query}")
 
 
 def _json_error(message: str, status: int = 400) -> JsonResponse:
