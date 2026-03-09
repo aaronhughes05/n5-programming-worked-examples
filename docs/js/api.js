@@ -136,6 +136,14 @@
             const result = await jsonFetch("/api/progress-summary", { method: "GET" });
             return result?.summary || null;
         },
+
+        async getTeacherClassSummary() {
+            return await jsonFetch("/api/teacher/class-summary", { method: "GET" });
+        },
+
+        async getTeacherAttemptAnalytics() {
+            return await jsonFetch("/api/teacher/attempt-analytics", { method: "GET" });
+        },
     };
 
     window.N5Api = api;

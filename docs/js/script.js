@@ -1685,6 +1685,7 @@ const ACTIVITY_DEFINITIONS = [
     { key: "example3", label: "Example 3", title: "Array Traversal", path: "/docs/pages/example3.html" },
     { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/docs/pages/assessment.html" }
 ];
+const ACTIVITY_META_BY_KEY = new Map(ACTIVITY_DEFINITIONS.map((item) => [item.key, item]));
 
 const CHECKPOINT_LABELS = {
     example1: {
@@ -2307,22 +2308,9 @@ const initLearningDashboard = () => {
     }
 };
 
-const initTeacherSummaryPanel = () => {
+const initTeacherSummaryPanel = async () => {
     const root = document.getElementById("teacherSummaryPanel");
     if (!root) return;
-
-    const summaries = buildActivitySummaries();
-    const completeCount = summaries.filter((item) => item.isComplete).length;
-    const inProgressCount = summaries.filter((item) => item.inProgress).length;
-    const notStartedCount = summaries.filter((item) => !item.started).length;
-    const totalHintsUsed = summaries.reduce(
-        (sum, item) => sum + Number(item?.hintAnalytics?.hintsUsed || 0),
-        0
-    );
-    const totalWorkedHints = summaries.reduce(
-        (sum, item) => sum + Number(item?.hintAnalytics?.workedRevealed || 0),
-        0
-    );
 
     const completeEl = document.getElementById("teacherCountComplete");
     const inProgressEl = document.getElementById("teacherCountInProgress");
@@ -2341,6 +2329,165 @@ const initTeacherSummaryPanel = () => {
     const resetCloseTriggers = resetModal
         ? Array.from(resetModal.querySelectorAll("[data-close-reset-modal='true']"))
         : [];
+
+    const shouldUseTeacherApi = hasApiAdapter() && isApiLoggedIn() && getApiUserRole() === "teacher";
+    if (shouldUseTeacherApi) {
+        try {
+            const [classSummary, attemptAnalytics] = await Promise.all([
+                window.N5Api.getTeacherClassSummary(),
+                window.N5Api.getTeacherAttemptAnalytics()
+            ]);
+            const introEl = root.querySelector(".teacher-summary-intro");
+            if (introEl) {
+                introEl.textContent = "Snapshot from database-backed class progress data.";
+            }
+
+            const overall = classSummary?.overall || {};
+            if (completeEl) completeEl.textContent = String(Number(overall.activitiesCompleted || 0));
+            if (inProgressEl) inProgressEl.textContent = String(Number(overall.activitiesInProgress || 0));
+            if (notStartedEl) notStartedEl.textContent = String(Number(overall.activitiesNotStarted || 0));
+            if (hintsUsedEl) hintsUsedEl.textContent = String(Number(overall.hintsUsed || 0));
+            if (workedHintsEl) workedHintsEl.textContent = String(Number(overall.workedHintsRevealed || 0));
+
+            if (listEl) {
+                listEl.innerHTML = "";
+                const classes = Array.isArray(classSummary?.classes) ? classSummary.classes : [];
+                classes.forEach((classRow) => {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    const activityLines = (classRow.activityCounts || [])
+                        .map((activity) => (
+                            `${activity.activityKey}: ${activity.completed} complete, ${activity.inProgress} in progress, ${activity.notStarted} not started`
+                        ))
+                        .join(" | ");
+                    li.innerHTML = `
+                      <p class="teacher-summary-list__title">${classRow.classroomName} (${classRow.studentCount} students)</p>
+                      <p class="teacher-summary-list__meta">${activityLines || "No activity data yet."}</p>
+                    `;
+                    listEl.appendChild(li);
+                });
+                if (!classes.length) {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    li.innerHTML = `<p class="teacher-summary-list__meta">No classes found for this teacher account yet.</p>`;
+                    listEl.appendChild(li);
+                }
+            }
+
+            const checkpointRows = Array.isArray(attemptAnalytics?.checkpointAnalytics)
+                ? attemptAnalytics.checkpointAnalytics
+                : [];
+            const byActivity = new Map();
+            checkpointRows.forEach((row) => {
+                const key = String(row.activityKey || "").toLowerCase();
+                const existing = byActivity.get(key) || {
+                    activityKey: key,
+                    attempts: 0,
+                    checkpointsTried: 0,
+                    missSignals: 0,
+                    toughest: null
+                };
+                existing.attempts += Number(row.attempts || 0);
+                existing.checkpointsTried += 1;
+                existing.missSignals += Number(row.missSignals || 0);
+                if (!existing.toughest || Number(row.missSignals || 0) > Number(existing.toughest.missSignals || 0)) {
+                    existing.toughest = row;
+                }
+                byActivity.set(key, existing);
+            });
+
+            if (attemptListEl) {
+                attemptListEl.innerHTML = "";
+                Array.from(byActivity.values()).forEach((row) => {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    const meta = ACTIVITY_META_BY_KEY.get(row.activityKey);
+                    const label = meta?.label || row.activityKey || "Activity";
+                    const title = meta?.title || "";
+                    const signal = row.missSignals >= 10
+                        ? "High difficulty signal"
+                        : row.missSignals >= 4
+                            ? "Moderate difficulty signal"
+                            : row.missSignals > 0
+                                ? "Low difficulty signal"
+                                : "No difficulty signal yet";
+                    const toughestText = row.toughest
+                        ? `${getCheckpointLabel(row.activityKey, row.toughest.checkpointId)} (${row.toughest.missSignals} miss signals)`
+                        : "None yet";
+                    li.innerHTML = `
+                      <p class="teacher-summary-list__title">${label}${title ? `: ${title}` : ""}</p>
+                      <p class="teacher-summary-list__meta">Attempts: ${row.attempts} across ${row.checkpointsTried} checkpoints</p>
+                      <p class="teacher-summary-list__meta">${signal}</p>
+                      <p class="teacher-summary-list__meta">Most missed in this activity: ${toughestText}</p>
+                    `;
+                    attemptListEl.appendChild(li);
+                });
+                if (!byActivity.size) {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    li.innerHTML = `<p class="teacher-summary-list__meta">No checkpoint attempt data yet.</p>`;
+                    attemptListEl.appendChild(li);
+                }
+            }
+
+            if (mostMissedEl) {
+                mostMissedEl.innerHTML = "";
+                const topMissed = Array.isArray(attemptAnalytics?.mostMissed) ? attemptAnalytics.mostMissed.slice(0, 5) : [];
+                if (!topMissed.length) {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    li.innerHTML = `<p class="teacher-summary-list__meta">No missed checkpoint data yet.</p>`;
+                    mostMissedEl.appendChild(li);
+                } else {
+                    topMissed.forEach((item) => {
+                        const li = document.createElement("li");
+                        li.className = "teacher-summary-list__item";
+                        const meta = ACTIVITY_META_BY_KEY.get(String(item.activityKey || "").toLowerCase());
+                        li.innerHTML = `
+                          <p class="teacher-summary-list__title">${meta?.label || item.activityKey}: ${getCheckpointLabel(item.activityKey, item.checkpointId)}</p>
+                          <p class="teacher-summary-list__meta">${item.missSignals} miss signals (${item.attempts} attempts)</p>
+                        `;
+                        mostMissedEl.appendChild(li);
+                    });
+                }
+            }
+
+            if (exportJsonBtn) {
+                exportJsonBtn.onclick = () => {
+                    window.location.href = "/api/teacher/export.json";
+                };
+            }
+            if (exportCsvBtn) {
+                exportCsvBtn.onclick = () => {
+                    window.location.href = "/api/teacher/export.csv";
+                };
+            }
+            if (seedDemoBtn) {
+                seedDemoBtn.disabled = true;
+                seedDemoBtn.title = "Local demo seed is disabled in database-backed teacher mode.";
+            }
+            if (resetProgressBtn) {
+                resetProgressBtn.disabled = true;
+                resetProgressBtn.title = "Local reset is disabled in database-backed teacher mode.";
+            }
+            return;
+        } catch {
+            // Fall through to local summary mode if DB endpoints are unavailable.
+        }
+    }
+
+    const summaries = buildActivitySummaries();
+    const completeCount = summaries.filter((item) => item.isComplete).length;
+    const inProgressCount = summaries.filter((item) => item.inProgress).length;
+    const notStartedCount = summaries.filter((item) => !item.started).length;
+    const totalHintsUsed = summaries.reduce(
+        (sum, item) => sum + Number(item?.hintAnalytics?.hintsUsed || 0),
+        0
+    );
+    const totalWorkedHints = summaries.reduce(
+        (sum, item) => sum + Number(item?.hintAnalytics?.workedRevealed || 0),
+        0
+    );
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
