@@ -50,6 +50,91 @@ const removeStorage = (key) => {
     }
 };
 
+const hasApiAdapter = () => typeof window !== "undefined" && !!window.N5Api;
+const isApiLoggedIn = () => hasApiAdapter() && typeof window.N5Api.isLoggedIn === "function" && window.N5Api.isLoggedIn();
+
+const toLocalProgressPayload = (remoteProgress, path) => {
+    const inputs = remoteProgress?.inputs && typeof remoteProgress.inputs === "object"
+        ? remoteProgress.inputs
+        : {};
+    return {
+        path: path || window.location.pathname,
+        stepCount: Number(remoteProgress?.stepCount || 0),
+        index: Number(remoteProgress?.stepIndex || 0),
+        isComplete: remoteProgress?.isComplete === true,
+        updatedAt: Date.now(),
+        completedChecks: Array.isArray(remoteProgress?.completedChecks) ? remoteProgress.completedChecks : [],
+        inputs,
+        makeProgram: typeof inputs.makeProgram === "string" ? inputs.makeProgram : "",
+        makeCase: typeof inputs.makeCase === "string" ? inputs.makeCase : "case1",
+        makeActual: typeof inputs.makeActual === "string" ? inputs.makeActual : "",
+        showWorkedExample: remoteProgress?.showWorkedExample === true
+    };
+};
+
+const syncProgressPayloadToApi = async (payload) => {
+    if (!isApiLoggedIn()) return;
+    try {
+        await window.N5Api.putActivityProgress(payload.path || window.location.pathname, {
+            stepIndex: Number(payload.index || 0),
+            stepCount: Number(payload.stepCount || 0),
+            isComplete: payload.isComplete === true,
+            completedChecks: Array.isArray(payload.completedChecks) ? payload.completedChecks : [],
+            inputs: payload.inputs && typeof payload.inputs === "object" ? payload.inputs : {},
+            showWorkedExample: payload.showWorkedExample === true
+        });
+    } catch {
+        // Keep localStorage as resilient fallback if API sync fails.
+    }
+};
+
+const syncHintCheckpointToApi = async (checkpointId, bucket) => {
+    if (!isApiLoggedIn()) return;
+    if (!checkpointId || !bucket || typeof bucket !== "object") return;
+    try {
+        await window.N5Api.postHint(window.location.pathname, checkpointId, {
+            attempts: Number(bucket.attempts || 0),
+            shownLevel: Number(bucket.shownLevel || 0),
+            showCount: Number(bucket.showCount || 0),
+            revealCount: Number(bucket.revealCount || 0),
+            revealedWorked: bucket.revealedWorked === true,
+            lastUsedAt: Number(bucket.lastUsedAt || 0)
+        });
+    } catch {
+        // Keep local hint state unchanged when API is unavailable.
+    }
+};
+
+const syncCheckpointResultToApi = async (checkpointId, isCorrect) => {
+    if (!isApiLoggedIn()) return;
+    if (!checkpointId) return;
+    try {
+        await window.N5Api.postCheckpoint(window.location.pathname, {
+            checkpointId,
+            isCorrect: !!isCorrect,
+            stepIndex: Number(stepperState?.index || 0),
+            stepCount: Number(stepperState?.sections?.length || 0),
+            isComplete: !!stepperState?.completed
+        });
+    } catch {
+        // Keep local progression even if checkpoint sync fails.
+    }
+};
+
+const hydrateProgressFromApi = async () => {
+    if (!isApiLoggedIn()) return;
+    try {
+        const paths = new Set([window.location.pathname, ...ACTIVITY_DEFINITIONS.map((item) => item.path)]);
+        for (const path of paths) {
+            const remoteProgress = await window.N5Api.getActivityProgress(path);
+            if (!remoteProgress) continue;
+            writeStorage(`${STORAGE_NAMESPACE}:${path}`, JSON.stringify(toLocalProgressPayload(remoteProgress, path)));
+        }
+    } catch {
+        // Fall back to existing local data without interruption.
+    }
+};
+
 const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
 const TEACHER_MODE_PASSCODE = "n5teacher";
 
@@ -713,6 +798,7 @@ const updateHintCheckpointResult = (checkpointId, correct) => {
     }
     bucket.lastUsedAt = Date.now();
     saveHintState();
+    syncHintCheckpointToApi(checkpointId, bucket);
     syncAdaptiveHintsUI();
 };
 
@@ -762,6 +848,7 @@ const initAdaptiveHints = () => {
             bucket.showCount += 1;
             bucket.lastUsedAt = Date.now();
             saveHintState();
+            syncHintCheckpointToApi(checkpointId, bucket);
             syncAdaptiveHintsUI();
         });
 
@@ -775,6 +862,7 @@ const initAdaptiveHints = () => {
             bucket.revealCount += 1;
             bucket.lastUsedAt = Date.now();
             saveHintState();
+            syncHintCheckpointToApi(checkpointId, bucket);
             syncAdaptiveHintsUI();
         });
 
@@ -820,6 +908,7 @@ const saveStepperState = () => {
     };
 
     writeStorage(getStorageKey(), JSON.stringify(payload));
+    syncProgressPayloadToApi(payload);
 };
 
 const loadStepperState = () => {
@@ -911,6 +1000,7 @@ const setTickState = (tick, correct, checkpointId = null) => {
     tick.textContent = correct ? "Correct" : "Try again";
     updateHintCheckpointResult(effectiveCheckpointId, correct);
     renderRichFeedback(tick, effectiveCheckpointId, correct, correct ? "Correct." : "Try again.");
+    syncCheckpointResultToApi(effectiveCheckpointId, correct);
     updateStepperState();
     saveStepperState();
 };
@@ -949,6 +1039,7 @@ const setFeedbackState = (el, correct, message, checkpointId = null) => {
     el.style.fontSize = "0.86rem";
     el.style.fontWeight = "600";
     el.style.lineHeight = "1.35";
+    syncCheckpointResultToApi(effectiveCheckpointId, correct);
     updateStepperState();
     saveStepperState();
 };
@@ -3235,11 +3326,19 @@ document.addEventListener("change", (event) => {
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const teacherModeReady = initTeacherMode();
     if (!teacherModeReady) return;
     initTeacherNavEntry();
     initTeacherAccessNotice();
+    if (hasApiAdapter()) {
+        try {
+            await window.N5Api.init();
+            await hydrateProgressFromApi();
+        } catch {
+            // Keep local-only mode when backend auth/API is unavailable.
+        }
+    }
     if (document.body.classList.contains("page-teacher")) {
         initTeacherPasscodeGate();
         initTeacherSummaryPanel();
