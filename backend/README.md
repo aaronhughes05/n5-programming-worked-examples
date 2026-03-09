@@ -1,8 +1,15 @@
-# Backend (Django scaffold)
+# Backend (Django)
 
-This folder contains the initial Django backend scaffold for account-based progress storage.
+This directory contains the Django app that serves both:
 
-## Local setup
+- page templates (frontend runtime)
+- JSON API (auth, progress, hints, teacher analytics)
+
+The project is configured for local development and PostgreSQL-backed deployment.
+
+---
+
+## Local Setup
 
 ```bash
 cd backend
@@ -14,69 +21,113 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-For production values, use `.env.production.example` as your template.
+Windows PowerShell:
 
-## Current endpoints
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.development.example .env
+python manage.py migrate
+python manage.py runserver
+```
 
-- `GET /health/`
-- `GET /api/`
+---
 
-## Seed demo teacher data
+## Useful Commands
+
+Create superuser:
+
+```bash
+python manage.py createsuperuser
+```
+
+Seed teacher demo data:
 
 ```bash
 python manage.py seed_teacher_demo
 ```
 
-Reset and reseed:
+Reset + reseed:
 
 ```bash
 python manage.py seed_teacher_demo --reset
 ```
 
-## Notes
+---
 
-- Database defaults to SQLite for local boot if `DATABASE_URL` is not set.
-- Set `DATABASE_URL` to PostgreSQL for shared/dev/prod environments.
+## Database
 
-## Production deployment (Django + frontend together)
+- Local fallback can use SQLite when `DATABASE_URL` is not set.
+- Recommended shared/dev/prod database is PostgreSQL.
+- Production should use managed Postgres (Render, Railway, Neon, etc.).
 
-This project is now configured to run as a single Django app in production:
+---
 
-- Django serves templates and static assets (including the frontend UI in `docs/`).
-- Runtime should be a Python host (Render or Railway), not GitHub Pages.
-- Use managed PostgreSQL in production (Render Postgres, Neon, Railway Postgres, etc.).
+## API Summary
 
-### Render (recommended)
+Auth:
 
-1. Push this repo to GitHub.
-2. In Render, create a Blueprint deploy from this repository (it will pick up `render.yaml`).
-3. After first deploy, set `DJANGO_CSRF_TRUSTED_ORIGINS` to your app URL, e.g.:
-   - `https://your-app.onrender.com`
-4. Redeploy.
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
 
-### Railway
+Learner progress:
 
-1. Create a new Railway project from this repository.
-2. Add a PostgreSQL service or connect Neon.
-3. Set app variables:
-   - `DJANGO_SECRET_KEY`
-   - `DJANGO_ENV=production`
-   - `DJANGO_DEBUG=0`
-   - `DJANGO_ALLOWED_HOSTS=<your-railway-domain>`
-   - `DJANGO_CSRF_TRUSTED_ORIGINS=https://<your-railway-domain>`
-   - `DATABASE_URL=<managed postgres URL>`
-   - `DATABASE_SSL_REQUIRE=1`
-4. Deploy (Railway will use `railway.toml`).
+- `GET /api/progress-summary`
+- `GET|PUT /api/progress/<activity_key>`
+- `POST /api/progress/<activity_key>/checkpoint`
+- `POST /api/hints/<activity_key>/<checkpoint_id>`
 
-## Cookie and session security
+Teacher analytics and management:
 
-Session and CSRF cookies are now environment-driven:
+- `GET /api/teacher/class-summary`
+- `GET /api/teacher/attempt-analytics`
+- `GET /api/teacher/students/<student_id>/analytics`
+- `GET /api/teacher/export.json`
+- `GET /api/teacher/export.csv`
+- `GET|POST /api/teacher/classes`
+- `POST /api/teacher/classes/<classroom_id>/students`
+- `POST /api/teacher/classes/<classroom_id>/students/<student_id>`
+- `POST /api/teacher/classes/<classroom_id>` (delete class)
 
-- `SESSION_COOKIE_SAMESITE` and `CSRF_COOKIE_SAMESITE` (Lax/Strict/None)
-- `SESSION_COOKIE_SECURE` and `CSRF_COOKIE_SECURE` (0/1)
-- Optional `SESSION_COOKIE_DOMAIN` and `CSRF_COOKIE_DOMAIN`
+---
 
-Recommended strategy:
+## Security And Environment
 
-- Same-site deployment (Django serves frontend): `Lax` + secure cookies in production.
-- Cross-site frontend/backend: set both SameSite values to `None` and keep both secure flags as `1`.
+Environment variables in production should include at least:
+
+- `DJANGO_SECRET_KEY`
+- `DJANGO_ENV=production`
+- `DJANGO_DEBUG=0`
+- `DJANGO_ALLOWED_HOSTS`
+- `DJANGO_CSRF_TRUSTED_ORIGINS`
+- `DATABASE_URL`
+- `DATABASE_SSL_REQUIRE=1` (if required by host)
+
+Cookie/session controls are environment-driven:
+
+- `SESSION_COOKIE_SAMESITE`
+- `CSRF_COOKIE_SAMESITE`
+- `SESSION_COOKIE_SECURE`
+- `CSRF_COOKIE_SECURE`
+- optional: `SESSION_COOKIE_DOMAIN`, `CSRF_COOKIE_DOMAIN`
+
+---
+
+## Deployment
+
+Deploy as one Django app runtime (do not use GitHub Pages for app runtime).
+
+Recommended free-tier paths:
+
+- Render web service + managed Postgres
+- Railway app + Postgres
+- Neon Postgres attached to Render/Railway
+
+After first deploy, run migrations:
+
+```bash
+python manage.py migrate
+```
+

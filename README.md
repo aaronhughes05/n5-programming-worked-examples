@@ -1,185 +1,69 @@
 # Crack the Code
 ## National 5 Computing Science Worked Examples
 
-Crack the Code is an interactive web resource for National 5 learners, designed to move students from passive reading to active analysis through scaffolded programming activities.
+Crack the Code is an interactive learning web app for National 5 Computing Science. It guides learners from prediction to implementation, modification, and testing using scaffolded worked examples and a final assessment.
 
-It is built with plain HTML, CSS, and JavaScript so it can run in typical school environments without build tooling.
+The project now runs as a Django web app (frontend + backend together), with PostgreSQL-ready persistence for accounts, progress, hints, and teacher analytics.
 
 ---
 
 ## What The Project Does
 
-The site provides:
-
-- Structured worked examples following a step-by-step pipeline
-- Prediction and checkpoint tasks with immediate feedback
-- Persistent progress tracking across activities
-- A learning dashboard with completion and badges
-- Worksheet pages for print/download classroom use
-- A final assessment with gating and mixed activity types
-- A teacher mode with local analytics and admin tools
+- Scaffolded step-by-step examples with checkpoint gating
+- Rich feedback and adaptive hints at checkpoint level
+- Persistent learner progress (local fallback + API-backed sync)
+- Dashboard with status, progress bars, and badges
+- Worksheet pages for print/download use
+- Final assessment with prerequisite gate
+- Teacher mode with class summary, analytics, exports, and roster management
 
 ---
 
-## Current Pages
+## Runtime Architecture
 
-### Home
-- `docs/index.html`
-- Learning dashboard
-- Example showcase with rotating previews
-- Badge summary actions (copy/download)
+### Django routes (current source of truth)
 
-### Learner Activities
-- `docs/pages/example1.html` (implemented)
-- `docs/pages/example2.html` (implemented)
-- `docs/pages/assessment.html` (implemented)
-- `docs/pages/example3.html` (placeholder file currently empty)
+- `/` home dashboard
+- `/login/` sign-in page
+- `/examples/example1/`
+- `/examples/example2/`
+- `/examples/example3/`
+- `/assessment/`
+- `/worksheets/`
+- `/examples/worksheet-example1/`
+- `/examples/worksheet-example2/`
+- `/examples/worksheet-example3/`
+- `/examples/worksheet-assessment/`
+- `/teacher/` (teacher role required)
 
-### Worksheets
-- `docs/pages/worksheets.html`
-- `docs/pages/worksheet-example1.html`
-- `docs/pages/worksheet-example2.html`
-- `docs/pages/worksheet-example3.html`
-- `docs/pages/worksheet-assessment.html`
+### API routes
 
-### Teacher Mode
-- `docs/pages/teacher.html`
-- Passcode-gated local teacher tools
-
----
-
-## Learning Flow And Design
-
-Examples use a guided progression model with required checkpoints before moving forward.
-
-Typical activity types:
-
-- Prediction questions (radio/text/select)
-- Step-by-step implementation reveal
-- Parsons-style ordering tasks
-- Subgoal mapping and line identification
-- Trace/modify tasks
-- Output checking
-
-The design applies:
-
-- Consistent structure and wording across activities
-- Subgoal labeling to support mental mapping
-- Rich targeted feedback on errors
-- Adaptive hints with escalation by attempt count
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
+- `GET /api/progress-summary`
+- `GET|PUT /api/progress/<activity_key>`
+- `POST /api/progress/<activity_key>/checkpoint`
+- `POST /api/hints/<activity_key>/<checkpoint_id>`
+- `GET /api/teacher/class-summary`
+- `GET /api/teacher/attempt-analytics`
+- `GET /api/teacher/students/<student_id>/analytics`
+- `GET /api/teacher/export.json`
+- `GET /api/teacher/export.csv`
+- `GET|POST /api/teacher/classes`
+- `POST /api/teacher/classes/<classroom_id>/students`
+- `POST /api/teacher/classes/<classroom_id>/students/<student_id>`
+- `POST /api/teacher/classes/<classroom_id>` (delete class)
 
 ---
 
-## Core Features
+## Current Stack
 
-### 1) Unified App Bar
-
-- Shared top navigation across pages
-- Mobile menu support
-- Resume link shown when in-progress work exists
-- Teacher Mode nav entry injected across pages
-
-### 2) Stepper + Required Checkpoints
-
-- Next step is blocked until required checks are complete
-- Progress bar and step indicator update dynamically
-- Restart clears state for the current activity
-
-### 3) Rich Feedback + Adaptive Hints
-
-- Correct/incorrect status treatment is standardized
-- Rich feedback includes misconception and next-step guidance
-- Hint levels unlock after failed attempts
-- Worked hint reveal is tracked
-
-### 4) Progress Persistence
-
-Saved locally in `localStorage`:
-
-- `assessmentStepperState.v2:<pathname>`
-- `adaptiveHintState.v1:<pathname>`
-
-Tracks:
-
-- step index
-- completed checkpoints
-- input values
-- completion state
-- hint usage analytics
-
-### 5) Learning Dashboard
-
-- Activity state cards: Not started / In progress / Complete
-- Progress bars + activity actions (Start/Continue/Review)
-- Badge rendering and summary
-- Summary copy/download actions
-
-### 6) Assessment Access Gate
-
-When users open Final Assessment before finishing all worked examples:
-
-- modal warning appears
-- completion progress shown (`X of 3 examples complete`)
-- missing examples listed
-- options to proceed or jump to next incomplete example
-
-### 7) Teacher Mode (Client-Side)
-
-Teacher Mode includes:
-
-- passcode unlock modal (session-based)
-- class progress summary cards
-- attempt analytics and difficulty signals
-- most-missed checkpoint highlights
-- report export (CSV and JSON)
-- admin actions:
-  - `Insert Test Data`
-  - `Reset all local progress` (custom confirmation popup)
-
-Notes:
-
-- This is client-side only (no backend auth)
-- It provides deterrence/convenience, not secure access control
-
----
-
-## Teacher Mode Access
-
-Open:
-
-- `docs/pages/teacher.html`
-
-Unlock with passcode:
-
-- current local passcode in code: `n5teacher`
-
-Session behavior:
-
-- unlock persists for current browser tab/session via `sessionStorage`
-- lock/logout clears teacher session and returns to home
-
----
-
-## Accessibility And UX
-
-Implemented UX/accessibility support includes:
-
-- keyboard focus styles and interactive controls
-- ARIA labels for dynamic sections and tool groups
-- modal close affordances (close button/backdrop/Escape where implemented)
-- reduced-motion-aware animation patterns
-- consistent feedback iconography and color semantics
-
----
-
-## Tech Stack
-
-- HTML
-- CSS
+- Django (templates + API)
 - Vanilla JavaScript
-- Pyodide (browser Python runtime for run/check tasks where used)
-- Django (serves frontend + API in one app runtime)
-- PostgreSQL (managed in production; Neon/Render/Railway-compatible)
+- HTML/CSS (served as Django static/template assets)
+- PostgreSQL (production target)
+- Pyodide (for browser-run coding tasks)
 
 ---
 
@@ -193,70 +77,111 @@ Implemented UX/accessibility support includes:
     styles.css
   /js
     script.js
-  /pages
-    assessment.html
-    example-template.html
-    example1.html
-    example2.html
-    example3.html
-    teacher.html
-    worksheets.html
-    worksheet-example1.html
-    worksheet-example2.html
-    worksheet-example3.html
-    worksheet-assessment.html
+    api.js
+
+/backend
+  manage.py
+  requirements.txt
+  /config
+  /core
+  /templates
+    index.html
+    login.html
+    /pages
+      assessment.html
+      example-template.html
+      example1.html
+      example2.html
+      example3.html
+      teacher.html
+      worksheets.html
+      worksheet-example1.html
+      worksheet-example2.html
+      worksheet-example3.html
+      worksheet-assessment.html
 ```
 
 ---
 
-## Run Locally
+## Local Setup
 
 1. Clone repository:
 
 ```bash
 git clone https://github.com/aaronhughes05/n5-programming-worked-examples.git
+cd n5-programming-worked-examples/backend
 ```
 
-2. Run the Django app:
+2. Create and activate virtual environment:
 
 ```bash
-cd backend
-python -m venv .venv
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-# macOS/Linux:
-# source .venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Windows PowerShell:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+3. Install dependencies and configure env:
+
+```bash
 pip install -r requirements.txt
 cp .env.development.example .env
+```
+
+4. Migrate and run:
+
+```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-3. Open `http://127.0.0.1:8000/`.
-
-No build step is required.
+5. Open `http://127.0.0.1:8000/`.
 
 ---
 
-## Manual Smoke Test Checklist
+## Auth And Roles
 
-1. Home page loads with app bar, dashboard, and examples preview.
-2. App bar links route correctly from both `/docs` and `/docs/pages`.
-3. Stepper behavior works (Back/Next/Restart + required checks).
-4. Progress persists on reload for activities with saved data.
-5. Assessment gate appears correctly when examples are incomplete.
-6. Feedback/hints render correctly and update after failed attempts.
-7. Teacher mode lock/unlock flow works as expected.
-8. Teacher exports generate valid CSV and JSON files.
-9. Reset/Insert Test Data actions immediately refresh teacher analytics.
-10. Responsive layout remains usable on mobile widths.
+- App access requires login.
+- `student` role: learner pages only.
+- `teacher` role: learner pages + teacher mode.
+- Teacher mode is role-based (legacy passcode gate removed from runtime path).
 
 ---
 
-## Known Limitations
+## Progress And Analytics
 
-- `docs/pages/example3.html` is currently an empty placeholder.
-- Cross-device persistence depends on running the Django + Postgres deployment path.
+- Learner progress and hint analytics are stored in DB for logged-in users.
+- Frontend includes localStorage compatibility and one-time import to DB.
+- Teacher mode surfaces:
+  - class progress counts
+  - attempt analytics and most-missed checkpoints
+  - per-student analytics modal
+  - CSV/JSON export
+  - class and roster management tools
+
+---
+
+## Manual Smoke Checklist
+
+1. Login works and `/auth/me` reflects role.
+2. Student can open home/examples/assessment/worksheets.
+3. Non-teacher cannot access `/teacher/`.
+4. Teacher can access `/teacher/` and load analytics.
+5. Progress persists after reload.
+6. Assessment prerequisite gate works.
+7. Export JSON/CSV downloads from teacher page.
+
+---
+
+## Known Notes
+
+- `example3` content may still be lighter than Example 1/2 depending on branch state.
+- Old static `docs/pages/*` runtime was removed; Django templates are now the only page source.
 
 ---
 
