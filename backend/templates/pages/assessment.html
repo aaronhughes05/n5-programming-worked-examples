@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Final Assessment</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  </head>
+  <body class="page page-inner">
+    <div class="appbar" id="appbar">
+      <div class="appbar-brand-wrap">
+        <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+        <div class="appbar-brand-stack">
+          <div class="appbar-brand">Crack the Code</div>
+          <div class="appbar-subtitle">National 5 Computing Science</div>
+        </div>
+      </div>
+
+      <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
+
+      <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
+        <a class="appbar-nav-pill" href="/">Home</a>
+        <a class="appbar-nav-pill" href="/#examples">Examples</a>
+        <a class="appbar-nav-pill" href="/pages/worksheets.html">Worksheets</a>
+        <a class="appbar-nav-pill is-active" href="/assessment/">Final Assessment</a>
+        <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
+          Resume
+          <span class="appbar-status-dot" aria-hidden="true"></span>
+        </a>
+      </nav>
+    </div>
+
+    <header class="hero hero-main">
+      <h1 class="hero-title">Combining Concepts</h1>
+      <p class="hero-summary">
+        Bring together validation, running totals, and list traversal in one mixed activity set.
+      </p>
+    </header>
+
+    <main class="content">
+      <details class="card expander-card subgoals-panel">
+        <summary>Subgoals</summary>
+        <p class="subgoal-intro">Core stages used in this assessment.</p>
+        <ul class="subgoal-list">
+          <li class="subgoal-item"><span class="subgoal-code">A</span><span class="subgoal-text">Set up state variables (total, items)</span></li>
+          <li class="subgoal-item"><span class="subgoal-code">B</span><span class="subgoal-text">Repeat input collection for all required values</span></li>
+          <li class="subgoal-item"><span class="subgoal-code">C</span><span class="subgoal-text">Validate each input, store valid data, and update the running total</span></li>
+          <li class="subgoal-item"><span class="subgoal-code">D</span><span class="subgoal-text">Traverse stored values for output/processing</span></li>
+          <li class="subgoal-item"><span class="subgoal-code">E</span><span class="subgoal-text">Display final results (total and summary output)</span></li>
+        </ul>
+      </details>
+      <div class="stepper-header">
+        <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
+        <div class="stepper-bar" aria-hidden="true">
+          <span class="stepper-bar-fill" id="stepperBarFill"></span>
+        </div>
+        <div class="stepper-progress-note" id="stepperNote">Complete the activity to continue.</div>
+      </div>
+
+      <section class="card step-section" data-step="1" data-step-id="step-1">
+        <h2>1. Problem Description</h2>
+        <p>
+          Ask the user for the prices of 5 items. Reject negative values, store
+          each valid price in a list, and calculate the total. Finally, display
+          each item price and the final total.
+        </p>
+      </section>
+
+      <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2,tick3,tick4">
+        <h2>2. Predictions</h2>
+        <div class="question-block">
+          <p>How many times will the main loop repeat?</p>
+          <div class="question-input">
+            <input type="text" id="pred1" class="w-80" placeholder="Enter a number">
+            <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
+            <span id="tick1" class="tick-mark"></span>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p>Which loop would you use to reject negative prices?</p>
+          <div class="question-input">
+            <input type="text" id="pred2" class="w-140" placeholder="Is it while or for?">
+            <button onclick="checkAnswer('pred2', 'while', 'tick2')">Check</button>
+            <span id="tick2" class="tick-mark"></span>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p>What variable stores the running total?</p>
+          <div class="question-input">
+            <input type="text" id="pred3" class="w-140" placeholder="Enter variable name">
+            <button onclick="checkAnswer('pred3', 'total', 'tick3')">Check</button>
+            <span id="tick3" class="tick-mark"></span>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p>Should the list store each valid price?</p>
+          <div class="question-input">
+            <input type="text" id="pred4" class="w-100" placeholder="Enter yes or no">
+            <button onclick="checkAnswer('pred4', 'yes', 'tick4')">Check</button>
+            <span id="tick4" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
+        <h2>3. Step-by-Step Implementation</h2>
+        <div id="step1" class="step-box">
+          <p><strong>Step 1:</strong> Set up the total and a list to store valid prices.</p>
+          <pre><code>A: total = 0
+A: items = []</code></pre>
+          <button onclick="nextStep(1, 2)">Next Step</button>
+        </div>
+        <div id="step2" class="step-box hidden">
+          <p><strong>Step 2:</strong> Repeat exactly 5 times so each item is entered once.</p>
+          <pre><code>B: for counter in range(5):</code></pre>
+          <button onclick="nextStep(2, 3)">Next Step</button>
+        </div>
+        <div id="step3" class="step-box hidden">
+          <p><strong>Step 3:</strong> Validate each price, store it, and update the running total.</p>
+          <pre><code>C:     price = float(input("Price: "))
+C:     while price &lt; 0:
+C:         price = float(input("Enter a valid price: "))
+C:     items.append(price)
+C:     total = total + price</code></pre>
+          <button onclick="nextStep(3, 4)">Next Step</button>
+        </div>
+        <div id="step4" class="step-box hidden">
+          <p><strong>Step 4:</strong> Traverse the list and display each price, then show the total.</p>
+          <pre><code>D: for value in items:
+D:     print(value)
+E: print("Total:", total)</code></pre>
+          <button onclick="nextStep(4, 'full')">Show Full Code</button>
+        </div>
+        <div id="fullCode" class="step-box hidden">
+          <p><strong>Full Solution:</strong> Combine all steps into one complete program with subgoal labels.</p>
+          <pre><code>A: total = 0
+A: items = []
+B: for counter in range(5):
+C:     price = float(input("Price: "))
+C:     while price &lt; 0:
+C:         price = float(input("Enter a valid price: "))
+C:     items.append(price)
+C:     total = total + price
+D: for value in items:
+D:     print(value)
+E: print("Total:", total)</code></pre>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="sgA1Tick">
+        <h2>4. Match The Subgoal</h2>
+        <div class="question-block" data-choice-group="sgA">
+          <p>Which subgoal does this line belong to? <span class="inline-code"><strong>total = 0</strong></span></p>
+          <div class="mc-buttons">
+            <button type="button" onclick="setChoice('sgA', 'A', this)">A</button>
+            <button type="button" onclick="setChoice('sgA', 'B', this)">B</button>
+            <button type="button" onclick="setChoice('sgA', 'C', this)">C</button>
+            <button type="button" onclick="setChoice('sgA', 'D', this)">D</button>
+            <button type="button" onclick="setChoice('sgA', 'E', this)">E</button>
+            <button type="button" class="check-btn" onclick="checkChoice('sgA', 'A', 'sgA1Tick')">Check</button>
+            <span id="sgA1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="sgB1Tick">
+        <h2>5. Identify The Code</h2>
+        <div class="question-block" data-line-group="sgB">
+          <p>Click the line that matches Subgoal B (the loop that repeats 5 times).</p>
+          <div class="code-select">
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'total = 0', this)">total = 0</button>
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'for counter in range(5):', this)">for counter in range(5):</button>
+            <button type="button" class="code-line" onclick="selectLine('sgB', 'total = total + price', this)">total = total + price</button>
+          </div>
+          <button type="button" class="check-btn" onclick="checkLineChoice('sgB', 'for counter in range(5):', 'sgB1Tick')">Check</button>
+          <span id="sgB1Tick" class="tick-mark"></span>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="sgC1Tick">
+        <h2>6. Fill In The Blank</h2>
+        <div class="question-block">
+          <p>Fill the blank to update the running total: <span class="inline-code"><strong>total = total + ___</strong></span></p>
+          <div class="question-input">
+            <input type="text" id="sgC1" class="w-140">
+            <button onclick="checkAnswer('sgC1', 'price', 'sgC1Tick')">Check</button>
+            <span id="sgC1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="sgD1Tick">
+        <h2>7. Identify The Subgoal</h2>
+        <div class="question-block">
+          <p>Identify the subgoal for: <span class="inline-code"><strong>for value in items:</strong></span></p>
+          <div class="question-input">
+            <input type="text" id="sgD1" class="w-160" placeholder="A, B, C, D, or E">
+            <button onclick="checkAnswer('sgD1', 'D', 'sgD1Tick')">Check</button>
+            <span id="sgD1Tick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="sgE1Tick">
+        <h2>8. Trace The Value  </h2>
+        <div class="question-block">
+          <p>Trace the running total. Fill in the totals after each input.</p>
+          <table class="trace-table">
+            <thead>
+              <tr>
+                <th>Input Price</th>
+                <th>Running Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2</td>
+                <td><input type="text" id="trace1" class="w-80"></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><input type="text" id="trace2" class="w-80"></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><input type="text" id="trace3" class="w-80"></td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" class="check-btn" onclick="checkTrace(['trace1','trace2','trace3'], ['2','5','9'], 'sgE1Tick')">Check</button>
+          <span id="sgE1Tick" class="tick-mark"></span>
+        </div>
+      </section>
+
+      <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="assessmentFeedback">
+        <h2>9. Modify The Program</h2>
+        <p>Rearrange the code lines to build a working program that:</p>
+        <ul>
+          <li>Collects 8 prices</li>
+          <li>Rejects negative inputs</li>
+          <li>Stores prices in a list</li>
+          <li>Prints the total and average</li>
+        </ul>
+        <div id="assessment-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+          <div id="a3" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
+          <div id="a8" class="draggable" draggable="true" ondragstart="drag(event)">average = total / len(prices)</div>
+          <div id="a2" class="draggable" draggable="true" ondragstart="drag(event)">prices = []</div>
+          <div id="a5" class="draggable" draggable="true" ondragstart="drag(event)">while price &lt; 0:</div>
+          <div id="a10" class="draggable" draggable="true" ondragstart="drag(event)">print("Total:", total)</div>
+          <div id="a4" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(8):</div>
+          <div id="a6" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Enter a valid price: "))</div>
+          <div id="a7" class="draggable" draggable="true" ondragstart="drag(event)">prices.append(price)</div>
+          <div id="a1" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
+          <div id="a9" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
+          <div id="a11" class="draggable" draggable="true" ondragstart="drag(event)">print("Average:", average)</div>
+        </div>
+        <button onclick="verifyParsons('assessment-parsons', ['a3','a2','a4','a1','a5','a6','a7','a9','a8','a10','a11'], 'assessmentFeedback')">Verify Logic</button>
+        <p id="assessmentFeedback" class="result-feedback" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
+        <h2>10. Make Your Own Program</h2>
+        <p>Write your own program below, select a test case, then run and check the output.</p>
+
+        <p><strong>Your Program</strong></p>
+        <textarea class="code-area" id="makeProgram" rows="12" placeholder="Write your program here..."></textarea>
+
+        <div class="question-block">
+          <p><strong>Test Case</strong></p>
+          <div class="question-input">
+            <select id="makeCase" onchange="updateExpectedOutput()">
+              <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+              <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+              <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+            </select>
+          </div>
+        </div>
+
+        <p><strong>Expected Output</strong></p>
+        <pre><code id="makeExpected">Scores: 2, 3, 4, 5, 6, 7
+Total: 27
+Average: 4.5</code></pre>
+
+        <p><strong>Your Output</strong></p>
+        <div class="run-row">
+          <button class="check-btn" id="runProgramBtn" onclick="runProgram()" disabled>Run Program</button>
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="runStatus" class="run-status">Python runtime loading...</span>
+        </div>
+        <pre><code id="makeActual">Run your program to see the output here.</code></pre>
+
+        <div class="question-block">
+          <div class="question-input">
+            <button class="check-btn" onclick="checkActualOutput('makeCase', 'makeActual', 'makeOutputTick')">Check Output</button>
+            <span id="makeOutputTick" class="tick-mark"></span>
+          </div>
+        </div>
+      </section>
+
+      <div class="stepper-controls">
+        <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
+        <button class="check-btn reset-btn" id="stepReset" onclick="resetAssessment()">Restart</button>
+        <button class="check-btn nav-btn" id="stepNext">Next</button>
+      </div>
+    </main>
+
+    <section class="completion-screen" id="completionScreen">
+      <div class="completion-card">
+        <p class="completion-eyebrow">Completed</p>
+        <h2>Final Assessment Finished</h2>
+        <p>You have completed all activities in this assessment.</p>
+        <p class="completion-note">You can restart the assessment or return to the homepage.</p>
+        <div class="completion-badges" data-completion-badges aria-label="Earned badges"></div>
+        <p class="completion-badge-summary" data-completion-badge-summary></p>
+        <div class="completion-actions">
+          <a class="check-btn nav-btn back-btn" href="/">Back to Home</a>
+          <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+  </body>
+</html>

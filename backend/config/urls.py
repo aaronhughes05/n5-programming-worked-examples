@@ -6,7 +6,10 @@ from core.views import (
     auth_login,
     auth_logout,
     auth_me,
+    examples_page,
     hints_checkpoint,
+    home_page,
+    pages_alias,
     progress_checkpoint,
     progress_detail,
     progress_summary,
@@ -22,6 +25,14 @@ def health(_request):
 
 
 urlpatterns = [
+    path("", home_page, name="home"),
+    path("index.html", home_page, name="home-index"),
+    path("pages/index.html", home_page, name="home-pages-index"),
+    path("examples/<str:page_key>/", examples_page, name="examples-page"),
+    path("assessment/", examples_page, {"page_key": "assessment"}, name="assessment-page"),
+    path("teacher/", examples_page, {"page_key": "teacher"}, name="teacher-page"),
+    path("worksheets/", examples_page, {"page_key": "worksheets"}, name="worksheets-page"),
+    path("pages/<str:file_name>", pages_alias, name="pages-alias"),
     path("admin/", admin.site.urls),
     path("health/", health, name="health"),
     path("api/", api_root, name="api-root"),

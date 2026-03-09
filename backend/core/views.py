@@ -4,6 +4,7 @@ import csv
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
@@ -11,10 +12,48 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, UserProgressSummary
 
+PAGE_TEMPLATE_MAP = {
+    "example1": "pages/example1.html",
+    "example2": "pages/example2.html",
+    "example3": "pages/example3.html",
+    "assessment": "pages/assessment.html",
+    "teacher": "pages/teacher.html",
+    "worksheets": "pages/worksheets.html",
+    "worksheet-example1": "pages/worksheet-example1.html",
+    "worksheet-example2": "pages/worksheet-example2.html",
+    "worksheet-example3": "pages/worksheet-example3.html",
+    "worksheet-assessment": "pages/worksheet-assessment.html",
+    "example-template": "pages/example-template.html",
+}
+
 
 @require_GET
 def api_root(_request: HttpRequest):
     return JsonResponse({"message": "API scaffold ready"})
+
+
+@require_GET
+def home_page(request: HttpRequest):
+    return render(request, "index.html")
+
+
+@require_GET
+def examples_page(request: HttpRequest, page_key: str):
+    template_name = PAGE_TEMPLATE_MAP.get(page_key)
+    if not template_name:
+        return _json_error("Page not found.", status=404)
+    return render(request, template_name)
+
+
+@require_GET
+def pages_alias(request: HttpRequest, file_name: str):
+    normalized = str(file_name or "").strip().lower()
+    if normalized.endswith(".html"):
+        normalized = normalized[:-5]
+    template_name = PAGE_TEMPLATE_MAP.get(normalized)
+    if not template_name:
+        return _json_error("Page not found.", status=404)
+    return render(request, template_name)
 
 
 def _json_error(message: str, status: int = 400) -> JsonResponse:
