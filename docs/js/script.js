@@ -348,55 +348,13 @@ const initTeacherMode = () => {
 };
 
 const initTeacherNavEntry = () => {
-    const isAuthenticated = isApiLoggedIn();
-    const role = getApiUserRole();
-    const showTeacherLink = hasApiAdapter()
-        ? (isAuthenticated && role === "teacher")
-        : (!isAuthenticated || role === "teacher");
-    const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
-    if (!navs.length) return;
-
-    navs.forEach((nav) => {
-        const existing = nav.querySelector('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"]');
-        if (!showTeacherLink) {
-            if (existing) existing.remove();
-            return;
-        }
-        if (existing) return;
-
-        const link = document.createElement("a");
-        link.className = "appbar-nav-pill";
-        link.dataset.teacherNav = "true";
-        link.href = getTeacherHref();
-        link.textContent = "Teacher Mode";
-        if (document.body.classList.contains("page-teacher")) {
-            link.classList.add("is-active");
-            link.setAttribute("aria-current", "page");
-        }
-
-        const resumeLink = nav.querySelector(".appbar-resume");
-        if (resumeLink) {
-            nav.insertBefore(link, resumeLink);
-        } else {
-            nav.appendChild(link);
-        }
-    });
-
-    if (isAuthenticated) {
-        document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
-            btn.onclick = async (event) => {
-                event.preventDefault();
-                try {
-                    await window.N5Api.logout();
-                } catch {
-                    // Continue with local session cleanup.
-                }
-                writeTeacherModeSession(false);
-                applyTeacherModeClasses(false);
-                window.location.href = getHomeHref();
-            };
+    // Legacy cleanup: Teacher Mode now lives in the avatar menu.
+    document.querySelectorAll(".appbar-nav-actions").forEach((nav) => {
+        nav.querySelectorAll('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"], [data-teacher-lock]').forEach((el) => {
+            if (el.closest("[data-avatar-menu='true']")) return;
+            el.remove();
         });
-    }
+    });
 };
 
 const enforceRoleAccess = () => {
@@ -520,41 +478,103 @@ const initAuthUX = () => {
 
     const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
     navs.forEach((nav) => {
-        let stateEl = nav.querySelector("[data-auth-state]");
-        if (!stateEl) {
-            stateEl = document.createElement("span");
-            stateEl.className = "appbar-nav-pill";
-            stateEl.dataset.authState = "true";
-            stateEl.style.cursor = "default";
-            nav.appendChild(stateEl);
+        nav.querySelectorAll("[data-auth-state], [data-auth-action], [data-auth-import], [data-teacher-lock]").forEach((el) => el.remove());
+        nav.querySelectorAll('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"]').forEach((el) => el.remove());
+
+        let avatarWrap = nav.querySelector("[data-avatar-wrap]");
+        if (!avatarWrap) {
+            avatarWrap = document.createElement("div");
+            avatarWrap.className = "appbar-avatar-wrap";
+            avatarWrap.dataset.avatarWrap = "true";
+            avatarWrap.innerHTML = `
+              <button type="button" class="appbar-avatar-btn" data-avatar-toggle="true" aria-expanded="false" aria-label="Open account menu">
+                <span class="appbar-avatar-initial" data-avatar-initial="true">G</span>
+              </button>
+              <div class="appbar-avatar-panel" data-avatar-menu="true" hidden>
+                <p class="appbar-avatar-meta" data-avatar-meta="true"></p>
+                <div class="appbar-avatar-actions" data-avatar-actions="true"></div>
+              </div>
+            `;
+            nav.appendChild(avatarWrap);
         }
 
-        let actionBtn = nav.querySelector("[data-auth-action]");
-        if (!actionBtn) {
-            actionBtn = document.createElement("button");
-            actionBtn.type = "button";
-            actionBtn.className = "appbar-nav-pill";
-            actionBtn.dataset.authAction = "true";
-            nav.appendChild(actionBtn);
+        const toggleBtn = avatarWrap.querySelector("[data-avatar-toggle='true']");
+        const initialEl = avatarWrap.querySelector("[data-avatar-initial='true']");
+        const metaEl = avatarWrap.querySelector("[data-avatar-meta='true']");
+        const menuEl = avatarWrap.querySelector("[data-avatar-menu='true']");
+        const actionsEl = avatarWrap.querySelector("[data-avatar-actions='true']");
+        if (!toggleBtn || !initialEl || !metaEl || !menuEl || !actionsEl) return;
+
+        const closeMenu = () => {
+            avatarWrap.classList.remove("is-open");
+            toggleBtn.setAttribute("aria-expanded", "false");
+            menuEl.hidden = true;
+        };
+
+        const openMenu = () => {
+            document.querySelectorAll(".appbar-avatar-wrap.is-open").forEach((wrap) => {
+                if (wrap === avatarWrap) return;
+                wrap.classList.remove("is-open");
+                const openToggle = wrap.querySelector("[data-avatar-toggle='true']");
+                const openMenuEl = wrap.querySelector("[data-avatar-menu='true']");
+                if (openToggle) openToggle.setAttribute("aria-expanded", "false");
+                if (openMenuEl) openMenuEl.hidden = true;
+            });
+            avatarWrap.classList.add("is-open");
+            toggleBtn.setAttribute("aria-expanded", "true");
+            menuEl.hidden = false;
+        };
+
+        if (!avatarWrap.dataset.bound) {
+            avatarWrap.dataset.bound = "true";
+            toggleBtn.addEventListener("click", () => {
+                if (avatarWrap.classList.contains("is-open")) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            });
+
+            document.addEventListener("click", (event) => {
+                if (!avatarWrap.contains(event.target)) closeMenu();
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") closeMenu();
+            });
         }
-        let importBtn = nav.querySelector("[data-auth-import]");
-        if (!importBtn) {
-            importBtn = document.createElement("button");
-            importBtn.type = "button";
-            importBtn.className = "appbar-nav-pill";
-            importBtn.dataset.authImport = "true";
-            importBtn.id = "authImportBtn";
-            importBtn.textContent = "Import local progress";
-            nav.appendChild(importBtn);
-        }
+
+        actionsEl.innerHTML = "";
+        const userInitial = isAuthenticated && user?.username
+            ? user.username.trim().charAt(0).toUpperCase()
+            : "G";
+        initialEl.textContent = userInitial || "G";
+        initialEl.classList.toggle("is-teacher", isAuthenticated && role === "teacher");
+        metaEl.textContent = isAuthenticated && user
+            ? `${user.username} (${role || "student"})`
+            : "Guest account";
 
         if (isAuthenticated && user) {
-            stateEl.textContent = `${user.username} (${role || "student"})`;
-            actionBtn.textContent = "Logout";
             const alreadyImported = hasImportedLocalProgressForUser(user);
-            importBtn.hidden = alreadyImported;
-            importBtn.disabled = false;
+            if (role === "teacher") {
+                const teacherLink = document.createElement("a");
+                teacherLink.className = "appbar-nav-pill";
+                teacherLink.href = getTeacherHref();
+                teacherLink.textContent = "Teacher Mode";
+                if (document.body.classList.contains("page-teacher")) {
+                    teacherLink.classList.add("is-active");
+                    teacherLink.setAttribute("aria-current", "page");
+                }
+                actionsEl.appendChild(teacherLink);
+            }
+
             if (!alreadyImported) {
+                const importBtn = document.createElement("button");
+                importBtn.type = "button";
+                importBtn.className = "appbar-nav-pill";
+                importBtn.dataset.authImport = "true";
+                importBtn.id = "authImportBtn";
+                importBtn.textContent = "Import local progress";
                 importBtn.onclick = async () => {
                     importBtn.disabled = true;
                     const originalLabel = importBtn.textContent;
@@ -563,11 +583,10 @@ const initAuthUX = () => {
                         await importLocalProgressToDb();
                         importBtn.textContent = "Imported";
                         window.setTimeout(() => {
-                            importBtn.hidden = true;
-                            importBtn.textContent = originalLabel;
                             initLearningDashboard();
                             if (document.body.classList.contains("page-teacher")) initTeacherSummaryPanel();
-                        }, 800);
+                            window.location.reload();
+                        }, 700);
                     } catch {
                         importBtn.disabled = false;
                         importBtn.textContent = "Import failed";
@@ -576,23 +595,34 @@ const initAuthUX = () => {
                         }, 1200);
                     }
                 };
-            } else {
-                importBtn.onclick = null;
+                actionsEl.appendChild(importBtn);
             }
-            actionBtn.onclick = async () => {
+
+            const signOutBtn = document.createElement("button");
+            signOutBtn.type = "button";
+            signOutBtn.className = "appbar-nav-pill";
+            signOutBtn.textContent = "Sign out";
+            signOutBtn.onclick = async () => {
                 try {
                     await window.N5Api.logout();
                 } catch {
                     // Force local unauth state regardless of transport issues.
                 }
+                writeTeacherModeSession(false);
+                applyTeacherModeClasses(false);
                 window.location.href = getHomeHref();
             };
+            actionsEl.appendChild(signOutBtn);
         } else {
-            stateEl.textContent = "Guest";
-            importBtn.hidden = true;
-            importBtn.onclick = null;
-            actionBtn.textContent = "Login";
-            actionBtn.onclick = openModal;
+            const loginBtn = document.createElement("button");
+            loginBtn.type = "button";
+            loginBtn.className = "appbar-nav-pill";
+            loginBtn.textContent = "Sign in";
+            loginBtn.onclick = () => {
+                closeMenu();
+                openModal();
+            };
+            actionsEl.appendChild(loginBtn);
         }
     });
 };
@@ -3467,6 +3497,7 @@ const initDefaultTooltipCopy = () => {
         const sectionLabel = sectionTitle ? ` in ${sectionTitle}` : "";
 
         if (el.classList.contains("appbar-menu-toggle")) return "Show quick links";
+        if (el.classList.contains("appbar-avatar-btn")) return "Open account menu";
         if (el.classList.contains("appbar-resume")) return "Resume your saved progress";
         if (el.classList.contains("hint-panel__btn-show")) return `Show a progressive hint${sectionLabel}`;
         if (el.classList.contains("hint-panel__btn-reveal")) return `Reveal a worked hint${sectionLabel}`;
@@ -3582,6 +3613,7 @@ const initDefaultTooltipCopy = () => {
 
     const selector = [
         ".appbar-nav-pill",
+        ".appbar-avatar-btn",
         ".appbar-menu-toggle",
         ".examples-tab",
         ".check-btn",
