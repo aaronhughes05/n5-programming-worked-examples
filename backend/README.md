@@ -35,3 +35,32 @@ python manage.py seed_teacher_demo --reset
 
 - Database defaults to SQLite for local boot if `DATABASE_URL` is not set.
 - Set `DATABASE_URL` to PostgreSQL for shared/dev/prod environments.
+
+## Production deployment (Django + frontend together)
+
+This project is now configured to run as a single Django app in production:
+
+- Django serves templates and static assets (including the frontend UI in `docs/`).
+- Runtime should be a Python host (Render or Railway), not GitHub Pages.
+- Use managed PostgreSQL in production (Render Postgres, Neon, Railway Postgres, etc.).
+
+### Render (recommended)
+
+1. Push this repo to GitHub.
+2. In Render, create a Blueprint deploy from this repository (it will pick up `render.yaml`).
+3. After first deploy, set `DJANGO_CSRF_TRUSTED_ORIGINS` to your app URL, e.g.:
+   - `https://your-app.onrender.com`
+4. Redeploy.
+
+### Railway
+
+1. Create a new Railway project from this repository.
+2. Add a PostgreSQL service or connect Neon.
+3. Set app variables:
+   - `DJANGO_SECRET_KEY`
+   - `DJANGO_DEBUG=0`
+   - `DJANGO_ALLOWED_HOSTS=<your-railway-domain>`
+   - `DJANGO_CSRF_TRUSTED_ORIGINS=https://<your-railway-domain>`
+   - `DATABASE_URL=<managed postgres URL>`
+   - `DATABASE_SSL_REQUIRE=1`
+4. Deploy (Railway will use `railway.toml`).

@@ -10,6 +10,20 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-secret-change-me")
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+# Managed platforms inject public hostnames dynamically.
+for runtime_host in (os.getenv("RENDER_EXTERNAL_HOSTNAME"), os.getenv("RAILWAY_PUBLIC_DOMAIN")):
+    if runtime_host and runtime_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(runtime_host)
+    if runtime_host:
+        trusted_origin = f"https://{runtime_host}"
+        if trusted_origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(trusted_origin)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -90,3 +104,4 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "1") == "1"
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

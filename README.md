@@ -178,7 +178,8 @@ Implemented UX/accessibility support includes:
 - CSS
 - Vanilla JavaScript
 - Pyodide (browser Python runtime for run/check tasks where used)
-- GitHub Pages style deployment from `/docs`
+- Django (serves frontend + API in one app runtime)
+- PostgreSQL (managed in production; Neon/Render/Railway-compatible)
 
 ---
 
@@ -216,7 +217,22 @@ Implemented UX/accessibility support includes:
 git clone https://github.com/aaronhughes05/n5-programming-worked-examples.git
 ```
 
-2. Open `docs/index.html` in a browser.
+2. Run the Django app:
+
+```bash
+cd backend
+python -m venv .venv
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# macOS/Linux:
+# source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py runserver
+```
+
+3. Open `http://127.0.0.1:8000/`.
 
 No build step is required.
 
