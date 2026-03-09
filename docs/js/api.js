@@ -176,6 +176,12 @@
                 body: JSON.stringify({}),
             });
         },
+
+        async getTeacherStudentAnalytics(studentId) {
+            return await jsonFetch(`/api/teacher/students/${encodeURIComponent(studentId)}/analytics`, {
+                method: "GET",
+            });
+        },
     };
 
     window.N5Api = api;

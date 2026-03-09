@@ -384,7 +384,7 @@ def _build_teacher_attempt_analytics(teacher_user):
         key=lambda x: (x["activityKey"], -x["missSignals"], -x["attempts"], x["checkpointId"]),
     )
     most_missed = sorted(
-        checkpoints,
+        [row for row in checkpoints if int(row.get("missSignals", 0)) > 0],
         key=lambda x: (-x["missSignals"], -x["attempts"], x["activityKey"], x["checkpointId"]),
     )[:10]
 
@@ -830,6 +830,120 @@ def teacher_delete_class(request: HttpRequest, classroom_id: int):
     classroom_name = classroom.name
     classroom.delete()
     return JsonResponse({"ok": True, "deletedClassroomId": classroom_id, "deletedClassroomName": classroom_name})
+
+
+@require_GET
+def teacher_student_analytics(request: HttpRequest, student_id: int):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    link_exists = TeacherStudent.objects.filter(teacher=teacher, student_id=student_id).exists()
+    if not link_exists:
+        return _json_error("Student not found for this teacher.", status=404)
+
+    User = get_user_model()
+    try:
+        student = User.objects.get(id=student_id)
+    except User.DoesNotExist:
+        return _json_error("Student not found.", status=404)
+
+    progress_rows = list(ActivityProgress.objects.filter(user=student).order_by("activity_key"))
+    hint_rows = list(HintAnalytics.objects.filter(user=student).order_by("activity_key", "checkpoint_id"))
+
+    activity_map = {}
+    for row in progress_rows:
+        key = _normalize_activity_key(row.activity_key)
+        if not key:
+            continue
+        activity_map.setdefault(key, {})
+        activity_map[key]["progress"] = {
+            "activityKey": key,
+            "stepIndex": int(row.step_index or 0),
+            "stepCount": int(row.step_count or 0),
+            "isComplete": bool(row.is_complete),
+            "updatedAt": row.updated_at.isoformat(),
+        }
+
+    hint_totals = {
+        "hintsUsed": 0,
+        "workedHintsRevealed": 0,
+        "attempts": 0,
+    }
+    checkpoint_rows = []
+    for row in hint_rows:
+        key = _normalize_activity_key(row.activity_key)
+        checkpoint_rows.append(
+            {
+                "activityKey": key,
+                "checkpointId": row.checkpoint_id,
+                "attempts": int(row.attempts or 0),
+                "hintsShown": int(row.show_count or 0),
+                "workedHintsRevealed": int(row.reveal_count or 0),
+                "missSignals": max(0, int(row.attempts or 0) - 1),
+                "updatedAt": row.updated_at.isoformat(),
+            }
+        )
+        hint_totals["hintsUsed"] += int(row.show_count or 0)
+        hint_totals["workedHintsRevealed"] += int(row.reveal_count or 0)
+        hint_totals["attempts"] += int(row.attempts or 0)
+
+    ordered_keys = ("example1", "example2", "example3", "assessment")
+    activities = []
+    started_count = 0
+    complete_count = 0
+    for key in ordered_keys:
+        progress = activity_map.get(key, {}).get("progress")
+        if progress:
+            started = progress["isComplete"] or progress["stepIndex"] > 0 or progress["stepCount"] > 0
+            if started:
+                started_count += 1
+            if progress["isComplete"]:
+                complete_count += 1
+            status = "Complete" if progress["isComplete"] else ("In Progress" if started else "Not Started")
+        else:
+            status = "Not Started"
+            progress = {
+                "activityKey": key,
+                "stepIndex": 0,
+                "stepCount": 0,
+                "isComplete": False,
+                "updatedAt": None,
+            }
+
+        activities.append(
+            {
+                "activityKey": key,
+                "status": status,
+                "progress": progress,
+            }
+        )
+
+    most_missed = sorted(
+        [row for row in checkpoint_rows if int(row.get("missSignals", 0)) > 0],
+        key=lambda row: (-row["missSignals"], -row["attempts"], row["activityKey"], row["checkpointId"]),
+    )[:8]
+
+    return JsonResponse(
+        {
+            "generatedAt": timezone.now().isoformat(),
+            "student": {
+                "id": student.id,
+                "username": student.username,
+                "email": student.email,
+            },
+            "summary": {
+                "activitiesStarted": started_count,
+                "activitiesCompleted": complete_count,
+                "hintsUsed": hint_totals["hintsUsed"],
+                "workedHintsRevealed": hint_totals["workedHintsRevealed"],
+                "attempts": hint_totals["attempts"],
+            },
+            "activities": activities,
+            "checkpoints": checkpoint_rows,
+            "mostMissed": most_missed,
+        }
+    )
 
 
 @require_GET

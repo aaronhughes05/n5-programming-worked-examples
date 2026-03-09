@@ -2585,6 +2585,12 @@ const initTeacherSummaryPanel = async () => {
     const deleteClassCloseTriggers = deleteClassModal
         ? Array.from(deleteClassModal.querySelectorAll("[data-close-delete-modal='true']"))
         : [];
+    const studentModal = document.getElementById("teacherStudentModal");
+    const studentModalBody = document.getElementById("teacherStudentBody");
+    const studentModalContent = document.getElementById("teacherStudentAnalyticsContent");
+    const studentModalCloseTriggers = studentModal
+        ? Array.from(studentModal.querySelectorAll("[data-close-student-modal='true']"))
+        : [];
     let pendingDeleteClassId = "";
     let pendingDeleteTrigger = null;
 
@@ -2664,14 +2670,29 @@ const initTeacherSummaryPanel = async () => {
                 classes.forEach((classRow) => {
                     const li = document.createElement("li");
                     li.className = "teacher-summary-list__item";
-                    const activityLines = (classRow.activityCounts || [])
-                        .map((activity) => (
-                            `${activity.activityKey}: ${activity.completed} complete, ${activity.inProgress} in progress, ${activity.notStarted} not started`
-                        ))
-                        .join(" | ");
+                    const activityCards = (classRow.activityCounts || [])
+                        .map((activity) => {
+                            const normalizedKey = String(activity.activityKey || "").toLowerCase();
+                            const friendly = ACTIVITY_META_BY_KEY.get(normalizedKey)?.label
+                                || normalizedKey
+                                || "Activity";
+                            return `
+                              <article class="teacher-class-breakdown__item">
+                                <p class="teacher-class-breakdown__title">${friendly}</p>
+                                <div class="teacher-class-breakdown__stats" role="list" aria-label="${friendly} progress counts">
+                                  <span class="teacher-class-breakdown__stat teacher-class-breakdown__stat--complete" role="listitem">${activity.completed} complete</span>
+                                  <span class="teacher-class-breakdown__stat teacher-class-breakdown__stat--progress" role="listitem">${activity.inProgress} in progress</span>
+                                  <span class="teacher-class-breakdown__stat teacher-class-breakdown__stat--not-started" role="listitem">${activity.notStarted} not started</span>
+                                </div>
+                              </article>
+                            `;
+                        })
+                        .join("");
+                    const studentCount = Number(classRow.studentCount || 0);
+                    const studentLabel = studentCount === 1 ? "student" : "students";
                     li.innerHTML = `
-                      <p class="teacher-summary-list__title">${classRow.classroomName} (${classRow.studentCount} students)</p>
-                      <p class="teacher-summary-list__meta">${activityLines || "No activity data yet."}</p>
+                      <p class="teacher-summary-list__title">${classRow.classroomName} (${studentCount} ${studentLabel})</p>
+                      <div class="teacher-class-breakdown">${activityCards || '<p class="teacher-summary-list__meta">No activity data yet.</p>'}</div>
                     `;
                     listEl.appendChild(li);
                 });
@@ -2741,7 +2762,11 @@ const initTeacherSummaryPanel = async () => {
 
             if (mostMissedEl) {
                 mostMissedEl.innerHTML = "";
-                const topMissed = Array.isArray(attemptAnalytics?.mostMissed) ? attemptAnalytics.mostMissed.slice(0, 5) : [];
+                const topMissed = Array.isArray(attemptAnalytics?.mostMissed)
+                    ? attemptAnalytics.mostMissed
+                        .filter((item) => Number(item?.missSignals || 0) > 0)
+                        .slice(0, 5)
+                    : [];
                 if (!topMissed.length) {
                     const li = document.createElement("li");
                     li.className = "teacher-summary-list__item";
@@ -2780,6 +2805,79 @@ const initTeacherSummaryPanel = async () => {
                 el.classList.toggle("is-correct", !!message && !isError);
             };
 
+            const closeStudentModal = () => {
+                if (!studentModal) return;
+                studentModal.classList.remove("is-open");
+                studentModal.setAttribute("aria-hidden", "true");
+                document.body.classList.remove("is-modal-open");
+            };
+
+            const openStudentModal = () => {
+                if (!studentModal) return;
+                studentModal.classList.add("is-open");
+                studentModal.setAttribute("aria-hidden", "false");
+                document.body.classList.add("is-modal-open");
+            };
+
+            const renderStudentAnalytics = (payload) => {
+                if (!studentModalBody || !studentModalContent) return;
+                const student = payload?.student || {};
+                const summary = payload?.summary || {};
+                const activities = Array.isArray(payload?.activities) ? payload.activities : [];
+                const mostMissed = Array.isArray(payload?.mostMissed) ? payload.mostMissed.slice(0, 6) : [];
+
+                studentModalBody.textContent = `Progress snapshot for ${student.username || "student"}${student.email ? ` (${student.email})` : ""}.`;
+                studentModalContent.innerHTML = "";
+
+                const summaryBlock = document.createElement("article");
+                summaryBlock.className = "teacher-student-analytics__block";
+                summaryBlock.innerHTML = `
+                  <p class="teacher-student-analytics__title">Summary</p>
+                  <p class="teacher-student-analytics__meta">Activities started: ${Number(summary.activitiesStarted || 0)} • Completed: ${Number(summary.activitiesCompleted || 0)}</p>
+                  <p class="teacher-student-analytics__meta">Hints used: ${Number(summary.hintsUsed || 0)} • Worked hints revealed: ${Number(summary.workedHintsRevealed || 0)} • Attempts: ${Number(summary.attempts || 0)}</p>
+                `;
+                studentModalContent.appendChild(summaryBlock);
+
+                const activityBlock = document.createElement("article");
+                activityBlock.className = "teacher-student-analytics__block";
+                const activityLines = activities.map((row) => {
+                    const key = String(row.activityKey || "").toLowerCase();
+                    const label = ACTIVITY_META_BY_KEY.get(key)?.label || key || "Activity";
+                    return `<p class="teacher-student-analytics__meta">${label}: ${row.status || "Not Started"}</p>`;
+                }).join("");
+                activityBlock.innerHTML = `
+                  <p class="teacher-student-analytics__title">Activity status</p>
+                  ${activityLines || '<p class="teacher-student-analytics__meta">No activity records yet.</p>'}
+                `;
+                studentModalContent.appendChild(activityBlock);
+
+                const missedBlock = document.createElement("article");
+                missedBlock.className = "teacher-student-analytics__block";
+                const missedLines = mostMissed.map((row) => {
+                    const key = String(row.activityKey || "").toLowerCase();
+                    const label = ACTIVITY_META_BY_KEY.get(key)?.label || key || "Activity";
+                    return `<p class="teacher-student-analytics__meta">${label} • ${getCheckpointLabel(key, row.checkpointId)}: ${Number(row.missSignals || 0)} miss signals</p>`;
+                }).join("");
+                missedBlock.innerHTML = `
+                  <p class="teacher-student-analytics__title">Most missed checkpoints</p>
+                  ${missedLines || '<p class="teacher-student-analytics__meta">No checkpoint misses recorded.</p>'}
+                `;
+                studentModalContent.appendChild(missedBlock);
+            };
+
+            const loadAndShowStudentAnalytics = async (studentId) => {
+                if (!studentModalBody || !studentModalContent) return;
+                studentModalBody.textContent = "Loading student activity analytics...";
+                studentModalContent.innerHTML = "";
+                openStudentModal();
+                try {
+                    const payload = await window.N5Api.getTeacherStudentAnalytics(studentId);
+                    renderStudentAnalytics(payload);
+                } catch (err) {
+                    studentModalBody.textContent = err?.message || "Unable to load student analytics.";
+                }
+            };
+
             const renderClasses = (classes) => {
                 const rows = Array.isArray(classes) ? classes : [];
                 if (classSelect) {
@@ -2810,7 +2908,10 @@ const initTeacherSummaryPanel = async () => {
                             const students = Array.isArray(item.students) ? item.students : [];
                             const studentsHtml = students.length
                                 ? students.map((s) => (
-                                    `<span class="teacher-roster-chip">${s.username} <button type="button" class="check-btn outline-btn" data-remove-student data-class-id="${item.id}" data-student-id="${s.id}">Remove</button></span>`
+                                    `<span class="teacher-roster-chip teacher-roster-chip--clickable" data-view-student data-student-id="${s.id}" role="button" tabindex="0" title="View student analytics">
+                                      <span class="teacher-roster-chip__name">${s.username}</span>
+                                      <button type="button" class="teacher-roster-remove-btn" data-remove-student data-class-id="${item.id}" data-student-id="${s.id}" aria-label="Remove student from class" title="Remove student"></button>
+                                    </span>`
                                 )).join(" ")
                                 : "No students enrolled yet.";
                             li.innerHTML = `
@@ -2932,6 +3033,14 @@ const initTeacherSummaryPanel = async () => {
                         return;
                     }
 
+                    const viewStudentBtn = target.closest("[data-view-student]");
+                    if (viewStudentBtn) {
+                        const studentId = String(viewStudentBtn.getAttribute("data-student-id") || "").trim();
+                        if (!studentId) return;
+                        await loadAndShowStudentAnalytics(studentId);
+                        return;
+                    }
+
                     const deleteBtn = target.closest("[data-delete-class]");
                     if (deleteBtn) {
                         const classId = String(deleteBtn.getAttribute("data-class-id") || "").trim();
@@ -2958,6 +3067,18 @@ const initTeacherSummaryPanel = async () => {
                         window.setTimeout(() => deleteClassConfirmBtn.focus(), 0);
                     }
                 });
+
+                classRosterList.addEventListener("keydown", async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    if (!target) return;
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    const viewStudentBtn = target.closest("[data-view-student]");
+                    if (!viewStudentBtn) return;
+                    event.preventDefault();
+                    const studentId = String(viewStudentBtn.getAttribute("data-student-id") || "").trim();
+                    if (!studentId) return;
+                    await loadAndShowStudentAnalytics(studentId);
+                });
             }
 
             const closeDeleteClassModal = () => {
@@ -2973,6 +3094,12 @@ const initTeacherSummaryPanel = async () => {
                 if (el.dataset.bound === "true") return;
                 el.dataset.bound = "true";
                 el.onclick = closeDeleteClassModal;
+            });
+
+            studentModalCloseTriggers.forEach((el) => {
+                if (el.dataset.bound === "true") return;
+                el.dataset.bound = "true";
+                el.onclick = closeStudentModal;
             });
 
             if (deleteClassConfirmBtn && deleteClassConfirmBtn.dataset.bound !== "true") {
@@ -3175,6 +3302,7 @@ const initTeacherSummaryPanel = async () => {
     if (mostMissedEl) {
         mostMissedEl.innerHTML = "";
         const topMissed = Array.from(missedAgg.values())
+            .filter((item) => Number(item?.attempts || 0) > 0)
             .sort((a, b) => b.attempts - a.attempts)
             .slice(0, 5);
 

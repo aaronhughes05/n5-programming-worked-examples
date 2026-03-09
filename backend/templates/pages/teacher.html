@@ -192,6 +192,16 @@
       </div>
     </div>
 
+    <div class="teacher-reset-modal" id="teacherStudentModal" aria-hidden="true">
+      <div class="teacher-reset-modal__backdrop" data-close-student-modal="true" aria-hidden="true"></div>
+      <div class="teacher-reset-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherStudentTitle" aria-describedby="teacherStudentBody">
+        <button type="button" class="teacher-reset-modal__close" aria-label="Close student analytics dialog" data-close-student-modal="true">&times;</button>
+        <h3 id="teacherStudentTitle">Student Analytics</h3>
+        <p id="teacherStudentBody">Loading student activity analytics...</p>
+        <div id="teacherStudentAnalyticsContent" class="teacher-student-analytics" aria-live="polite"></div>
+      </div>
+    </div>
+
     <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/script.js' %}"></script>
   </body>
