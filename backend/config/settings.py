@@ -5,10 +5,32 @@ import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
+
+
+def parse_bool(value, default=False):
+    if value is None:
+        return default
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def normalize_samesite(value, default="Lax"):
+    raw = str(value or default).strip().lower()
+    if raw == "none":
+        return "None"
+    if raw == "strict":
+        return "Strict"
+    return "Lax"
+
+
+DJANGO_ENV = os.getenv("DJANGO_ENV", "development").strip().lower()
+ENV_FILE = os.getenv("DJANGO_ENV_FILE")
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-secret-change-me")
-DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
+DEBUG = parse_bool(os.getenv("DJANGO_DEBUG"), default=(DJANGO_ENV != "production"))
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
@@ -70,7 +92,7 @@ DATABASES = {
     "default": dj_database_url.config(
         default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=600,
-        ssl_require=os.getenv("DATABASE_SSL_REQUIRE", "0") == "1",
+        ssl_require=parse_bool(os.getenv("DATABASE_SSL_REQUIRE"), default=(DJANGO_ENV == "production")),
     )
 }
 
@@ -94,14 +116,21 @@ STATICFILES_DIRS = [BASE_DIR.parent / "docs"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = normalize_samesite(os.getenv("SESSION_COOKIE_SAMESITE"), "Lax")
+CSRF_COOKIE_SAMESITE = normalize_samesite(os.getenv("CSRF_COOKIE_SAMESITE"), "Lax")
+SESSION_COOKIE_SECURE = parse_bool(os.getenv("SESSION_COOKIE_SECURE"), default=not DEBUG)
+CSRF_COOKIE_SECURE = parse_bool(os.getenv("CSRF_COOKIE_SECURE"), default=not DEBUG)
+
+session_cookie_domain = os.getenv("SESSION_COOKIE_DOMAIN", "").strip()
+csrf_cookie_domain = os.getenv("CSRF_COOKIE_DOMAIN", "").strip()
+if session_cookie_domain:
+    SESSION_COOKIE_DOMAIN = session_cookie_domain
+if csrf_cookie_domain:
+    CSRF_COOKIE_DOMAIN = csrf_cookie_domain
 
 if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "1") == "1"
+    SECURE_SSL_REDIRECT = parse_bool(os.getenv("DJANGO_SECURE_SSL_REDIRECT"), default=True)
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

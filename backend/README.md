@@ -9,10 +9,12 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.development.example .env
 python manage.py migrate
 python manage.py runserver
 ```
+
+For production values, use `.env.production.example` as your template.
 
 ## Current endpoints
 
@@ -58,9 +60,23 @@ This project is now configured to run as a single Django app in production:
 2. Add a PostgreSQL service or connect Neon.
 3. Set app variables:
    - `DJANGO_SECRET_KEY`
+   - `DJANGO_ENV=production`
    - `DJANGO_DEBUG=0`
    - `DJANGO_ALLOWED_HOSTS=<your-railway-domain>`
    - `DJANGO_CSRF_TRUSTED_ORIGINS=https://<your-railway-domain>`
    - `DATABASE_URL=<managed postgres URL>`
    - `DATABASE_SSL_REQUIRE=1`
 4. Deploy (Railway will use `railway.toml`).
+
+## Cookie and session security
+
+Session and CSRF cookies are now environment-driven:
+
+- `SESSION_COOKIE_SAMESITE` and `CSRF_COOKIE_SAMESITE` (Lax/Strict/None)
+- `SESSION_COOKIE_SECURE` and `CSRF_COOKIE_SECURE` (0/1)
+- Optional `SESSION_COOKIE_DOMAIN` and `CSRF_COOKIE_DOMAIN`
+
+Recommended strategy:
+
+- Same-site deployment (Django serves frontend): `Lax` + secure cookies in production.
+- Cross-site frontend/backend: set both SameSite values to `None` and keep both secure flags as `1`.

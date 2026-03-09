@@ -227,7 +227,7 @@ python -m venv .venv
 # macOS/Linux:
 # source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.development.example .env
 python manage.py migrate
 python manage.py runserver
 ```
@@ -256,8 +256,7 @@ No build step is required.
 ## Known Limitations
 
 - `docs/pages/example3.html` is currently an empty placeholder.
-- All state and analytics are local to the browser (no backend sync).
-- Teacher mode protection is client-side only.
+- Cross-device persistence depends on running the Django + Postgres deployment path.
 
 ---
 
