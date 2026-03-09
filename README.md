@@ -71,7 +71,7 @@ The project now runs as a Django web app (frontend + backend together), with Pos
 
 ```text
 /docs
-  index.html
+  (static assets only)
   favicon.svg
   /css
     styles.css
@@ -182,6 +182,7 @@ python manage.py runserver
 
 - `example3` content may still be lighter than Example 1/2 depending on branch state.
 - Old static `docs/pages/*` runtime was removed; Django templates are now the only page source.
+- Old static `docs/index.html` was removed; home runtime is `backend/templates/index.html`.
 
 ---
 
