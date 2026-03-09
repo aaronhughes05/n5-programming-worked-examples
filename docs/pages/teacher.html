@@ -39,7 +39,7 @@
     <main class="content">
       <section class="card" data-student-only>
         <h2>Teacher Mode Locked</h2>
-        <p>Enter the teacher passcode to continue.</p>
+        <p>Sign in with a teacher account to continue.</p>
       </section>
 
       <section class="card teacher-summary-card" id="teacherSummaryPanel" data-teacher-only aria-label="Class summary">
@@ -139,10 +139,10 @@
       <div class="teacher-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherGateTitle" aria-describedby="teacherGateBody">
         <button type="button" class="teacher-gate__close" aria-label="Close teacher mode" data-close-teacher-gate="true">&times;</button>
         <h2 id="teacherGateTitle">Unlock Teacher Mode</h2>
-        <p id="teacherGateBody">Enter the teacher passcode to access teacher tools.</p>
+        <p id="teacherGateBody">Enter the teacher passcode to access teacher tools in demo mode.</p>
         <form id="teacherGateForm" class="teacher-gate__form">
           <label for="teacherPasscodeInput">Passcode</label>
-          <input id="teacherPasscodeInput" type="password" autocomplete="current-password" required />
+          <input id="teacherPasscodeInput" class="teacher-gate__input" type="password" autocomplete="current-password" required />
           <p id="teacherGateError" class="teacher-gate__error tick-mark is-incorrect" aria-live="polite"></p>
           <div class="teacher-gate__actions">
             <button type="submit" class="check-btn" id="teacherGateUnlock">Unlock</button>

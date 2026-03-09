@@ -281,6 +281,10 @@ const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
 const TEACHER_MODE_PASSCODE = "n5teacher";
 
 const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
+const isTeacherDemoFallbackMode = () => {
+    const params = new URLSearchParams(window.location.search);
+    return isTruthyFlag(params.get("teacherDemo"));
+};
 
 const readTeacherModeSession = () => {
     try {
@@ -454,7 +458,7 @@ const initAuthUX = () => {
             <p id="authLoginBody">Use your account credentials to load your saved progress.</p>
             <form id="authLoginForm" class="teacher-gate__form">
               <label for="authUsernameInput" class="teacher-gate__label">Username</label>
-              <input id="authUsernameInput" class="teacher-gate__input" name="username" autocomplete="username" required />
+              <input id="authUsernameInput" class="teacher-gate__input" type="text" name="username" autocomplete="username" required />
               <label for="authPasswordInput" class="teacher-gate__label">Password</label>
               <input id="authPasswordInput" class="teacher-gate__input" type="password" name="password" autocomplete="current-password" required />
               <p id="authLoginError" class="teacher-gate__error" aria-live="polite"></p>
@@ -604,7 +608,7 @@ const initTeacherAccessNotice = () => {
     notice.className = "card teacher-access-notice";
     notice.innerHTML = `
       <h2>Teacher Mode Locked</h2>
-      <p>Access denied. Enter the teacher passcode on the Teacher Mode page to continue.</p>
+      <p>Access denied. Sign in with a teacher account to access Teacher Mode.</p>
     `;
     main.prepend(notice);
 
@@ -615,7 +619,8 @@ const initTeacherAccessNotice = () => {
 };
 
 const initTeacherPasscodeGate = () => {
-    if (hasApiAdapter()) {
+    const isDemoFallback = isTeacherDemoFallbackMode();
+    if (hasApiAdapter() && !isDemoFallback) {
         const loggedIn = isApiLoggedIn();
         const role = getApiUserRole();
         if (loggedIn && role === "teacher") {
@@ -624,6 +629,13 @@ const initTeacherPasscodeGate = () => {
             return;
         }
         // If account auth is available, require role-based account access rather than passcode.
+        writeTeacherModeSession(false);
+        applyTeacherModeClasses(false);
+        return;
+    }
+
+    const allowPasscodeFallback = !hasApiAdapter() || isDemoFallback;
+    if (!allowPasscodeFallback) {
         writeTeacherModeSession(false);
         applyTeacherModeClasses(false);
         return;

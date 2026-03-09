@@ -358,11 +358,13 @@ body::before {
 .appbar-nav-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: 1px solid rgba(37, 99, 235, 0.28);
   border-radius: var(--radius-pill);
   padding: 6px 11px;
   font-size: 0.85rem;
+  line-height: 1;
   color: var(--ink-800);
   background: rgba(255, 255, 255, 0.88);
   text-decoration: none;
@@ -370,11 +372,14 @@ body::before {
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   position: relative;
   overflow: clip;
+  box-sizing: border-box;
 }
 
 button.appbar-nav-pill {
   font-family: inherit;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .appbar-nav-pill:hover,
@@ -2637,7 +2642,7 @@ body.is-teacher-mode [data-student-only] {
   max-width: 440px;
 }
 
-.teacher-gate__form input[type="password"] {
+.teacher-gate__input {
   width: 100%;
 }
 
@@ -3012,7 +3017,8 @@ button[onclick*="verifyParsons("] {
 
 input[type="text"], 
 input[type="number"],
-input[type="password"] {
+input[type="password"],
+input[type="email"] {
   padding: 10px 12px;
   border: 1px solid var(--slate-150);
   border-radius: var(--radius-pill);
