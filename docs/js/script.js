@@ -58,6 +58,7 @@ const getApiUserRole = () => {
     return String(user?.role || "").toLowerCase();
 };
 const LOCAL_IMPORT_MARKER_PREFIX = "dbImportDone.v1:";
+const importedProgressRuntimeKeys = new Set();
 
 const normalizeActivityKeyFromPath = (pathValue) => {
     const raw = String(pathValue || "").trim().toLowerCase();
@@ -66,22 +67,38 @@ const normalizeActivityKeyFromPath = (pathValue) => {
     return fromPath.endsWith(".html") ? fromPath.slice(0, -5) : fromPath;
 };
 
-const getImportMarkerKeyForUser = (user) => {
-    const userId = user?.id != null ? String(user.id) : String(user?.username || "unknown");
-    return `${LOCAL_IMPORT_MARKER_PREFIX}${userId}`;
+const getImportMarkerKeysForUser = (user) => {
+    const keys = [];
+    const id = user?.id != null ? String(user.id).trim() : "";
+    const username = String(user?.username || "").trim();
+    const usernameLower = username.toLowerCase();
+
+    if (id) keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}id:${id}`);
+    if (username) keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}user:${username}`);
+    if (usernameLower && usernameLower !== username) {
+        keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}user:${usernameLower}`);
+    }
+    if (!keys.length) keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}unknown`);
+    return Array.from(new Set(keys));
 };
+
+const getPrimaryImportRuntimeKey = (user) => getImportMarkerKeysForUser(user)[0];
 
 const hasImportedLocalProgressForUser = (user) => {
     try {
-        return localStorage.getItem(getImportMarkerKeyForUser(user)) === "1";
+        const keys = getImportMarkerKeysForUser(user);
+        if (keys.some((key) => importedProgressRuntimeKeys.has(key))) return true;
+        return keys.some((key) => localStorage.getItem(key) === "1");
     } catch {
-        return false;
+        return importedProgressRuntimeKeys.has(getPrimaryImportRuntimeKey(user));
     }
 };
 
 const markImportedLocalProgressForUser = (user) => {
+    const keys = getImportMarkerKeysForUser(user);
+    keys.forEach((key) => importedProgressRuntimeKeys.add(key));
     try {
-        localStorage.setItem(getImportMarkerKeyForUser(user), "1");
+        keys.forEach((key) => localStorage.setItem(key, "1"));
     } catch {
         // Ignore storage failures.
     }
@@ -566,36 +583,6 @@ const initAuthUX = () => {
                     teacherLink.setAttribute("aria-current", "page");
                 }
                 actionsEl.appendChild(teacherLink);
-            }
-
-            if (!alreadyImported) {
-                const importBtn = document.createElement("button");
-                importBtn.type = "button";
-                importBtn.className = "appbar-nav-pill";
-                importBtn.dataset.authImport = "true";
-                importBtn.id = "authImportBtn";
-                importBtn.textContent = "Import local progress";
-                importBtn.onclick = async () => {
-                    importBtn.disabled = true;
-                    const originalLabel = importBtn.textContent;
-                    importBtn.textContent = "Importing...";
-                    try {
-                        await importLocalProgressToDb();
-                        importBtn.textContent = "Imported";
-                        window.setTimeout(() => {
-                            initLearningDashboard();
-                            if (document.body.classList.contains("page-teacher")) initTeacherSummaryPanel();
-                            window.location.reload();
-                        }, 700);
-                    } catch {
-                        importBtn.disabled = false;
-                        importBtn.textContent = "Import failed";
-                        window.setTimeout(() => {
-                            importBtn.textContent = originalLabel;
-                        }, 1200);
-                    }
-                };
-                actionsEl.appendChild(importBtn);
             }
 
             const signOutBtn = document.createElement("button");
@@ -2578,6 +2565,7 @@ const initTeacherSummaryPanel = async () => {
     const mostMissedEl = document.getElementById("teacherMostMissedList");
     const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
     const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
+    const importProgressBtn = document.getElementById("teacherImportProgressBtn");
     const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
     const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
     const createClassForm = document.getElementById("teacherCreateClassForm");
@@ -2597,7 +2585,58 @@ const initTeacherSummaryPanel = async () => {
         : [];
 
     const shouldUseTeacherApi = hasApiAdapter() && isApiLoggedIn() && getApiUserRole() === "teacher";
+    const currentUser = getApiUser();
+    if (importProgressBtn) {
+        importProgressBtn.hidden = true;
+        importProgressBtn.onclick = null;
+    }
     if (shouldUseTeacherApi) {
+        // In DB teacher mode, local-only tools must remain hidden even if analytics endpoints fail.
+        if (seedDemoBtn) {
+            seedDemoBtn.hidden = true;
+            seedDemoBtn.disabled = true;
+        }
+        if (resetProgressBtn) {
+            resetProgressBtn.hidden = true;
+            resetProgressBtn.disabled = true;
+        }
+        if (importProgressBtn) {
+            const alreadyImported = !!currentUser && hasImportedLocalProgressForUser(currentUser);
+            importProgressBtn.hidden = alreadyImported;
+            if (!alreadyImported) {
+                importProgressBtn.disabled = false;
+                importProgressBtn.title = "Import one-time local progress into your account.";
+                importProgressBtn.onclick = async () => {
+                    importProgressBtn.disabled = true;
+                    const originalLabel = importProgressBtn.textContent;
+                    importProgressBtn.textContent = "Importing...";
+                    try {
+                        const result = await importLocalProgressToDb();
+                        // Ensure marker is set and button disappears in all success-ish paths.
+                        if (currentUser) markImportedLocalProgressForUser(currentUser);
+                        if (result?.imported || result?.reason === "already_imported") {
+                            importProgressBtn.textContent = "Imported";
+                            window.setTimeout(async () => {
+                                importProgressBtn.hidden = true;
+                                importProgressBtn.textContent = originalLabel;
+                                await initTeacherSummaryPanel();
+                                initLearningDashboard();
+                            }, 650);
+                        } else {
+                            importProgressBtn.hidden = true;
+                            importProgressBtn.textContent = originalLabel;
+                        }
+                    } catch {
+                        importProgressBtn.disabled = false;
+                        importProgressBtn.textContent = "Import failed";
+                        window.setTimeout(() => {
+                            importProgressBtn.textContent = originalLabel;
+                        }, 1100);
+                    }
+                };
+            }
+        }
+
         try {
             const [classSummary, attemptAnalytics] = await Promise.all([
                 window.N5Api.getTeacherClassSummary(),
@@ -2728,15 +2767,6 @@ const initTeacherSummaryPanel = async () => {
                     window.location.href = "/api/teacher/export.csv";
                 };
             }
-            if (seedDemoBtn) {
-                seedDemoBtn.disabled = true;
-                seedDemoBtn.title = "Local demo seed is disabled in database-backed teacher mode.";
-            }
-            if (resetProgressBtn) {
-                resetProgressBtn.disabled = true;
-                resetProgressBtn.title = "Local reset is disabled in database-backed teacher mode.";
-            }
-
             const setRosterFeedback = (el, message, isError = false) => {
                 if (!el) return;
                 el.textContent = message || "";
@@ -2887,8 +2917,42 @@ const initTeacherSummaryPanel = async () => {
             await loadClasses();
             return;
         } catch {
-            // Fall through to local summary mode if DB endpoints are unavailable.
+            // Keep DB-mode controls; only data fetch failed.
+            const introEl = root.querySelector(".teacher-summary-intro");
+            if (introEl) {
+                introEl.textContent = "Unable to load teacher analytics from the server right now.";
+            }
+            if (listEl && !listEl.childElementCount) {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `<p class="teacher-summary-list__meta">Analytics endpoint unavailable. Try refreshing.</p>`;
+                listEl.appendChild(li);
+            }
+            if (attemptListEl && !attemptListEl.childElementCount) {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `<p class="teacher-summary-list__meta">Attempt analytics endpoint unavailable.</p>`;
+                attemptListEl.appendChild(li);
+            }
+            if (mostMissedEl && !mostMissedEl.childElementCount) {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `<p class="teacher-summary-list__meta">Most-missed checkpoint endpoint unavailable.</p>`;
+                mostMissedEl.appendChild(li);
+            }
+            return;
         }
+    }
+
+    if (seedDemoBtn) {
+        seedDemoBtn.hidden = false;
+        seedDemoBtn.disabled = false;
+        seedDemoBtn.title = "";
+    }
+    if (resetProgressBtn) {
+        resetProgressBtn.hidden = false;
+        resetProgressBtn.disabled = false;
+        resetProgressBtn.title = "";
     }
 
     const summaries = buildActivitySummaries();
@@ -3515,6 +3579,7 @@ const initDefaultTooltipCopy = () => {
         if (id === "dashboardrecommendedbtn") return "Open the recommended next activity";
         if (id === "teacherexportcsvbtn") return "Export class progress and hints as CSV";
         if (id === "teacherexportjsonbtn") return "Export class progress and hints as JSON";
+        if (id === "teacherimportprogressbtn") return "Import one-time local progress into your account";
         if (id === "authimportbtn") return "Import one-time local progress into your account";
         if (id === "teacherseeddemobtn") return "Insert demo progress data for presentation";
         if (id === "teacherresetprogressbtn") return "Open confirmation to clear all local progress";
