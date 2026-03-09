@@ -99,6 +99,40 @@
         <p class="teacher-summary-intro">Highest failed-attempt checkpoints from local data.</p>
         <ul class="teacher-summary-list" id="teacherMostMissedList" aria-live="polite"></ul>
       </section>
+
+      <section class="card teacher-summary-card" data-teacher-only aria-label="Class and roster management">
+        <h2>Class And Roster Management</h2>
+        <p class="teacher-summary-intro">Create classes and add student accounts directly from Teacher Mode.</p>
+
+        <form id="teacherCreateClassForm" class="teacher-gate__form">
+          <label for="teacherClassNameInput">New class name</label>
+          <input id="teacherClassNameInput" class="teacher-gate__input" type="text" maxlength="120" placeholder="e.g. N5 Period 3" required />
+          <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+            <button type="submit" class="check-btn">Create class</button>
+          </div>
+          <p id="teacherCreateClassFeedback" class="teacher-gate__error" aria-live="polite"></p>
+        </form>
+
+        <form id="teacherAddStudentForm" class="teacher-gate__form">
+          <label for="teacherClassSelect">Class</label>
+          <select id="teacherClassSelect" class="teacher-gate__input" required>
+            <option value="">Select class</option>
+          </select>
+          <label for="teacherStudentUsernameInput">Student username</label>
+          <input id="teacherStudentUsernameInput" class="teacher-gate__input" type="text" maxlength="150" placeholder="student username" required />
+          <label for="teacherStudentEmailInput">Student email (optional)</label>
+          <input id="teacherStudentEmailInput" class="teacher-gate__input" type="email" placeholder="student@example.com" />
+          <label for="teacherStudentPasswordInput">Password (required for new accounts)</label>
+          <input id="teacherStudentPasswordInput" class="teacher-gate__input" type="password" placeholder="set for new students" />
+          <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+            <button type="submit" class="check-btn">Add student</button>
+          </div>
+          <p id="teacherAddStudentFeedback" class="teacher-gate__error" aria-live="polite"></p>
+        </form>
+
+        <h3>Current Classes</h3>
+        <ul id="teacherClassRosterList" class="teacher-summary-list" aria-live="polite"></ul>
+      </section>
     </main>
 
     <div class="teacher-gate" id="teacherGate" aria-hidden="true">

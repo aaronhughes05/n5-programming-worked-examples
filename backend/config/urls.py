@@ -14,9 +14,13 @@ from core.views import (
     progress_detail,
     progress_summary,
     teacher_attempt_analytics,
+    teacher_add_student,
     teacher_class_summary,
+    teacher_classes,
+    teacher_delete_class,
     teacher_export_csv,
     teacher_export_json,
+    teacher_remove_student,
 )
 
 
@@ -41,6 +45,10 @@ urlpatterns = [
     path("api/progress/<str:activity_key>/checkpoint", progress_checkpoint, name="progress-checkpoint"),
     path("api/hints/<str:activity_key>/<str:checkpoint_id>", hints_checkpoint, name="hints-checkpoint"),
     path("api/teacher/class-summary", teacher_class_summary, name="teacher-class-summary"),
+    path("api/teacher/classes", teacher_classes, name="teacher-classes"),
+    path("api/teacher/classes/<int:classroom_id>", teacher_delete_class, name="teacher-delete-class"),
+    path("api/teacher/classes/<int:classroom_id>/students", teacher_add_student, name="teacher-add-student"),
+    path("api/teacher/classes/<int:classroom_id>/students/<int:student_id>", teacher_remove_student, name="teacher-remove-student"),
     path("api/teacher/attempt-analytics", teacher_attempt_analytics, name="teacher-attempt-analytics"),
     path("api/teacher/export.json", teacher_export_json, name="teacher-export-json"),
     path("api/teacher/export.csv", teacher_export_csv, name="teacher-export-csv"),

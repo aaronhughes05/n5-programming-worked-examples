@@ -2538,6 +2538,16 @@ const initTeacherSummaryPanel = async () => {
     const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
     const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
     const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
+    const createClassForm = document.getElementById("teacherCreateClassForm");
+    const classNameInput = document.getElementById("teacherClassNameInput");
+    const createClassFeedback = document.getElementById("teacherCreateClassFeedback");
+    const addStudentForm = document.getElementById("teacherAddStudentForm");
+    const classSelect = document.getElementById("teacherClassSelect");
+    const studentUsernameInput = document.getElementById("teacherStudentUsernameInput");
+    const studentEmailInput = document.getElementById("teacherStudentEmailInput");
+    const studentPasswordInput = document.getElementById("teacherStudentPasswordInput");
+    const addStudentFeedback = document.getElementById("teacherAddStudentFeedback");
+    const classRosterList = document.getElementById("teacherClassRosterList");
     const resetModal = document.getElementById("teacherResetModal");
     const resetConfirmBtn = document.getElementById("teacherResetConfirmBtn");
     const resetCloseTriggers = resetModal
@@ -2684,6 +2694,155 @@ const initTeacherSummaryPanel = async () => {
                 resetProgressBtn.disabled = true;
                 resetProgressBtn.title = "Local reset is disabled in database-backed teacher mode.";
             }
+
+            const setRosterFeedback = (el, message, isError = false) => {
+                if (!el) return;
+                el.textContent = message || "";
+                el.classList.toggle("is-visible", !!message);
+                el.classList.toggle("tick-mark", !!message);
+                el.classList.toggle("is-incorrect", !!message && isError);
+                el.classList.toggle("is-correct", !!message && !isError);
+            };
+
+            const renderClasses = (classes) => {
+                const rows = Array.isArray(classes) ? classes : [];
+                if (classSelect) {
+                    const current = classSelect.value;
+                    classSelect.innerHTML = '<option value="">Select class</option>';
+                    rows.forEach((item) => {
+                        const option = document.createElement("option");
+                        option.value = String(item.id);
+                        option.textContent = `${item.name} (${item.studentCount} students)`;
+                        classSelect.appendChild(option);
+                    });
+                    if (current && rows.some((item) => String(item.id) === current)) {
+                        classSelect.value = current;
+                    }
+                }
+
+                if (classRosterList) {
+                    classRosterList.innerHTML = "";
+                    if (!rows.length) {
+                        const li = document.createElement("li");
+                        li.className = "teacher-summary-list__item";
+                        li.innerHTML = `<p class="teacher-summary-list__meta">No classes yet. Create your first class above.</p>`;
+                        classRosterList.appendChild(li);
+                    } else {
+                        rows.forEach((item) => {
+                            const li = document.createElement("li");
+                            li.className = "teacher-summary-list__item";
+                            const students = Array.isArray(item.students) ? item.students : [];
+                            const studentsHtml = students.length
+                                ? students.map((s) => (
+                                    `<span class="teacher-roster-chip">${s.username} <button type="button" class="check-btn outline-btn" data-remove-student data-class-id="${item.id}" data-student-id="${s.id}">Remove</button></span>`
+                                )).join(" ")
+                                : "No students enrolled yet.";
+                            li.innerHTML = `
+                              <p class="teacher-summary-list__title">${item.name} (${item.studentCount} students)</p>
+                              <p class="teacher-summary-list__meta">${studentsHtml}</p>
+                              <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+                                <button type="button" class="check-btn reset-btn" data-delete-class data-class-id="${item.id}">Delete class</button>
+                              </div>
+                            `;
+                            classRosterList.appendChild(li);
+                        });
+                    }
+                }
+            };
+
+            const loadClasses = async () => {
+                const payload = await window.N5Api.getTeacherClasses();
+                renderClasses(payload?.classes || []);
+            };
+
+            if (createClassForm && !createClassForm.dataset.bound) {
+                createClassForm.dataset.bound = "true";
+                createClassForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const className = (classNameInput?.value || "").trim();
+                    if (!className) return;
+                    try {
+                        await window.N5Api.createTeacherClass(className);
+                        if (classNameInput) classNameInput.value = "";
+                        setRosterFeedback(createClassFeedback, "Class created.", false);
+                        await loadClasses();
+                        await initTeacherSummaryPanel();
+                    } catch (err) {
+                        setRosterFeedback(createClassFeedback, err?.message || "Unable to create class.", true);
+                    }
+                });
+            }
+
+            if (addStudentForm && !addStudentForm.dataset.bound) {
+                addStudentForm.dataset.bound = "true";
+                addStudentForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const classroomId = (classSelect?.value || "").trim();
+                    const username = (studentUsernameInput?.value || "").trim();
+                    const email = (studentEmailInput?.value || "").trim();
+                    const password = (studentPasswordInput?.value || "").trim();
+                    if (!classroomId || !username) return;
+                    try {
+                        await window.N5Api.addTeacherStudent(classroomId, { username, email, password });
+                        if (studentUsernameInput) studentUsernameInput.value = "";
+                        if (studentEmailInput) studentEmailInput.value = "";
+                        if (studentPasswordInput) studentPasswordInput.value = "";
+                        setRosterFeedback(addStudentFeedback, "Student added to class.", false);
+                        await loadClasses();
+                        await initTeacherSummaryPanel();
+                    } catch (err) {
+                        setRosterFeedback(addStudentFeedback, err?.message || "Unable to add student.", true);
+                    }
+                });
+            }
+
+            if (classRosterList && !classRosterList.dataset.bound) {
+                classRosterList.dataset.bound = "true";
+                classRosterList.addEventListener("click", async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    if (!target) return;
+
+                    const removeBtn = target.closest("[data-remove-student]");
+                    if (removeBtn) {
+                        const classId = String(removeBtn.getAttribute("data-class-id") || "").trim();
+                        const studentId = String(removeBtn.getAttribute("data-student-id") || "").trim();
+                        if (!classId || !studentId) return;
+                        removeBtn.setAttribute("disabled", "true");
+                        try {
+                            await window.N5Api.removeTeacherStudent(classId, studentId);
+                            setRosterFeedback(addStudentFeedback, "Student removed from class.", false);
+                            await loadClasses();
+                            await initTeacherSummaryPanel();
+                        } catch (err) {
+                            setRosterFeedback(addStudentFeedback, err?.message || "Unable to remove student.", true);
+                        } finally {
+                            removeBtn.removeAttribute("disabled");
+                        }
+                        return;
+                    }
+
+                    const deleteBtn = target.closest("[data-delete-class]");
+                    if (deleteBtn) {
+                        const classId = String(deleteBtn.getAttribute("data-class-id") || "").trim();
+                        if (!classId) return;
+                        const confirmed = window.confirm("Delete this class and all enrollments?");
+                        if (!confirmed) return;
+                        deleteBtn.setAttribute("disabled", "true");
+                        try {
+                            await window.N5Api.deleteTeacherClass(classId);
+                            setRosterFeedback(createClassFeedback, "Class deleted.", false);
+                            await loadClasses();
+                            await initTeacherSummaryPanel();
+                        } catch (err) {
+                            setRosterFeedback(createClassFeedback, err?.message || "Unable to delete class.", true);
+                        } finally {
+                            deleteBtn.removeAttribute("disabled");
+                        }
+                    }
+                });
+            }
+
+            await loadClasses();
             return;
         } catch {
             // Fall through to local summary mode if DB endpoints are unavailable.
@@ -2702,6 +2861,32 @@ const initTeacherSummaryPanel = async () => {
         (sum, item) => sum + Number(item?.hintAnalytics?.workedRevealed || 0),
         0
     );
+
+    if (createClassForm) {
+        createClassForm.querySelectorAll("input, button, select").forEach((el) => {
+            el.disabled = true;
+        });
+    }
+    if (addStudentForm) {
+        addStudentForm.querySelectorAll("input, button, select").forEach((el) => {
+            el.disabled = true;
+        });
+    }
+    if (createClassFeedback) {
+        createClassFeedback.textContent = "Sign in with a teacher account to manage classes in database mode.";
+        createClassFeedback.classList.add("is-visible", "tick-mark", "is-incorrect");
+    }
+    if (addStudentFeedback) {
+        addStudentFeedback.textContent = "Class and student management is disabled in local-only fallback mode.";
+        addStudentFeedback.classList.add("is-visible", "tick-mark", "is-incorrect");
+    }
+    if (classRosterList) {
+        classRosterList.innerHTML = "";
+        const li = document.createElement("li");
+        li.className = "teacher-summary-list__item";
+        li.innerHTML = `<p class="teacher-summary-list__meta">Class roster tools are available when backend teacher auth is active.</p>`;
+        classRosterList.appendChild(li);
+    }
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);

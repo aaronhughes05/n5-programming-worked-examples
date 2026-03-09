@@ -1,7 +1,7 @@
 import json
 import csv
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -332,6 +332,30 @@ def _build_teacher_attempt_analytics(teacher_user):
     }
 
 
+def _serialize_classroom_with_students(classroom):
+    enrollments = list(
+        Enrollment.objects.filter(classroom=classroom)
+        .select_related("student")
+        .order_by("student__username")
+    )
+    students = [
+        {
+            "id": row.student.id,
+            "username": row.student.username,
+            "email": row.student.email,
+            "role": getattr(getattr(row.student, "profile", None), "role", "student"),
+        }
+        for row in enrollments
+    ]
+    return {
+        "id": classroom.id,
+        "name": classroom.name,
+        "studentCount": len(students),
+        "students": students,
+        "updatedAt": classroom.updated_at.isoformat(),
+    }
+
+
 @csrf_exempt
 @require_POST
 def auth_login(request: HttpRequest):
@@ -586,6 +610,148 @@ def teacher_class_summary(request: HttpRequest):
         return error
     payload = _build_teacher_class_summary(teacher)
     return JsonResponse(payload)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def teacher_classes(request: HttpRequest):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    if request.method == "POST":
+        payload, parse_error = _get_json_payload(request)
+        if parse_error:
+            return parse_error
+        name = str(payload.get("name", "")).strip()
+        if not name:
+            return _json_error("Class name is required.")
+        if len(name) > 120:
+            return _json_error("Class name is too long.")
+        classroom, created = Classroom.objects.get_or_create(
+            teacher=teacher,
+            name=name,
+        )
+        return JsonResponse(
+            {
+                "ok": True,
+                "created": created,
+                "classroom": _serialize_classroom_with_students(classroom),
+            },
+            status=201 if created else 200,
+        )
+
+    classes = list(Classroom.objects.filter(teacher=teacher).order_by("name", "id"))
+    data = [_serialize_classroom_with_students(item) for item in classes]
+    return JsonResponse({"classes": data})
+
+
+@csrf_exempt
+@require_POST
+def teacher_add_student(request: HttpRequest, classroom_id: int):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    try:
+        classroom = Classroom.objects.get(id=classroom_id, teacher=teacher)
+    except Classroom.DoesNotExist:
+        return _json_error("Classroom not found.", status=404)
+
+    payload, parse_error = _get_json_payload(request)
+    if parse_error:
+        return parse_error
+
+    username = str(payload.get("username", "")).strip()
+    email = str(payload.get("email", "")).strip()
+    password = str(payload.get("password", "")).strip()
+
+    if not username:
+        return _json_error("username is required.")
+    if len(username) > 150:
+        return _json_error("username is too long.")
+
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={"email": email},
+    )
+
+    if created:
+        if not password:
+            return _json_error("password is required for new student accounts.")
+        user.set_password(password)
+        if email:
+            user.email = email
+        user.save()
+    else:
+        if email and not user.email:
+            user.email = email
+            user.save(update_fields=["email"])
+
+    profile = getattr(user, "profile", None)
+    role = getattr(profile, "role", "student")
+    if role == "teacher":
+        return _json_error("Teacher accounts cannot be enrolled as students.", status=400)
+    if profile and profile.role != "student":
+        profile.role = "student"
+        profile.save(update_fields=["role", "updated_at"])
+
+    enrollment, enrolled_created = Enrollment.objects.get_or_create(
+        classroom=classroom,
+        student=user,
+    )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "createdStudent": created,
+            "createdEnrollment": enrolled_created,
+            "classroom": _serialize_classroom_with_students(classroom),
+            "student": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+        },
+        status=201 if (created or enrolled_created) else 200,
+    )
+
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def teacher_remove_student(request: HttpRequest, classroom_id: int, student_id: int):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    try:
+        classroom = Classroom.objects.get(id=classroom_id, teacher=teacher)
+    except Classroom.DoesNotExist:
+        return _json_error("Classroom not found.", status=404)
+
+    deleted, _ = Enrollment.objects.filter(classroom=classroom, student_id=student_id).delete()
+    if deleted == 0:
+        return _json_error("Student enrollment not found.", status=404)
+
+    return JsonResponse({"ok": True, "classroom": _serialize_classroom_with_students(classroom)})
+
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def teacher_delete_class(request: HttpRequest, classroom_id: int):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    try:
+        classroom = Classroom.objects.get(id=classroom_id, teacher=teacher)
+    except Classroom.DoesNotExist:
+        return _json_error("Classroom not found.", status=404)
+
+    classroom_name = classroom.name
+    classroom.delete()
+    return JsonResponse({"ok": True, "deletedClassroomId": classroom_id, "deletedClassroomName": classroom_name})
 
 
 @require_GET

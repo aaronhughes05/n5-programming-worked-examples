@@ -144,6 +144,38 @@
         async getTeacherAttemptAnalytics() {
             return await jsonFetch("/api/teacher/attempt-analytics", { method: "GET" });
         },
+
+        async getTeacherClasses() {
+            return await jsonFetch("/api/teacher/classes", { method: "GET" });
+        },
+
+        async createTeacherClass(name) {
+            return await jsonFetch("/api/teacher/classes", {
+                method: "POST",
+                body: JSON.stringify({ name }),
+            });
+        },
+
+        async addTeacherStudent(classroomId, payload) {
+            return await jsonFetch(`/api/teacher/classes/${encodeURIComponent(classroomId)}/students`, {
+                method: "POST",
+                body: JSON.stringify(payload || {}),
+            });
+        },
+
+        async removeTeacherStudent(classroomId, studentId) {
+            return await jsonFetch(
+                `/api/teacher/classes/${encodeURIComponent(classroomId)}/students/${encodeURIComponent(studentId)}`,
+                { method: "DELETE", body: JSON.stringify({}) }
+            );
+        },
+
+        async deleteTeacherClass(classroomId) {
+            return await jsonFetch(`/api/teacher/classes/${encodeURIComponent(classroomId)}`, {
+                method: "DELETE",
+                body: JSON.stringify({}),
+            });
+        },
     };
 
     window.N5Api = api;
