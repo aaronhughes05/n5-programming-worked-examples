@@ -2393,7 +2393,6 @@ const initTeacherSummaryPanel = async () => {
     const mostMissedEl = document.getElementById("teacherMostMissedList");
     const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
     const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
-    const importProgressBtn = document.getElementById("teacherImportProgressBtn");
     const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
     const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
     const createClassForm = document.getElementById("teacherCreateClassForm");
@@ -2423,60 +2422,76 @@ const initTeacherSummaryPanel = async () => {
     const studentModalCloseTriggers = studentModal
         ? Array.from(studentModal.querySelectorAll("[data-close-student-modal='true']"))
         : [];
+    const seedModal = document.getElementById("teacherSeedModal");
+    const seedConfirmBtn = document.getElementById("teacherSeedConfirmBtn");
+    const seedCloseTriggers = seedModal
+        ? Array.from(seedModal.querySelectorAll("[data-close-seed-modal='true']"))
+        : [];
     let pendingDeleteClassId = "";
     let pendingDeleteTrigger = null;
 
     const shouldUseTeacherApi = hasApiAdapter() && isApiLoggedIn() && getApiUserRole() === "teacher";
-    const currentUser = getApiUser();
-    if (importProgressBtn) {
-        importProgressBtn.hidden = true;
-        importProgressBtn.onclick = null;
+    const closeSeedModal = () => {
+        if (!seedModal) return;
+        seedModal.classList.remove("is-open");
+        seedModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+    };
+    const openSeedModal = () => {
+        if (!seedModal) return;
+        seedModal.classList.add("is-open");
+        seedModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+        if (seedConfirmBtn) window.setTimeout(() => seedConfirmBtn.focus(), 0);
+    };
+
+    seedCloseTriggers.forEach((el) => {
+        el.onclick = closeSeedModal;
+    });
+
+    if (seedDemoBtn) {
+        seedDemoBtn.onclick = () => {
+            openSeedModal();
+        };
     }
+
+    if (seedConfirmBtn) {
+        seedConfirmBtn.onclick = async () => {
+            seedConfirmBtn.disabled = true;
+            const originalLabel = seedConfirmBtn.textContent;
+            seedConfirmBtn.textContent = "Seeding...";
+            try {
+                if (shouldUseTeacherApi && hasApiAdapter() && typeof window.N5Api.seedTeacherDemo === "function") {
+                    await window.N5Api.seedTeacherDemo(true);
+                } else {
+                    seedDemoProgress();
+                }
+                closeSeedModal();
+                await initTeacherSummaryPanel();
+                initLearningDashboard();
+            } catch {
+                seedConfirmBtn.textContent = "Seed failed";
+                window.setTimeout(() => {
+                    seedConfirmBtn.textContent = originalLabel;
+                }, 1200);
+            } finally {
+                seedConfirmBtn.disabled = false;
+                if (seedConfirmBtn.textContent !== originalLabel) {
+                    seedConfirmBtn.textContent = originalLabel;
+                }
+            }
+        };
+    }
+
     if (shouldUseTeacherApi) {
-        // In DB teacher mode, local-only tools must remain hidden even if analytics endpoints fail.
+        // In DB teacher mode, local-only reset remains hidden.
         if (seedDemoBtn) {
-            seedDemoBtn.hidden = true;
-            seedDemoBtn.disabled = true;
+            seedDemoBtn.hidden = false;
+            seedDemoBtn.disabled = false;
         }
         if (resetProgressBtn) {
             resetProgressBtn.hidden = true;
             resetProgressBtn.disabled = true;
-        }
-        if (importProgressBtn) {
-            const alreadyImported = !!currentUser && hasImportedLocalProgressForUser(currentUser);
-            importProgressBtn.hidden = alreadyImported;
-            if (!alreadyImported) {
-                importProgressBtn.disabled = false;
-                importProgressBtn.title = "Import one-time local progress into your account.";
-                importProgressBtn.onclick = async () => {
-                    importProgressBtn.disabled = true;
-                    const originalLabel = importProgressBtn.textContent;
-                    importProgressBtn.textContent = "Importing...";
-                    try {
-                        const result = await importLocalProgressToDb();
-                        // Ensure marker is set and button disappears in all success-ish paths.
-                        if (currentUser) markImportedLocalProgressForUser(currentUser);
-                        if (result?.imported || result?.reason === "already_imported") {
-                            importProgressBtn.textContent = "Imported";
-                            window.setTimeout(async () => {
-                                importProgressBtn.hidden = true;
-                                importProgressBtn.textContent = originalLabel;
-                                await initTeacherSummaryPanel();
-                                initLearningDashboard();
-                            }, 650);
-                        } else {
-                            importProgressBtn.hidden = true;
-                            importProgressBtn.textContent = originalLabel;
-                        }
-                    } catch {
-                        importProgressBtn.disabled = false;
-                        importProgressBtn.textContent = "Import failed";
-                        window.setTimeout(() => {
-                            importProgressBtn.textContent = originalLabel;
-                        }, 1100);
-                    }
-                };
-            }
         }
 
         try {
@@ -2992,7 +3007,7 @@ const initTeacherSummaryPanel = async () => {
     if (seedDemoBtn) {
         seedDemoBtn.hidden = false;
         seedDemoBtn.disabled = false;
-        seedDemoBtn.title = "";
+        seedDemoBtn.title = "Reset and seed local demo progress data.";
     }
     if (resetProgressBtn) {
         resetProgressBtn.hidden = false;
@@ -3269,12 +3284,6 @@ const initTeacherSummaryPanel = async () => {
         };
     });
 
-    if (seedDemoBtn) {
-        seedDemoBtn.onclick = () => {
-            seedDemoProgress();
-            initTeacherSummaryPanel();
-        };
-    }
 };
 
 const initBackToTopFab = () => {
@@ -3627,7 +3636,7 @@ const initDefaultTooltipCopy = () => {
         if (id === "teacherexportjsonbtn") return "Export class progress and hints as JSON";
         if (id === "teacherimportprogressbtn") return "Import one-time local progress into your account";
         if (id === "authimportbtn") return "Import one-time local progress into your account";
-        if (id === "teacherseeddemobtn") return "Insert demo progress data for presentation";
+        if (id === "teacherseeddemobtn") return "Seed demo teacher and student analytics data";
         if (id === "teacherresetprogressbtn") return "Open confirmation to clear all local progress";
         if (id === "teacherresetconfirmbtn") return "Permanently clear all local progress on this device";
         if (id === "assessmentgatereview") return "Open the next incomplete example";

@@ -182,6 +182,13 @@
                 method: "GET",
             });
         },
+
+        async seedTeacherDemo(reset = true) {
+            return await jsonFetch("/api/teacher/seed-demo", {
+                method: "POST",
+                body: JSON.stringify({ reset: !!reset }),
+            });
+        },
     };
 
     window.N5Api = api;
