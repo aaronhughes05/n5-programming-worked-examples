@@ -1800,12 +1800,13 @@ const initStepper = () => {
 
 const restartStepper = () => {
     showStepSection(0, { save: false });
+    saveStepperState();
     const main = document.querySelector("main.content");
     if (main) main.scrollIntoView({ behavior: "smooth" });
-    removeStorage(getStorageKey());
 };
 
 const resetAssessment = () => {
+    const previousHintCheckpointIds = Object.keys(hintState?.checkpoints || {});
     removeStorage(getStorageKey());
     stepperState.showWorkedExample = false;
     const workedExample = document.getElementById("workedExample");
@@ -1858,6 +1859,21 @@ const resetAssessment = () => {
     showStepSection(0, { save: false });
     removeStorage(getHintStorageKey());
     hintState = { checkpoints: {} };
+    saveHintState();
+    if (previousHintCheckpointIds.length) {
+        const resetStamp = Date.now();
+        previousHintCheckpointIds.forEach((checkpointId) => {
+            syncHintCheckpointToApi(checkpointId, {
+                attempts: 0,
+                shownLevel: 0,
+                showCount: 0,
+                revealCount: 0,
+                revealedWorked: false,
+                lastUsedAt: resetStamp
+            });
+        });
+    }
+    saveStepperState();
     syncAdaptiveHintsUI();
     renderCompletionBadges(buildActivitySummaries());
 };
@@ -2111,15 +2127,25 @@ const seedDemoProgress = () => {
 
     saveStep("/examples/example3/", {
         path: "/examples/example3/",
-        stepCount: 6,
-        index: 0,
+        stepCount: 10,
+        index: 6,
         isComplete: false,
         updatedAt: now - 6 * minute,
-        completedChecks: [],
-        inputs: {},
+        completedChecks: ["ex3Pred1Tick", "ex3Pred2Tick", "ex3Pred3Tick", "ex3Pred4Tick", "fullCode", "ex3SgATick"],
+        inputs: {
+            ex3PredStore: "append",
+            ex3PredVariable: "value",
+            ex3PredCount: "5",
+            ex3SgCInput: "1"
+        },
         showWorkedExample: false
     });
-    saveHint("/examples/example3/", { checkpoints: {} });
+    saveHint("/examples/example3/", {
+        checkpoints: {
+            ex3SgBTick: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 5 * minute },
+            ex3SgDTick: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 4 * minute }
+        }
+    });
 
     saveStep("/assessment/", {
         path: "/assessment/",

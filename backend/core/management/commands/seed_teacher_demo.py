@@ -110,6 +110,30 @@ class Command(BaseCommand):
                 "show_worked_example": False,
             },
         )
+        ActivityProgress.objects.update_or_create(
+            user=s1,
+            activity_key="example3",
+            defaults={
+                "step_index": 6,
+                "step_count": 10,
+                "is_complete": False,
+                "completed_checks": [
+                    "ex3Pred1Tick",
+                    "ex3Pred2Tick",
+                    "ex3Pred3Tick",
+                    "ex3Pred4Tick",
+                    "fullCode",
+                    "ex3SgATick",
+                ],
+                "inputs": {
+                    "ex3PredStore": "append",
+                    "ex3PredVariable": "value",
+                    "ex3PredCount": "5",
+                    "ex3SgCInput": "1",
+                },
+                "show_worked_example": False,
+            },
+        )
 
         # Student 2: in progress
         s2 = students[1]
@@ -137,6 +161,18 @@ class Command(BaseCommand):
                 "show_worked_example": False,
             },
         )
+        ActivityProgress.objects.update_or_create(
+            user=s2,
+            activity_key="example3",
+            defaults={
+                "step_index": 3,
+                "step_count": 10,
+                "is_complete": False,
+                "completed_checks": ["ex3Pred1Tick", "ex3Pred2Tick"],
+                "inputs": {"ex3PredStore": "append", "ex3PredCount": "5"},
+                "show_worked_example": False,
+            },
+        )
 
         # Student 3: not started much
         s3 = students[2]
@@ -158,8 +194,11 @@ class Command(BaseCommand):
             (s1, "example1", "tick2", 2, 2, 2, 1, True),
             (s1, "example1", "ex1ModifyTick", 3, 3, 3, 1, True),
             (s1, "example2", "sgB2Tick", 2, 2, 2, 0, False),
+            (s1, "example3", "ex3SgBTick", 2, 2, 2, 0, False),
+            (s1, "example3", "ex3SgDTick", 3, 2, 2, 1, True),
             (s2, "example1", "tick3", 2, 1, 1, 0, False),
             (s2, "example2", "tick2", 3, 2, 2, 1, True),
+            (s2, "example3", "ex3Pred3Tick", 2, 1, 1, 0, False),
             (s3, "example1", "tick1", 1, 1, 1, 0, False),
         ]
         for user, activity_key, checkpoint_id, attempts, shown_level, show_count, reveal_count, revealed in hint_rows:
