@@ -135,19 +135,8 @@ D: print("Highest:", highest)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="3" data-step-id="step-3">
-            <h2>3. Learning Objective</h2>
-            <p>By the end of this example, you should be able to:</p>
-            <ul>
-                <li>Store multiple values in a list</li>
-                <li>Traverse a list using a loop</li>
-                <li>Apply conditional logic during traversal</li>
-                <li>Produce a clear output summary from processed list data</li>
-            </ul>
-        </section>
-
-        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="fullCode">
-            <h2>4. Step-by-Step Implementation</h2>
+        <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
+            <h2>3. Step-by-Step Implementation</h2>
 
             <div id="step1" class="step-box">
                 <p><strong>Step 1:</strong> Set up storage and tracking variables.</p>
@@ -197,8 +186,8 @@ D: print("Highest:", highest)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="ex3SgATick">
-            <h2>5. Match The Subgoal</h2>
+        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="ex3SgATick">
+            <h2>4. Match The Subgoal</h2>
             <div class="question-block" data-choice-group="ex3sgA">
                 <p>Which subgoal does this line belong to? <span class="inline-code"><strong>scores = []</strong></span></p>
                 <div class="mc-buttons">
@@ -212,8 +201,8 @@ D: print("Highest:", highest)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="ex3SgBTick">
-            <h2>6. Identify The Code</h2>
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="ex3SgBTick">
+            <h2>5. Identify The Code</h2>
             <div class="question-block" data-line-group="ex3sgB">
                 <p>Click the line that matches Subgoal B (collect and store input values).</p>
                 <div class="code-select">
@@ -226,8 +215,8 @@ D: print("Highest:", highest)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="ex3SgCTick">
-            <h2>7. Fill In The Blank</h2>
+        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="ex3SgCTick">
+            <h2>6. Fill In The Blank</h2>
             <div class="question-block">
                 <p>Complete Subgoal C update logic: <span class="inline-code"><strong>pass_count = pass_count + ___</strong></span></p>
                 <div class="question-input">
@@ -238,8 +227,8 @@ D: print("Highest:", highest)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="ex3SgDTick">
-            <h2>8. Trace Traversal Output</h2>
+        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="ex3SgDTick">
+            <h2>7. Trace Traversal Output</h2>
             <div class="question-block">
                 <p>Trace this list: <span class="inline-code"><strong>scores = [42, 67, 51, 30, 88]</strong></span></p>
                 <p>After traversal, what are the final values?</p>
@@ -263,6 +252,20 @@ D: print("Highest:", highest)</code></pre>
                 </table>
                 <button type="button" class="check-btn" onclick="checkTrace(['ex3TracePasses','ex3TraceHighest'], ['3','88'], 'ex3SgDTick')">Check</button>
                 <span id="ex3SgDTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="ex3SgETick">
+            <h2>8. Identify The Condition</h2>
+            <div class="question-block" data-line-group="ex3sgE">
+                <p>Click the condition used to count a pass during traversal.</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgE', 'if value >= 50:', this)">if value &gt;= 50:</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgE', 'if value > highest:', this)">if value &gt; highest:</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgE', 'if value < 0:', this)">if value &lt; 0:</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex3sgE', 'if value >= 50:', 'ex3SgETick')">Check</button>
+                <span id="ex3SgETick" class="tick-mark"></span>
             </div>
         </section>
 

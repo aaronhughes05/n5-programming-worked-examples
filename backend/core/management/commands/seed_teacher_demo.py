@@ -102,8 +102,8 @@ class Command(BaseCommand):
             user=s1,
             activity_key="example2",
             defaults={
-                "step_index": 8,
-                "step_count": 9,
+                "step_index": 9,
+                "step_count": 10,
                 "is_complete": False,
                 "completed_checks": ["tick1", "tick2Pred", "tick3Pred", "tick4Pred", "fullCode", "sgA2Tick"],
                 "inputs": {"pred1": "5", "pred3": "total", "pred4": "0"},
@@ -154,7 +154,7 @@ class Command(BaseCommand):
             activity_key="example2",
             defaults={
                 "step_index": 1,
-                "step_count": 9,
+                "step_count": 10,
                 "is_complete": False,
                 "completed_checks": ["tick1"],
                 "inputs": {"pred1": "5"},

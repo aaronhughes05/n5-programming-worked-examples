@@ -670,6 +670,12 @@ const HINT_MODEL = {
             l3: "Choose the for counter in range(...) line.",
             worked: "The matching line is for counter in range(5):"
         },
+        sgE2Tick: {
+            l1: "A running total carries the previous value forward each row.",
+            l2: "Start from 0, then add each price in sequence.",
+            l3: "Use cumulative totals, not per-row resets.",
+            worked: "Running totals are 2, then 5, then 9."
+        },
         tick2Pred: {
             l1: "Decide whether repetition count is fixed or unknown.",
             l2: "The task always processes exactly 5 values.",
@@ -756,6 +762,12 @@ const HINT_MODEL = {
             l3: "Use the given list values to compute final pass count and highest.",
             worked: "For [42, 67, 51, 30, 88], passes = 3 and highest = 88."
         },
+        ex3SgETick: {
+            l1: "Pass-count logic uses a threshold check, not a maximum check.",
+            l2: "The pass condition compares each value with 50 or higher.",
+            l3: "Do not confuse pass logic with highest-tracking logic.",
+            worked: "Use if value >= 50: to count passes."
+        },
         ex3ModifyTick: {
             l1: "Start by grouping stages: setup/input -> traversal checks -> output.",
             l2: "Keep the score input loop before traversal, then evaluate each stored value once.",
@@ -770,6 +782,12 @@ const HINT_MODEL = {
         }
     },
     "assessment.html": {
+        fullCode: {
+            l1: "Follow the full implementation in order: setup, fixed loop, validation, storage/update, traversal, output.",
+            l2: "Keep validation inside the input loop and output stages after data collection/traversal.",
+            l3: "Check each line against subgoal purpose before confirming.",
+            worked: "Correct sequence: initialize total/list, collect 5 valid prices, store/update total, traverse items, then print total."
+        },
         tick1: { l1: "Look at the required item count.", l2: "The loop count matches the number of prices collected.", l3: "Use the exact numeric count.", worked: "The loop repeats 5 times." },
         tick2: { l1: "Which loop keeps checking until input is valid?", l2: "Validation usually repeats while a bad condition is true.", l3: "Negative-price checking uses while.", worked: "Use while for repeated validation." },
         tick3: { l1: "Find the variable that accumulates values.", l2: "It starts at zero and is updated each loop.", l3: "Look for total = total + ...", worked: "The running total variable is total." },
@@ -897,6 +915,12 @@ const FEEDBACK_MAP = {
             misconception: "You may be selecting setup or output code instead of the loop header.",
             next: "Choose the line that controls repeated execution."
         },
+        sgE2Tick: {
+            correct: "Correct trace values.",
+            incorrect: "Trace values are off.",
+            misconception: "A common issue is resetting total each row instead of adding each new value to the previous total.",
+            next: "Build totals cumulatively: 0 + 2 = 2, then +3 = 5, then +4 = 9."
+        },
         tick2Pred: {
             correct: "Correct. A for loop is the strongest fit for a known number of repeats.",
             incorrect: "That choice does not match this fixed-count problem.",
@@ -984,6 +1008,12 @@ const FEEDBACK_MAP = {
             misconception: "You may be missing one passing score or not updating highest after each comparison.",
             next: "Recheck each score against >= 50 and track the maximum step-by-step."
         },
+        ex3SgETick: {
+            correct: "Correct condition identification.",
+            incorrect: "That condition is not used for pass counting.",
+            misconception: "A common mix-up is selecting the highest-comparison condition instead of the pass-threshold condition.",
+            next: "Choose the condition that classifies a score as a pass (50 or above)."
+        },
         ex3ModifyTick: {
             correct: "Correct. The modified array traversal logic is now in the right order.",
             incorrect: "Try again.",
@@ -999,6 +1029,12 @@ const FEEDBACK_MAP = {
         }
     },
     "assessment.html": {
+        fullCode: {
+            correct: "Correct. You completed the full implementation sequence for the assessment program.",
+            incorrect: "Try again.",
+            misconception: "A common issue is placing validation or output in the wrong stage of the pipeline.",
+            next: "Rebuild in order: setup -> input loop -> validate -> store/update -> traverse/output."
+        },
         tick1: { correct: "Correct. The loop count matches the number of required inputs.", incorrect: "Not correct yet.", misconception: "You may be counting outputs instead of input iterations.", next: "Use the problem statement to confirm how many prices are entered." },
         tick2: { correct: "Correct. while is appropriate for repeated validation.", incorrect: "That loop choice is not best here.", misconception: "You may be choosing for when the number of retries is unknown.", next: "Pick the loop that repeats until input is valid." },
         tick3: { correct: "Correct. You identified the accumulator variable.", incorrect: "Not quite.", misconception: "You may be naming the list variable instead of the running total variable.", next: "Find the variable initialized to 0 and updated each iteration." },
@@ -1938,6 +1974,7 @@ const CHECKPOINT_LABELS = {
         sgB2Tick: "Code identification: input line",
         sgC2Tick: "Fill blank: running total update",
         sgD2Tick: "Code identification: repetition line",
+        sgE2Tick: "Trace running total values",
         tick2Pred: "Prediction Q2: Loop type",
         tick3Pred: "Prediction Q3: Running total variable",
         tick4Pred: "Prediction Q4: Initial total value",
@@ -1954,10 +1991,12 @@ const CHECKPOINT_LABELS = {
         ex3SgBTick: "Code identification: store input line",
         ex3SgCTick: "Fill blank: pass counter increment",
         ex3SgDTick: "Trace traversal: passes and highest",
+        ex3SgETick: "Code identification: pass condition",
         ex3ModifyTick: "Modify program: traversal ordering",
         makeOutputTick: "Output verification"
     },
     assessment: {
+        fullCode: "Implementation: full solution sequence",
         tick1: "Prediction Q1: Loop count",
         tick2: "Prediction Q2: Validation loop",
         tick3: "Prediction Q3: Running total variable",
@@ -2103,8 +2142,8 @@ const seedDemoProgress = () => {
 
     saveStep("/examples/example2/", {
         path: "/examples/example2/",
-        stepCount: 9,
-        index: 5,
+        stepCount: 10,
+        index: 6,
         isComplete: false,
         updatedAt: now - 12 * minute,
         completedChecks: ["tick1", "tick2Pred", "tick3Pred", "tick4Pred", "fullCode", "sgA2Tick"],
