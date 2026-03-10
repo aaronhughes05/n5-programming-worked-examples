@@ -3,6 +3,7 @@ import csv
 from urllib.parse import urlencode
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.core.management import call_command
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -936,6 +937,33 @@ def teacher_attempt_analytics(request: HttpRequest):
         return error
     payload = _build_teacher_attempt_analytics(teacher)
     return JsonResponse(payload)
+
+
+@csrf_exempt
+@require_POST
+def teacher_seed_demo(request: HttpRequest):
+    teacher, error = _require_teacher_user(request)
+    if error:
+        return error
+
+    payload, parse_error = _get_json_payload(request)
+    if parse_error:
+        return parse_error
+
+    reset = bool(payload.get("reset", True))
+    if reset:
+        call_command("seed_teacher_demo", "--reset")
+    else:
+        call_command("seed_teacher_demo")
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "seededBy": teacher.username,
+            "reset": reset,
+            "message": "Demo data seeded successfully.",
+        }
+    )
 
 
 @require_GET

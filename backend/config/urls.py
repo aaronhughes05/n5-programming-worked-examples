@@ -21,6 +21,7 @@ from core.views import (
     teacher_export_csv,
     teacher_export_json,
     teacher_remove_student,
+    teacher_seed_demo,
     teacher_student_analytics,
 )
 
@@ -51,6 +52,7 @@ urlpatterns = [
     path("api/teacher/classes/<int:classroom_id>/students/<int:student_id>", teacher_remove_student, name="teacher-remove-student"),
     path("api/teacher/students/<int:student_id>/analytics", teacher_student_analytics, name="teacher-student-analytics"),
     path("api/teacher/attempt-analytics", teacher_attempt_analytics, name="teacher-attempt-analytics"),
+    path("api/teacher/seed-demo", teacher_seed_demo, name="teacher-seed-demo"),
     path("api/teacher/export.json", teacher_export_json, name="teacher-export-json"),
     path("api/teacher/export.csv", teacher_export_csv, name="teacher-export-csv"),
     path("auth/login", auth_login, name="auth-login"),

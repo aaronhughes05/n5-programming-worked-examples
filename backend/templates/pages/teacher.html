@@ -75,7 +75,7 @@
         <div class="teacher-summary-actions teacher-summary-actions--single-row teacher-summary-actions--in-summary" role="group" aria-label="Teacher tools">
           <button type="button" class="check-btn outline-btn" id="teacherExportCsvBtn">Export CSV</button>
           <button type="button" class="check-btn outline-btn" id="teacherExportJsonBtn">Export JSON</button>
-          <button type="button" class="check-btn outline-btn" id="teacherImportProgressBtn">One-time import local progress</button>
+          <button type="button" class="check-btn outline-btn" id="teacherSeedDemoBtn">Seed Demo Data</button>
         </div>
       </section>
 
@@ -155,6 +155,19 @@
         <div class="teacher-reset-modal__actions">
           <button type="button" class="check-btn reset-btn" id="teacherResetConfirmBtn">Reset all local progress</button>
           <button type="button" class="check-btn outline-btn" data-close-reset-modal="true">Keep current data</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-reset-modal" id="teacherSeedModal" aria-hidden="true">
+      <div class="teacher-reset-modal__backdrop" data-close-seed-modal="true" aria-hidden="true"></div>
+      <div class="teacher-reset-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="teacherSeedTitle" aria-describedby="teacherSeedBody">
+        <button type="button" class="teacher-reset-modal__close" aria-label="Close seed dialog" data-close-seed-modal="true">&times;</button>
+        <h3 id="teacherSeedTitle">Seed Demo Data</h3>
+        <p id="teacherSeedBody">This will reset and reseed demo teacher/class/student analytics data. Are you sure you want to continue?</p>
+        <div class="teacher-reset-modal__actions">
+          <button type="button" class="check-btn" id="teacherSeedConfirmBtn">Yes, seed demo data</button>
+          <button type="button" class="check-btn outline-btn" data-close-seed-modal="true">Cancel</button>
         </div>
       </div>
     </div>

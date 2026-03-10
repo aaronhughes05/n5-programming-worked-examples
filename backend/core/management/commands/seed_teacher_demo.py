@@ -9,6 +9,7 @@ from core.models import (
     Enrollment,
     HintAnalytics,
     Profile,
+    TeacherStudent,
     UserProgressSummary,
 )
 
@@ -36,6 +37,10 @@ class Command(BaseCommand):
             HintAnalytics.objects.filter(user__username__in=[teacher_username, *student_usernames]).delete()
             ActivityProgress.objects.filter(user__username__in=[teacher_username, *student_usernames]).delete()
             Enrollment.objects.filter(student__username__in=student_usernames).delete()
+            TeacherStudent.objects.filter(
+                teacher__username=teacher_username,
+                student__username__in=student_usernames,
+            ).delete()
             Classroom.objects.filter(name="N5 Demo Class", teacher__username=teacher_username).delete()
             User.objects.filter(username__in=[teacher_username, *student_usernames]).delete()
 
@@ -61,6 +66,7 @@ class Command(BaseCommand):
             Profile.objects.update_or_create(user=student, defaults={"role": Profile.ROLE_STUDENT})
             UserProgressSummary.objects.get_or_create(user=student)
             Enrollment.objects.get_or_create(classroom=classroom, student=student)
+            TeacherStudent.objects.get_or_create(teacher=teacher, student=student)
             students.append(student)
 
         now = timezone.now()
