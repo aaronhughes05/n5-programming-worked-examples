@@ -702,6 +702,60 @@ const HINT_MODEL = {
         }
     },
     "example3.html": {
+        fullCode: {
+            l1: "Trace the full pipeline: initialize -> collect values -> traverse once -> print summary.",
+            l2: "Keep list collection complete before traversal begins.",
+            l3: "During traversal, update pass_count and highest using each score value.",
+            worked: "Correct flow: create list/trackers, input loop with append, traversal loop with pass/highest updates, then final outputs."
+        },
+        ex3Pred1Tick: {
+            l1: "Traversal means visiting each stored value in order.",
+            l2: "Use the loop type designed to iterate through list items directly.",
+            l3: "The best fit is the loop that reads as: for value in scores.",
+            worked: "Use a for loop for list traversal."
+        },
+        ex3Pred2Tick: {
+            l1: "Traversal needs values to already exist in the list.",
+            l2: "Each new score must be added as it is entered.",
+            l3: "Pick the option that keeps every input for later processing.",
+            worked: "Store each score in the list using append before traversal."
+        },
+        ex3Pred3Tick: {
+            l1: "In `for value in scores`, the variable after `for` holds each item.",
+            l2: "The loop variable name is the identifier used inside traversal logic.",
+            l3: "Use the same word that appears between `for` and `in`.",
+            worked: "The loop variable is value."
+        },
+        ex3Pred4Tick: {
+            l1: "Check the problem description and collection loop count.",
+            l2: "The traversal starts only after all required scores are entered.",
+            l3: "Use the same fixed count from range(5).",
+            worked: "Enter 5 scores before traversal starts."
+        },
+        ex3SgATick: {
+            l1: "Subgoal A is setup/initialization.",
+            l2: "Look for the line that prepares storage before input starts.",
+            l3: "Creating the list is part of setup.",
+            worked: "scores = [] maps to Subgoal A."
+        },
+        ex3SgBTick: {
+            l1: "Subgoal B is collecting and storing input values.",
+            l2: "Pick the line that writes the latest input into the list.",
+            l3: "Appending scores is the storage action for this stage.",
+            worked: "scores.append(score) is the Subgoal B line."
+        },
+        ex3SgCTick: {
+            l1: "pass_count increases by one for each passing score.",
+            l2: "The blank should be the increment value, not a variable name.",
+            l3: "Use the standard counting update amount.",
+            worked: "Fill the blank with 1."
+        },
+        ex3SgDTick: {
+            l1: "A pass is any score that is 50 or more.",
+            l2: "Count qualifying values, then identify the maximum score in the list.",
+            l3: "Use the given list values to compute final pass count and highest.",
+            worked: "For [42, 67, 51, 30, 88], passes = 3 and highest = 88."
+        },
         ex3ModifyTick: {
             l1: "Start by grouping stages: setup/input -> traversal checks -> output.",
             l2: "Keep the score input loop before traversal, then evaluate each stored value once.",
@@ -876,6 +930,60 @@ const FEEDBACK_MAP = {
         }
     },
     "example3.html": {
+        fullCode: {
+            correct: "Correct. You completed the full array traversal implementation sequence.",
+            incorrect: "Try again.",
+            misconception: "A common mix-up is blending collection and traversal stages into one unordered flow.",
+            next: "Follow the ordered pipeline: setup -> collect/store -> traverse/process -> output."
+        },
+        ex3Pred1Tick: {
+            correct: "Correct. A for loop is the best fit for traversing all list values.",
+            incorrect: "Not quite right.",
+            misconception: "A while loop can work, but here traversal is cleaner and clearer with a for loop over the list.",
+            next: "Choose the loop structure that directly visits each item in scores."
+        },
+        ex3Pred2Tick: {
+            correct: "Correct. Scores should be stored in the list before traversal starts.",
+            incorrect: "That would break later processing.",
+            misconception: "If values are only printed or discarded, traversal logic has no stored data to process.",
+            next: "Select the option that keeps each input value in the list."
+        },
+        ex3Pred3Tick: {
+            correct: "Correct. value is the loop variable in `for value in scores:`.",
+            incorrect: "Not correct yet.",
+            misconception: "You may be entering the list name or another variable instead of the traversal item variable.",
+            next: "Use the variable written directly after `for` in the loop header."
+        },
+        ex3Pred4Tick: {
+            correct: "Correct. The program collects 5 scores before traversal.",
+            incorrect: "That count is not aligned with this example.",
+            misconception: "A common error is mixing this step with the modify task count, which uses 6 for extension practice.",
+            next: "Use the fixed collection count shown in the main implementation step."
+        },
+        ex3SgATick: {
+            correct: "Correct subgoal mapping.",
+            incorrect: "That mapping is off.",
+            misconception: "You may be mapping by position instead of by purpose.",
+            next: "Subgoal A is setup, so match lines that initialize variables or storage."
+        },
+        ex3SgBTick: {
+            correct: "Correct line selection for Subgoal B.",
+            incorrect: "Wrong line selected.",
+            misconception: "The chosen line may test or initialize data rather than store new input.",
+            next: "Pick the line that appends each entered score into the list."
+        },
+        ex3SgCTick: {
+            correct: "Correct fill-in value.",
+            incorrect: "That value is not right yet.",
+            misconception: "pass_count is a counter, so it must increase by one per qualifying score.",
+            next: "Use the standard increment value in counting logic."
+        },
+        ex3SgDTick: {
+            correct: "Correct trace values.",
+            incorrect: "Trace values are off.",
+            misconception: "You may be missing one passing score or not updating highest after each comparison.",
+            next: "Recheck each score against >= 50 and track the maximum step-by-step."
+        },
         ex3ModifyTick: {
             correct: "Correct. The modified array traversal logic is now in the right order.",
             incorrect: "Try again.",
@@ -1821,6 +1929,15 @@ const CHECKPOINT_LABELS = {
         makeOutputTick: "Output verification"
     },
     example3: {
+        fullCode: "Implementation: full solution sequence",
+        ex3Pred1Tick: "Prediction Q1: Traversal loop type",
+        ex3Pred2Tick: "Prediction Q2: Store-before-traverse step",
+        ex3Pred3Tick: "Prediction Q3: Loop variable name",
+        ex3Pred4Tick: "Prediction Q4: Input count before traversal",
+        ex3SgATick: "Subgoal mapping: list setup line",
+        ex3SgBTick: "Code identification: store input line",
+        ex3SgCTick: "Fill blank: pass counter increment",
+        ex3SgDTick: "Trace traversal: passes and highest",
         ex3ModifyTick: "Modify program: traversal ordering",
         makeOutputTick: "Output verification"
     },
