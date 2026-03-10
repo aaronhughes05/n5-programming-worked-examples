@@ -71,7 +71,7 @@ D: print("Highest:", highest)</code></pre>
         </details>
 
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 3</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 4</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -89,8 +89,54 @@ D: print("Highest:", highest)</code></pre>
             </p>
         </section>
 
-        <section class="card step-section" data-step="2" data-step-id="step-2">
-            <h2>2. Learning Objective</h2>
+        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="ex3Pred1Tick,ex3Pred2Tick,ex3Pred3Tick,ex3Pred4Tick">
+            <h2>2. Prediction Activity</h2>
+            <div class="question-block">
+                <p>Which loop type is most appropriate for traversing every value in a list?</p>
+                <div class="question-input question-input--stacked">
+                    <label><input type="radio" name="ex3PredLoopType" id="ex3PredLoopFor"> for loop</label>
+                    <label><input type="radio" name="ex3PredLoopType" id="ex3PredLoopWhile"> while loop</label>
+                    <label><input type="radio" name="ex3PredLoopType" id="ex3PredLoopIf"> if statement only</label>
+                    <button onclick="checkRadioButton('ex3PredLoopFor', 'ex3Pred1Tick')">Check</button>
+                    <span id="ex3Pred1Tick" class="tick-mark"></span>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p>What should happen to each score before traversal can begin?</p>
+                <div class="question-input">
+                    <select id="ex3PredStore">
+                        <option value="">Select the best answer...</option>
+                        <option value="append">Store each score in the list</option>
+                        <option value="print">Print each score immediately only</option>
+                        <option value="discard">Discard all scores after input</option>
+                    </select>
+                    <button onclick="checkAnswer('ex3PredStore', 'append', 'ex3Pred2Tick')">Check</button>
+                    <span id="ex3Pred2Tick" class="tick-mark"></span>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p>When writing <code>for value in scores:</code>, what is the loop variable name?</p>
+                <div class="question-input">
+                    <input type="text" id="ex3PredVariable" class="w-140" placeholder="Enter variable name...">
+                    <button onclick="checkAnswer('ex3PredVariable', 'value', 'ex3Pred3Tick')">Check</button>
+                    <span id="ex3Pred3Tick" class="tick-mark"></span>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p>How many scores should be entered in this example before traversal starts?</p>
+                <div class="question-input">
+                    <input type="text" id="ex3PredCount" class="w-100" placeholder="Enter a number...">
+                    <button onclick="checkAnswer('ex3PredCount', '5', 'ex3Pred4Tick')">Check</button>
+                    <span id="ex3Pred4Tick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="3" data-step-id="step-3">
+            <h2>3. Learning Objective</h2>
             <p>By the end of this example, you should be able to:</p>
             <ul>
                 <li>Store multiple values in a list</li>
@@ -100,8 +146,8 @@ D: print("Highest:", highest)</code></pre>
             </ul>
         </section>
 
-        <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
-            <h2>3. Step-by-Step Implementation</h2>
+        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="fullCode">
+            <h2>4. Step-by-Step Implementation</h2>
 
             <div id="step1" class="step-box">
                 <p><strong>Step 1:</strong> Set up storage and tracking variables.</p>
