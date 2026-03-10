@@ -701,6 +701,14 @@ const HINT_MODEL = {
             worked: "Match expected output exactly after running your program."
         }
     },
+    "example3.html": {
+        ex3ModifyTick: {
+            l1: "Start by grouping stages: setup/input -> traversal checks -> output.",
+            l2: "Keep the score input loop before traversal, then evaluate each stored value once.",
+            l3: "Place both output lines after traversal is complete.",
+            worked: "Use order: setup list, collect 6 values, traverse for pass/highest logic, then print results."
+        }
+    },
     "assessment.html": {
         tick1: { l1: "Look at the required item count.", l2: "The loop count matches the number of prices collected.", l3: "Use the exact numeric count.", worked: "The loop repeats 5 times." },
         tick2: { l1: "Which loop keeps checking until input is valid?", l2: "Validation usually repeats while a bad condition is true.", l3: "Negative-price checking uses while.", worked: "Use while for repeated validation." },
@@ -859,6 +867,15 @@ const FEEDBACK_MAP = {
             incorrect: "Output does not match expected yet.",
             misconception: "Likely formatting mismatch, wrong total/average formula, or missing lines.",
             next: "Compare your output line-by-line with expected output and rerun."
+        }
+    },
+    "example3.html": {
+        ex3ModifyTick: {
+            correct: "Correct. The modified array traversal logic is now in the right order.",
+            incorrect: "Try again.",
+            misconception: "A common issue is mixing input collection lines into the traversal stage or printing before traversal is complete.",
+            next: "Rebuild as setup -> input loop/store -> traversal checks -> final output.",
+            alwaysShowMisconception: true
         }
     },
     "assessment.html": {
@@ -1791,7 +1808,9 @@ const CHECKPOINT_LABELS = {
         tick2: "Modify program: reorder 10-item flow",
         makeOutputTick: "Output verification"
     },
-    example3: {},
+    example3: {
+        ex3ModifyTick: "Modify program: traversal ordering"
+    },
     assessment: {
         tick1: "Prediction Q1: Loop count",
         tick2: "Prediction Q2: Validation loop",

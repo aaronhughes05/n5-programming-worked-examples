@@ -71,7 +71,7 @@ D: print("Highest:", highest)</code></pre>
         </details>
 
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 8</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 9</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -264,6 +264,30 @@ D: print("Highest:", highest)</code></pre>
                 <button type="button" class="check-btn" onclick="checkTrace(['ex3TracePasses','ex3TraceHighest'], ['3','88'], 'ex3SgDTick')">Check</button>
                 <span id="ex3SgDTick" class="tick-mark"></span>
             </div>
+        </section>
+
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="ex3ModifyTick">
+            <h2>9. Modify The Program</h2>
+            <p>Rearrange the code lines to build a correct traversal program.</p>
+            <p>Your corrected version should:</p>
+            <ul>
+                <li>Collect and store 6 scores in a list</li>
+                <li>Traverse the list once to count passes and find the highest score</li>
+                <li>Print the pass count and highest score after traversal</li>
+            </ul>
+            <div id="example3-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="e3m4" class="draggable" draggable="true" ondragstart="drag(event)">for value in scores:</div>
+                <div id="e3m1" class="draggable" draggable="true" ondragstart="drag(event)">scores = []</div>
+                <div id="e3m8" class="draggable" draggable="true" ondragstart="drag(event)">print(&quot;Passes:&quot;, pass_count)</div>
+                <div id="e3m2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(6):</div>
+                <div id="e3m9" class="draggable" draggable="true" ondragstart="drag(event)">print(&quot;Highest:&quot;, highest)</div>
+                <div id="e3m6" class="draggable" draggable="true" ondragstart="drag(event)">pass_count = pass_count + 1</div>
+                <div id="e3m3" class="draggable" draggable="true" ondragstart="drag(event)">scores.append(int(input(&quot;Score: &quot;)))</div>
+                <div id="e3m7" class="draggable" draggable="true" ondragstart="drag(event)">if value &gt; highest: highest = value</div>
+                <div id="e3m5" class="draggable" draggable="true" ondragstart="drag(event)">if value &gt;= 50:</div>
+            </div>
+            <button onclick="verifyParsons('example3-modify-parsons', ['e3m1', 'e3m2', 'e3m3', 'e3m4', 'e3m5', 'e3m6', 'e3m7', 'e3m8', 'e3m9'], 'ex3ModifyTick')">Verify Logic</button>
+            <p id="ex3ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>
         </section>
 
         <div class="stepper-controls">
