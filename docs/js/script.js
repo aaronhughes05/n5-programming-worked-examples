@@ -707,6 +707,12 @@ const HINT_MODEL = {
             l2: "Keep the score input loop before traversal, then evaluate each stored value once.",
             l3: "Place both output lines after traversal is complete.",
             worked: "Use order: setup list, collect 6 values, traverse for pass/highest logic, then print results."
+        },
+        makeOutputTick: {
+            l1: "Compare your output exactly against the expected output block.",
+            l2: "Check line order, labels, commas, and spacing closely.",
+            l3: "Confirm total and average use all test-case values correctly.",
+            worked: "Match expected output exactly after running your program."
         }
     },
     "assessment.html": {
@@ -876,6 +882,12 @@ const FEEDBACK_MAP = {
             misconception: "A common issue is mixing input collection lines into the traversal stage or printing before traversal is complete.",
             next: "Rebuild as setup -> input loop/store -> traversal checks -> final output.",
             alwaysShowMisconception: true
+        },
+        makeOutputTick: {
+            correct: "Output matches expected values and formatting.",
+            incorrect: "Output does not match expected yet.",
+            misconception: "Likely formatting mismatch, incorrect calculations, or missing output lines.",
+            next: "Compare your output line-by-line with expected output and rerun."
         }
     },
     "assessment.html": {
@@ -1809,7 +1821,8 @@ const CHECKPOINT_LABELS = {
         makeOutputTick: "Output verification"
     },
     example3: {
-        ex3ModifyTick: "Modify program: traversal ordering"
+        ex3ModifyTick: "Modify program: traversal ordering",
+        makeOutputTick: "Output verification"
     },
     assessment: {
         tick1: "Prediction Q1: Loop count",
