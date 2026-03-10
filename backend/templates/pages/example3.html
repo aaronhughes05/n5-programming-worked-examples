@@ -71,7 +71,7 @@ D: print("Highest:", highest)</code></pre>
         </details>
 
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 4</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 8</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -194,6 +194,75 @@ C:         highest = value
 D: print("Scores:", ", ".join(str(s) for s in scores))
 D: print("Passes:", pass_count)
 D: print("Highest:", highest)</code></pre>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="ex3SgATick">
+            <h2>5. Match The Subgoal</h2>
+            <div class="question-block" data-choice-group="ex3sgA">
+                <p>Which subgoal does this line belong to? <span class="inline-code"><strong>scores = []</strong></span></p>
+                <div class="mc-buttons">
+                    <button type="button" onclick="setChoice('ex3sgA', 'A', this)">A</button>
+                    <button type="button" onclick="setChoice('ex3sgA', 'B', this)">B</button>
+                    <button type="button" onclick="setChoice('ex3sgA', 'C', this)">C</button>
+                    <button type="button" onclick="setChoice('ex3sgA', 'D', this)">D</button>
+                    <button type="button" class="check-btn" onclick="checkChoice('ex3sgA', 'A', 'ex3SgATick')">Check</button>
+                    <span id="ex3SgATick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="ex3SgBTick">
+            <h2>6. Identify The Code</h2>
+            <div class="question-block" data-line-group="ex3sgB">
+                <p>Click the line that matches Subgoal B (collect and store input values).</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgB', 'scores = []', this)">scores = []</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgB', 'scores.append(score)', this)">scores.append(score)</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgB', 'if value >= 50:', this)">if value &gt;= 50:</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex3sgB', 'scores.append(score)', 'ex3SgBTick')">Check</button>
+                <span id="ex3SgBTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="ex3SgCTick">
+            <h2>7. Fill In The Blank</h2>
+            <div class="question-block">
+                <p>Complete Subgoal C update logic: <span class="inline-code"><strong>pass_count = pass_count + ___</strong></span></p>
+                <div class="question-input">
+                    <input type="text" id="ex3SgCInput" class="w-100" placeholder="Enter value...">
+                    <button onclick="checkAnswer('ex3SgCInput', '1', 'ex3SgCTick')">Check</button>
+                    <span id="ex3SgCTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="ex3SgDTick">
+            <h2>8. Trace Traversal Output</h2>
+            <div class="question-block">
+                <p>Trace this list: <span class="inline-code"><strong>scores = [42, 67, 51, 30, 88]</strong></span></p>
+                <p>After traversal, what are the final values?</p>
+                <table class="trace-table">
+                    <thead>
+                        <tr>
+                            <th>Result</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Passes (&gt;= 50)</td>
+                            <td><input type="text" id="ex3TracePasses" class="w-80" placeholder="e.g. 3"></td>
+                        </tr>
+                        <tr>
+                            <td>Highest score</td>
+                            <td><input type="text" id="ex3TraceHighest" class="w-80" placeholder="e.g. 88"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="check-btn" onclick="checkTrace(['ex3TracePasses','ex3TraceHighest'], ['3','88'], 'ex3SgDTick')">Check</button>
+                <span id="ex3SgDTick" class="tick-mark"></span>
             </div>
         </section>
 
