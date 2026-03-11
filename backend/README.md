@@ -54,6 +54,24 @@ Reset + reseed:
 python manage.py seed_teacher_demo --reset
 ```
 
+Activity-key cleanup dry-run (report only):
+
+```bash
+python manage.py cleanup_activity_keys
+```
+
+Apply normalizations:
+
+```bash
+python manage.py cleanup_activity_keys --apply
+```
+
+Apply + delete unknown activity keys:
+
+```bash
+python manage.py cleanup_activity_keys --apply --delete-unknown
+```
+
 ---
 
 ## Database
@@ -130,4 +148,3 @@ After first deploy, run migrations:
 ```bash
 python manage.py migrate
 ```
-
