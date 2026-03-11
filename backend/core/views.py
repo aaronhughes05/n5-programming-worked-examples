@@ -1,5 +1,6 @@
 import json
 import csv
+from datetime import timezone as dt_timezone
 from urllib.parse import urlencode
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
@@ -15,6 +16,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from core.models import ActivityProgress, Classroom, Enrollment, HintAnalytics, TeacherStudent, UserProgressSummary
+
+CANONICAL_ACTIVITY_KEYS = ("example1", "example2", "example3", "assessment")
+CANONICAL_ACTIVITY_KEY_SET = set(CANONICAL_ACTIVITY_KEYS)
+EXAMPLE_ACTIVITY_KEY_SET = {"example1", "example2", "example3"}
 
 PAGE_TEMPLATE_MAP = {
     "example1": "pages/example1.html",
@@ -139,21 +144,25 @@ def _normalize_activity_key(activity_key: str) -> str:
     return key
 
 
+def _is_canonical_activity_key(activity_key: str) -> bool:
+    return activity_key in CANONICAL_ACTIVITY_KEY_SET
+
+
 def _refresh_summary_for_user(user):
     progress_rows = list(ActivityProgress.objects.filter(user=user))
     normalized_started = set()
     normalized_completed = set()
     for row in progress_rows:
         nkey = _normalize_activity_key(row.activity_key)
-        if not nkey:
+        if not nkey or not _is_canonical_activity_key(nkey):
             continue
-        normalized_started.add(nkey)
+        if _is_progress_started(row):
+            normalized_started.add(nkey)
         if row.is_complete:
             normalized_completed.add(nkey)
 
-    example_keys = {"example1", "example2", "example3"}
-    examples_completed = len(example_keys.intersection(normalized_completed))
-    all_examples_completed = example_keys.issubset(normalized_completed)
+    examples_completed = len(EXAMPLE_ACTIVITY_KEY_SET.intersection(normalized_completed))
+    all_examples_completed = EXAMPLE_ACTIVITY_KEY_SET.issubset(normalized_completed)
     assessment_completed = "assessment" in normalized_completed
 
     summary, _ = UserProgressSummary.objects.get_or_create(user=user)
@@ -197,7 +206,7 @@ def _parse_client_timestamp(raw_value):
         value = float(raw_value)
         if value > 10_000_000_000:
             value = value / 1000.0
-        dt = timezone.datetime.fromtimestamp(value, tz=timezone.utc)
+        dt = timezone.datetime.fromtimestamp(value, tz=dt_timezone.utc)
         return dt
 
     if isinstance(raw_value, str):
@@ -209,7 +218,7 @@ def _parse_client_timestamp(raw_value):
             value = float(text)
             if value > 10_000_000_000:
                 value = value / 1000.0
-            return timezone.datetime.fromtimestamp(value, tz=timezone.utc)
+            return timezone.datetime.fromtimestamp(value, tz=dt_timezone.utc)
 
         parsed = parse_datetime(text)
         if parsed is not None:
@@ -269,11 +278,10 @@ def _build_teacher_class_summary(teacher_user):
     progress_by_user = {}
     for row in progress_rows:
         key = _normalize_activity_key(row.activity_key)
-        if not key:
+        if not key or not _is_canonical_activity_key(key):
             continue
         progress_by_user.setdefault(row.user_id, {})[key] = row
 
-    activity_keys = ("example1", "example2", "example3", "assessment")
     class_cards = []
     overall_totals = {
         "students": len(student_ids),
@@ -296,7 +304,7 @@ def _build_teacher_class_summary(teacher_user):
         student_progress = [progress_by_user.get(student.id, {}) for student in students]
 
         by_activity = []
-        for activity_key in activity_keys:
+        for activity_key in CANONICAL_ACTIVITY_KEYS:
             completed = 0
             in_progress = 0
             not_started = 0
@@ -344,11 +352,14 @@ def _build_teacher_attempt_analytics(teacher_user):
     hint_rows = list(HintAnalytics.objects.filter(user_id__in=student_ids))
     by_activity_checkpoint = {}
     for row in hint_rows:
-        key = (_normalize_activity_key(row.activity_key), row.checkpoint_id)
+        normalized_key = _normalize_activity_key(row.activity_key)
+        if not normalized_key or not _is_canonical_activity_key(normalized_key):
+            continue
+        key = (normalized_key, row.checkpoint_id)
         bucket = by_activity_checkpoint.setdefault(
             key,
             {
-                "activityKey": _normalize_activity_key(row.activity_key),
+                "activityKey": normalized_key,
                 "checkpointId": row.checkpoint_id,
                 "studentsAttempted": 0,
                 "attempts": 0,
@@ -838,7 +849,7 @@ def teacher_student_analytics(request: HttpRequest, student_id: int):
     activity_map = {}
     for row in progress_rows:
         key = _normalize_activity_key(row.activity_key)
-        if not key:
+        if not key or not _is_canonical_activity_key(key):
             continue
         activity_map.setdefault(key, {})
         activity_map[key]["progress"] = {
@@ -848,6 +859,7 @@ def teacher_student_analytics(request: HttpRequest, student_id: int):
             "isComplete": bool(row.is_complete),
             "updatedAt": row.updated_at.isoformat(),
         }
+        activity_map[key]["source"] = row
 
     hint_totals = {
         "hintsUsed": 0,
@@ -857,6 +869,8 @@ def teacher_student_analytics(request: HttpRequest, student_id: int):
     checkpoint_rows = []
     for row in hint_rows:
         key = _normalize_activity_key(row.activity_key)
+        if not key or not _is_canonical_activity_key(key):
+            continue
         checkpoint_rows.append(
             {
                 "activityKey": key,
@@ -872,14 +886,16 @@ def teacher_student_analytics(request: HttpRequest, student_id: int):
         hint_totals["workedHintsRevealed"] += int(row.reveal_count or 0)
         hint_totals["attempts"] += int(row.attempts or 0)
 
-    ordered_keys = ("example1", "example2", "example3", "assessment")
     activities = []
     started_count = 0
     complete_count = 0
-    for key in ordered_keys:
+    for key in CANONICAL_ACTIVITY_KEYS:
         progress = activity_map.get(key, {}).get("progress")
         if progress:
-            started = progress["isComplete"] or progress["stepIndex"] > 0 or progress["stepCount"] > 0
+            source_row = activity_map.get(key, {}).get("source")
+            started = _is_progress_started(source_row) if source_row else (
+                progress["isComplete"] or progress["stepIndex"] > 0
+            )
             if started:
                 started_count += 1
             if progress["isComplete"]:
