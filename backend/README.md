@@ -1,11 +1,9 @@
 # Backend (Django)
 
-This directory contains the Django app that serves both:
+This directory contains the Django runtime for:
 
-- page templates (frontend runtime)
-- JSON API (auth, progress, hints, teacher analytics)
-
-The project is configured for local development and PostgreSQL-backed deployment.
+- template-rendered frontend pages
+- JSON API for auth, progress, hints, teacher analytics, and roster management
 
 ---
 
@@ -34,75 +32,79 @@ python manage.py runserver
 
 ---
 
-## Useful Commands
+## Core Commands
 
-Create superuser:
+Create admin user:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-Seed teacher demo data:
+Seed demo teacher/classes/students/progress:
 
 ```bash
 python manage.py seed_teacher_demo
 ```
 
-Reset + reseed:
+Reset and reseed demo data:
 
 ```bash
 python manage.py seed_teacher_demo --reset
 ```
 
-Activity-key cleanup dry-run (report only):
+---
+
+## Data Maintenance Commands
+
+Normalize activity keys (dry-run):
 
 ```bash
 python manage.py cleanup_activity_keys
 ```
 
-Apply normalizations:
+Normalize activity keys (apply):
 
 ```bash
 python manage.py cleanup_activity_keys --apply
 ```
 
-Apply + delete unknown activity keys:
+Normalize + remove unknown keys:
 
 ```bash
 python manage.py cleanup_activity_keys --apply --delete-unknown
 ```
 
-Rebuild user progress summaries (recommended after cleanup):
+Rebuild user progress summaries:
 
 ```bash
 python manage.py rebuild_progress_summaries
 ```
 
-Audit roster consistency (dry-run):
+Audit roster consistency:
 
 ```bash
 python manage.py roster_consistency
 ```
 
-Repair missing links:
+Apply roster consistency fixes:
 
 ```bash
 python manage.py roster_consistency --apply
 ```
 
-Repair + prune orphan teacher/student links:
+Apply + prune orphan links + sync roles:
 
 ```bash
-python manage.py roster_consistency --apply --prune-orphans
+python manage.py roster_consistency --apply --prune-orphans --sync-roles
 ```
 
----
+Recommended post-cleanup sequence:
 
-## Database
-
-- Local fallback can use SQLite when `DATABASE_URL` is not set.
-- Recommended shared/dev/prod database is PostgreSQL.
-- Production should use managed Postgres (Render, Railway, Neon, etc.).
+```bash
+python manage.py cleanup_activity_keys --apply --delete-unknown
+python manage.py rebuild_progress_summaries
+python manage.py roster_consistency --apply
+```
 
 ---
 
@@ -130,24 +132,30 @@ Teacher analytics and management:
 - `GET /api/teacher/export.csv`
 - `GET|POST /api/teacher/classes`
 - `POST /api/teacher/classes/<classroom_id>/students`
-- `POST /api/teacher/classes/<classroom_id>/students/<student_id>`
-- `POST /api/teacher/classes/<classroom_id>` (delete class)
+- `DELETE /api/teacher/classes/<classroom_id>/students/<student_id>`
+- `DELETE /api/teacher/classes/<classroom_id>`
+- `POST /api/teacher/seed-demo`
+
+Health:
+
+- `GET /health/`
 
 ---
 
-## Security And Environment
+## Database and Environment
 
-Environment variables in production should include at least:
+- Local development can run on SQLite if `DATABASE_URL` is not set.
+- Shared/dev/prod should use PostgreSQL.
+- Production env should include:
+  - `DJANGO_SECRET_KEY`
+  - `DJANGO_ENV=production`
+  - `DJANGO_DEBUG=0`
+  - `DJANGO_ALLOWED_HOSTS`
+  - `DJANGO_CSRF_TRUSTED_ORIGINS`
+  - `DATABASE_URL`
+  - `DATABASE_SSL_REQUIRE=1` (if required by your host)
 
-- `DJANGO_SECRET_KEY`
-- `DJANGO_ENV=production`
-- `DJANGO_DEBUG=0`
-- `DJANGO_ALLOWED_HOSTS`
-- `DJANGO_CSRF_TRUSTED_ORIGINS`
-- `DATABASE_URL`
-- `DATABASE_SSL_REQUIRE=1` (if required by host)
-
-Cookie/session controls are environment-driven:
+Cookie/session env controls:
 
 - `SESSION_COOKIE_SAMESITE`
 - `CSRF_COOKIE_SAMESITE`
@@ -157,18 +165,21 @@ Cookie/session controls are environment-driven:
 
 ---
 
-## Deployment
+## Deployment (Render/Railway)
 
-Deploy as one Django app runtime (do not use GitHub Pages for app runtime).
+Deploy as a single Django app runtime.  
+Do not use GitHub Pages for production runtime.
 
-Recommended free-tier paths:
-
-- Render web service + managed Postgres
-- Railway app + Postgres
-- Neon Postgres attached to Render/Railway
-
-After first deploy, run migrations:
+Recommended start command:
 
 ```bash
-python manage.py migrate
+python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 ```
+
+One-time maintenance deploy command (if no shell access):
+
+```bash
+python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py cleanup_activity_keys --apply --delete-unknown && python manage.py rebuild_progress_summaries && python manage.py roster_consistency --apply && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+```
+
+After that one-time run, revert to the normal start command.

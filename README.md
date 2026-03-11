@@ -1,30 +1,40 @@
 # Crack the Code
 ## National 5 Computing Science Worked Examples
 
-Crack the Code is an interactive learning web app for National 5 Computing Science. It guides learners from prediction to implementation, modification, and testing using scaffolded worked examples and a final assessment.
+Crack the Code is an interactive National 5 Computing Science learning web app.  
+It scaffolds students through prediction, implementation, modification, and testing with worked examples and a final assessment.
 
-The project now runs as a Django web app (frontend + backend together), with PostgreSQL-ready persistence for accounts, progress, hints, and teacher analytics.
-
----
-
-## What The Project Does
-
-- Scaffolded step-by-step examples with checkpoint gating
-- Rich feedback and adaptive hints at checkpoint level
-- Persistent learner progress (local fallback + API-backed sync)
-- Dashboard with status, progress bars, and badges
-- Worksheet pages for print/download use
-- Final assessment with prerequisite gate
-- Teacher mode with class summary, analytics, exports, and roster management
+The app now runs as a single Django + PostgreSQL web application (no static-only runtime path for production).
 
 ---
 
-## Runtime Architecture
+## Key Features
 
-### Django routes (current source of truth)
+- PRIMM-style worked examples with checkpoint gating
+- Rich corrective feedback and adaptive hinting per checkpoint
+- Persistent account-based progress and hint analytics
+- Role-based access (`student` and `teacher`)
+- Teacher dashboard with class summary, attempt analytics, student drill-down, and exports
+- Worksheet pages for revision/printing
 
-- `/` home dashboard
-- `/login/` sign-in page
+---
+
+## Stack
+
+- Django 5 (templates + JSON API)
+- PostgreSQL
+- Vanilla JavaScript + HTML/CSS
+- Pyodide for in-browser Python run/check tasks
+- Gunicorn + Whitenoise for production runtime/static serving
+
+---
+
+## Runtime Routes
+
+Page routes:
+
+- `/`
+- `/login` and `/login/`
 - `/examples/example1/`
 - `/examples/example2/`
 - `/examples/example3/`
@@ -36,7 +46,7 @@ The project now runs as a Django web app (frontend + backend together), with Pos
 - `/examples/worksheet-assessment/`
 - `/teacher/` (teacher role required)
 
-### API routes
+API routes:
 
 - `POST /auth/login`
 - `POST /auth/logout`
@@ -52,137 +62,93 @@ The project now runs as a Django web app (frontend + backend together), with Pos
 - `GET /api/teacher/export.csv`
 - `GET|POST /api/teacher/classes`
 - `POST /api/teacher/classes/<classroom_id>/students`
-- `POST /api/teacher/classes/<classroom_id>/students/<student_id>`
-- `POST /api/teacher/classes/<classroom_id>` (delete class)
+- `DELETE /api/teacher/classes/<classroom_id>/students/<student_id>`
+- `DELETE /api/teacher/classes/<classroom_id>`
+- `POST /api/teacher/seed-demo`
 
 ---
 
-## Current Stack
-
-- Django (templates + API)
-- Vanilla JavaScript
-- HTML/CSS (served as Django static/template assets)
-- PostgreSQL (production target)
-- Pyodide (for browser-run coding tasks)
-
----
-
-## Project Structure
+## Repository Layout
 
 ```text
-/docs
-  (static assets only)
+docs/
+  css/styles.css
+  js/script.js
+  js/api.js
+  images/...
   favicon.svg
-  /css
-    styles.css
-  /js
-    script.js
-    api.js
 
-/backend
+backend/
   manage.py
   requirements.txt
-  /config
-  /core
-  /templates
+  config/
+  core/
+  templates/
     index.html
     login.html
-    /pages
-      assessment.html
-      example-template.html
-      example1.html
-      example2.html
-      example3.html
-      teacher.html
-      worksheets.html
-      worksheet-example1.html
-      worksheet-example2.html
-      worksheet-example3.html
-      worksheet-assessment.html
+    pages/...
 ```
+
+`backend/templates` is the page source of truth.  
+`docs/` contains static assets used by the Django templates.
 
 ---
 
 ## Local Setup
 
-1. Clone repository:
-
 ```bash
 git clone https://github.com/aaronhughes05/n5-programming-worked-examples.git
 cd n5-programming-worked-examples/backend
-```
-
-2. Create and activate virtual environment:
-
-```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.development.example .env
+python manage.py migrate
+python manage.py runserver
 ```
 
-Windows PowerShell:
+Open `http://127.0.0.1:8000/`.
+
+PowerShell activation:
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-3. Install dependencies and configure env:
+---
+
+## Roles and Access
+
+- Unauthenticated users are redirected to login.
+- `student`: learner pages only.
+- `teacher`: learner pages + teacher mode + teacher APIs.
+- Teacher access is role-account based (legacy passcode flow removed from production path).
+
+---
+
+## Operations
+
+Common backend maintenance commands are documented in [backend/README.md](backend/README.md), including:
+
+- demo seeding
+- activity key cleanup
+- progress summary rebuild
+- roster consistency audit/repair
+
+---
+
+## Deployment
+
+- Deploy as one Django app runtime (e.g., Render).
+- Use managed Postgres.
+- Do not rely on GitHub Pages for app runtime.
+
+Recommended production start command:
 
 ```bash
-pip install -r requirements.txt
-cp .env.development.example .env
+python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 ```
-
-4. Migrate and run:
-
-```bash
-python manage.py migrate
-python manage.py runserver
-```
-
-5. Open `http://127.0.0.1:8000/`.
-
----
-
-## Auth And Roles
-
-- App access requires login.
-- `student` role: learner pages only.
-- `teacher` role: learner pages + teacher mode.
-- Teacher mode is role-based (legacy passcode gate removed from runtime path).
-
----
-
-## Progress And Analytics
-
-- Learner progress and hint analytics are stored in DB for logged-in users.
-- Frontend includes localStorage compatibility and one-time import to DB.
-- Teacher mode surfaces:
-  - class progress counts
-  - attempt analytics and most-missed checkpoints
-  - per-student analytics modal
-  - CSV/JSON export
-  - class and roster management tools
-
----
-
-## Manual Smoke Checklist
-
-1. Login works and `/auth/me` reflects role.
-2. Student can open home/examples/assessment/worksheets.
-3. Non-teacher cannot access `/teacher/`.
-4. Teacher can access `/teacher/` and load analytics.
-5. Progress persists after reload.
-6. Assessment prerequisite gate works.
-7. Export JSON/CSV downloads from teacher page.
-
----
-
-## Known Notes
-
-- `example3` content may still be lighter than Example 1/2 depending on branch state.
-- Old static `docs/pages/*` runtime was removed; Django templates are now the only page source.
-- Old static `docs/index.html` was removed; home runtime is `backend/templates/index.html`.
 
 ---
 
