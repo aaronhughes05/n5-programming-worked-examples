@@ -72,6 +72,12 @@ Apply + delete unknown activity keys:
 python manage.py cleanup_activity_keys --apply --delete-unknown
 ```
 
+Rebuild user progress summaries (recommended after cleanup):
+
+```bash
+python manage.py rebuild_progress_summaries
+```
+
 ---
 
 ## Database

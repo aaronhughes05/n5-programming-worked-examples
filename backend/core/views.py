@@ -893,9 +893,7 @@ def teacher_student_analytics(request: HttpRequest, student_id: int):
         progress = activity_map.get(key, {}).get("progress")
         if progress:
             source_row = activity_map.get(key, {}).get("source")
-            started = _is_progress_started(source_row) if source_row else (
-                progress["isComplete"] or progress["stepIndex"] > 0
-            )
+            started = _is_progress_started(source_row) if source_row else False
             if started:
                 started_count += 1
             if progress["isComplete"]:
