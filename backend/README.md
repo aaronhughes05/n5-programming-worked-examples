@@ -78,6 +78,24 @@ Rebuild user progress summaries (recommended after cleanup):
 python manage.py rebuild_progress_summaries
 ```
 
+Audit roster consistency (dry-run):
+
+```bash
+python manage.py roster_consistency
+```
+
+Repair missing links:
+
+```bash
+python manage.py roster_consistency --apply
+```
+
+Repair + prune orphan teacher/student links:
+
+```bash
+python manage.py roster_consistency --apply --prune-orphans
+```
+
 ---
 
 ## Database
