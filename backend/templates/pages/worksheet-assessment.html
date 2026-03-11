@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    {% load static %}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Worksheet - Final Assessment</title>
-    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
   </head>
   <body class="page page-inner worksheet-page">
     <div class="appbar worksheet-hide-print" id="appbar">
@@ -20,10 +21,10 @@
       <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
 
       <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
-        <a class="appbar-nav-pill" href="../index.html">Home</a>
-        <a class="appbar-nav-pill" href="../index.html#examples">Examples</a>
-        <a class="appbar-nav-pill is-active" href="worksheets.html">Worksheets</a>
-        <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
+        <a class="appbar-nav-pill" href="/">Home</a>
+        <a class="appbar-nav-pill" href="/#examples">Examples</a>
+        <a class="appbar-nav-pill is-active" href="/worksheets/">Worksheets</a>
+        <a class="appbar-nav-pill" href="/assessment/">Final Assessment</a>
         <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
           Resume
           <span class="appbar-status-dot" aria-hidden="true"></span>
@@ -36,7 +37,7 @@
       <p class="hero-summary">Combine planning, tracing, and testing before you submit your final solution.</p>
       <div class="hero-actions">
         <button type="button" class="check-btn" data-print-worksheet>Print Worksheet</button>
-        <a class="check-btn" href="worksheet-assessment.html" data-download-worksheet download="worksheet-assessment.html">Download Worksheet</a>
+        <a class="check-btn" href="/examples/worksheet-assessment/" data-download-worksheet download="worksheet-assessment.html">Download Worksheet</a>
       </div>
     </header>
 
@@ -140,6 +141,7 @@
       </section>
     </main>
 
-    <script src="../js/script.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
   </body>
 </html>

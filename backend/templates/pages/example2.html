@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Example 2 - Running Total</title>
-    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
 </head>
 <body class="page page-inner">
     <div class="appbar" id="appbar">
@@ -20,10 +21,10 @@
         <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
 
         <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
-            <a class="appbar-nav-pill" href="../index.html">Home</a>
-            <a class="appbar-nav-pill is-active" href="../index.html#examples">Examples</a>
-            <a class="appbar-nav-pill" href="worksheets.html">Worksheets</a>
-            <a class="appbar-nav-pill" href="assessment.html">Final Assessment</a>
+            <a class="appbar-nav-pill" href="/">Home</a>
+            <a class="appbar-nav-pill is-active" href="/#examples">Examples</a>
+            <a class="appbar-nav-pill" href="/worksheets/">Worksheets</a>
+            <a class="appbar-nav-pill" href="/assessment/">Final Assessment</a>
             <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
                 Resume
                 <span class="appbar-status-dot" aria-hidden="true"></span>
@@ -60,7 +61,7 @@ D: print(total)</code></pre>
         </details>
 
         <div class="stepper-header">
-            <div class="stepper-progress" id="stepperProgress">Step 1 of 9</div>
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
             <div class="stepper-bar" aria-hidden="true">
                 <span class="stepper-bar-fill" id="stepperBarFill"></span>
             </div>
@@ -198,8 +199,39 @@ D: print(total)</code></pre>
             </div>
         </section>
 
-        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="tick2">
-            <h2>8. Modify The Program</h2>
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="sgE2Tick">
+            <h2>8. Trace The Running Total</h2>
+            <div class="question-block">
+                <p>Trace the running total for prices: <span class="inline-code"><strong>2, 3, 4</strong></span>.</p>
+                <table class="trace-table">
+                    <thead>
+                        <tr>
+                            <th>Input Price</th>
+                            <th>Running Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2</td>
+                            <td><input type="text" id="ex2Trace1" class="w-80" placeholder="e.g. 2"></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><input type="text" id="ex2Trace2" class="w-80" placeholder="e.g. 5"></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><input type="text" id="ex2Trace3" class="w-80" placeholder="e.g. 9"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="check-btn" onclick="checkTrace(['ex2Trace1','ex2Trace2','ex2Trace3'], ['2','5','9'], 'sgE2Tick')">Check</button>
+                <span id="sgE2Tick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="tick2">
+            <h2>9. Modify The Program</h2>
             <p>Rearrange the code lines to build a working program that uses 10 prices instead of 5.</p>
             <p>Your updated program should:</p>
             <ul>
@@ -219,8 +251,8 @@ D: print(total)</code></pre>
             <p id="tick2" class="result-feedback" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="makeOutputTick">
-            <h2>9. Make Your Own Program</h2>
+        <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
+            <h2>10. Make Your Own Program</h2>
             <p>Write your own running-total program below, select a test case, then run and check the output.</p>
 
             <p><strong>Your Program</strong></p>
@@ -274,13 +306,14 @@ Average: 4.5</code></pre>
             <div class="completion-badges" data-completion-badges aria-label="Earned badges"></div>
             <p class="completion-badge-summary" data-completion-badge-summary></p>
             <div class="completion-actions">
-                <a class="check-btn nav-btn back-btn" href="../index.html">Back to Home</a>
+                <a class="check-btn nav-btn back-btn" href="/">Back to Home</a>
                 <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
             </div>
         </div>
     </section>
 
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

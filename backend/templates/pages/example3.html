@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Example 3 - Array Traversal</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+</head>
+<body class="page page-inner">
+    <div class="appbar" id="appbar">
+        <div class="appbar-brand-wrap">
+            <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+            <div class="appbar-brand-stack">
+                <div class="appbar-brand">Crack the Code</div>
+                <div class="appbar-subtitle">National 5 Computing Science</div>
+            </div>
+        </div>
+
+        <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
+
+        <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
+            <a class="appbar-nav-pill" href="/">Home</a>
+            <a class="appbar-nav-pill is-active" href="/#examples">Examples</a>
+            <a class="appbar-nav-pill" href="/worksheets/">Worksheets</a>
+            <a class="appbar-nav-pill" href="/assessment/">Final Assessment</a>
+            <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
+                Resume
+                <span class="appbar-status-dot" aria-hidden="true"></span>
+            </a>
+        </nav>
+    </div>
+
+    <header class="hero hero-main">
+        <h1 class="hero-title">Array Traversal</h1>
+        <p class="hero-summary">
+            Apply National 5 list-processing skills by collecting values, traversing an array, and producing a clear summary.
+        </p>
+    </header>
+
+    <main class="content">
+        <details class="card expander-card subgoals-panel">
+            <summary>Subgoals</summary>
+            <p class="subgoal-intro">Array traversal focus aligned to National 5 Software Design and Development.</p>
+            <ul class="subgoal-list">
+                <li class="subgoal-item"><span class="subgoal-code">A</span><span class="subgoal-text">Set up list and tracking variables</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">B</span><span class="subgoal-text">Collect and store input values in a list</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">C</span><span class="subgoal-text">Traverse the list to process each value</span></li>
+                <li class="subgoal-item"><span class="subgoal-code">D</span><span class="subgoal-text">Output traversal results (pass count and highest score)</span></li>
+            </ul>
+        </details>
+
+        <details id="workedExample" class="card expander-card worked-example-panel hidden">
+            <summary>Full Solution</summary>
+            <p class="subgoal-intro">Complete program with subgoal-labeled lines.</p>
+            <pre><code>A: scores = []
+A: pass_count = 0
+B: for counter in range(5):
+B:     score = int(input("Score: "))
+B:     scores.append(score)
+A: highest = scores[0]
+C: for value in scores:
+C:     if value &gt;= 50:
+C:         pass_count = pass_count + 1
+C:     if value &gt; highest:
+C:         highest = value
+D: print("Scores:", ", ".join(str(s) for s in scores))
+D: print("Passes:", pass_count)
+D: print("Highest:", highest)</code></pre>
+        </details>
+
+        <div class="stepper-header">
+            <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
+            <div class="stepper-bar" aria-hidden="true">
+                <span class="stepper-bar-fill" id="stepperBarFill"></span>
+            </div>
+            <div class="stepper-progress-note" id="stepperNote">Complete the activity to continue.</div>
+        </div>
+
+        <section class="card step-section" data-step="1" data-step-id="step-1">
+            <h2>1. Problem Description</h2>
+            <p>
+                Input 5 scores, store them in a list, then traverse the list to count how many passes were achieved
+                and identify the highest score.
+            </p>
+            <p>
+                This example focuses on array traversal and list processing, as required by the National 5 course specification.
+            </p>
+        </section>
+
+        <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="ex3Pred1Tick,ex3Pred2Tick,ex3Pred3Tick,ex3Pred4Tick">
+            <h2>2. Prediction Activity</h2>
+            <div class="question-block">
+                <p>Which loop type is most appropriate for traversing every value in a list?</p>
+                <div class="question-input question-input--stacked">
+                    <label><input type="radio" name="ex3PredLoopType" id="ex3PredLoopFor"> for loop</label>
+                    <label><input type="radio" name="ex3PredLoopType" id="ex3PredLoopWhile"> while loop</label>
+                    <label><input type="radio" name="ex3PredLoopType" id="ex3PredLoopIf"> if statement only</label>
+                    <button onclick="checkRadioButton('ex3PredLoopFor', 'ex3Pred1Tick')">Check</button>
+                    <span id="ex3Pred1Tick" class="tick-mark"></span>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p>What should happen to each score before traversal can begin?</p>
+                <div class="question-input">
+                    <select id="ex3PredStore">
+                        <option value="">Select the best answer...</option>
+                        <option value="append">Store each score in the list</option>
+                        <option value="print">Print each score immediately only</option>
+                        <option value="discard">Discard all scores after input</option>
+                    </select>
+                    <button onclick="checkAnswer('ex3PredStore', 'append', 'ex3Pred2Tick')">Check</button>
+                    <span id="ex3Pred2Tick" class="tick-mark"></span>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p>When writing <code>for value in scores:</code>, what is the loop variable name?</p>
+                <div class="question-input">
+                    <input type="text" id="ex3PredVariable" class="w-140" placeholder="Enter variable name...">
+                    <button onclick="checkAnswer('ex3PredVariable', 'value', 'ex3Pred3Tick')">Check</button>
+                    <span id="ex3Pred3Tick" class="tick-mark"></span>
+                </div>
+            </div>
+
+            <div class="question-block">
+                <p>How many scores should be entered in this example before traversal starts?</p>
+                <div class="question-input">
+                    <input type="text" id="ex3PredCount" class="w-100" placeholder="Enter a number...">
+                    <button onclick="checkAnswer('ex3PredCount', '5', 'ex3Pred4Tick')">Check</button>
+                    <span id="ex3Pred4Tick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="3" data-step-id="step-3" data-requires="fullCode">
+            <h2>3. Step-by-Step Implementation</h2>
+
+            <div id="step1" class="step-box">
+                <p><strong>Step 1:</strong> Set up storage and tracking variables.</p>
+                <pre><code>A: scores = []
+A: pass_count = 0</code></pre>
+                <button onclick="nextStep(1, 2)">Next Step</button>
+            </div>
+
+            <div id="step2" class="step-box hidden">
+                <p><strong>Step 2:</strong> Collect 5 scores and store each value in the list.</p>
+                <pre><code>B: for counter in range(5):
+B:     score = int(input("Score: "))
+B:     scores.append(score)</code></pre>
+                <button onclick="nextStep(2, 3)">Next Step</button>
+            </div>
+
+            <div id="step3" class="step-box hidden">
+                <p><strong>Step 3:</strong> Traverse the list to count passes and track the highest score, then output results.</p>
+                <pre><code>A: highest = scores[0]
+C: for value in scores:
+C:     if value &gt;= 50:
+C:         pass_count = pass_count + 1
+C:     if value &gt; highest:
+C:         highest = value
+D: print("Scores:", ", ".join(str(s) for s in scores))
+D: print("Passes:", pass_count)
+D: print("Highest:", highest)</code></pre>
+                <button onclick="nextStep(3, 'full')">Show Full Code</button>
+            </div>
+
+            <div id="fullCode" class="step-box hidden">
+                <p><strong>Full Solution:</strong> Combine all steps into one complete traversal program.</p>
+                <pre><code>A: scores = []
+A: pass_count = 0
+B: for counter in range(5):
+B:     score = int(input("Score: "))
+B:     scores.append(score)
+A: highest = scores[0]
+C: for value in scores:
+C:     if value &gt;= 50:
+C:         pass_count = pass_count + 1
+C:     if value &gt; highest:
+C:         highest = value
+D: print("Scores:", ", ".join(str(s) for s in scores))
+D: print("Passes:", pass_count)
+D: print("Highest:", highest)</code></pre>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="4" data-step-id="step-4" data-requires="ex3SgATick">
+            <h2>4. Match The Subgoal</h2>
+            <div class="question-block" data-choice-group="ex3sgA">
+                <p>Which subgoal does this line belong to? <span class="inline-code"><strong>scores = []</strong></span></p>
+                <div class="mc-buttons">
+                    <button type="button" onclick="setChoice('ex3sgA', 'A', this)">A</button>
+                    <button type="button" onclick="setChoice('ex3sgA', 'B', this)">B</button>
+                    <button type="button" onclick="setChoice('ex3sgA', 'C', this)">C</button>
+                    <button type="button" onclick="setChoice('ex3sgA', 'D', this)">D</button>
+                    <button type="button" class="check-btn" onclick="checkChoice('ex3sgA', 'A', 'ex3SgATick')">Check</button>
+                    <span id="ex3SgATick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="5" data-step-id="step-5" data-requires="ex3SgBTick">
+            <h2>5. Identify The Code</h2>
+            <div class="question-block" data-line-group="ex3sgB">
+                <p>Click the line that matches Subgoal B (collect and store input values).</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgB', 'scores = []', this)">scores = []</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgB', 'scores.append(score)', this)">scores.append(score)</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgB', 'if value >= 50:', this)">if value &gt;= 50:</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex3sgB', 'scores.append(score)', 'ex3SgBTick')">Check</button>
+                <span id="ex3SgBTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="6" data-step-id="step-6" data-requires="ex3SgCTick">
+            <h2>6. Fill In The Blank</h2>
+            <div class="question-block">
+                <p>Complete Subgoal C update logic: <span class="inline-code"><strong>pass_count = pass_count + ___</strong></span></p>
+                <div class="question-input">
+                    <input type="text" id="ex3SgCInput" class="w-100" placeholder="Enter value...">
+                    <button onclick="checkAnswer('ex3SgCInput', '1', 'ex3SgCTick')">Check</button>
+                    <span id="ex3SgCTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="7" data-step-id="step-7" data-requires="ex3SgDTick">
+            <h2>7. Trace Traversal Output</h2>
+            <div class="question-block">
+                <p>Trace this list: <span class="inline-code"><strong>scores = [42, 67, 51, 30, 88]</strong></span></p>
+                <p>After traversal, what are the final values?</p>
+                <table class="trace-table">
+                    <thead>
+                        <tr>
+                            <th>Result</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Passes (&gt;= 50)</td>
+                            <td><input type="text" id="ex3TracePasses" class="w-80" placeholder="e.g. 3"></td>
+                        </tr>
+                        <tr>
+                            <td>Highest score</td>
+                            <td><input type="text" id="ex3TraceHighest" class="w-80" placeholder="e.g. 88"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="check-btn" onclick="checkTrace(['ex3TracePasses','ex3TraceHighest'], ['3','88'], 'ex3SgDTick')">Check</button>
+                <span id="ex3SgDTick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="8" data-step-id="step-8" data-requires="ex3SgETick">
+            <h2>8. Identify The Condition</h2>
+            <div class="question-block" data-line-group="ex3sgE">
+                <p>Click the condition used to count a pass during traversal.</p>
+                <div class="code-select">
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgE', 'if value >= 50:', this)">if value &gt;= 50:</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgE', 'if value > highest:', this)">if value &gt; highest:</button>
+                    <button type="button" class="code-line" onclick="selectLine('ex3sgE', 'if value < 0:', this)">if value &lt; 0:</button>
+                </div>
+                <button type="button" class="check-btn" onclick="checkLineChoice('ex3sgE', 'if value >= 50:', 'ex3SgETick')">Check</button>
+                <span id="ex3SgETick" class="tick-mark"></span>
+            </div>
+        </section>
+
+        <section class="card step-section" data-step="9" data-step-id="step-9" data-requires="ex3ModifyTick">
+            <h2>9. Modify The Program</h2>
+            <p>Rearrange the code lines to build a correct traversal program.</p>
+            <p>Your corrected version should:</p>
+            <ul>
+                <li>Collect and store 6 scores in a list</li>
+                <li>Traverse the list once to count passes and find the highest score</li>
+                <li>Print the pass count and highest score after traversal</li>
+            </ul>
+            <div id="example3-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="e3m4" class="draggable" draggable="true" ondragstart="drag(event)">for value in scores:</div>
+                <div id="e3m1" class="draggable" draggable="true" ondragstart="drag(event)">scores = []</div>
+                <div id="e3m8" class="draggable" draggable="true" ondragstart="drag(event)">print(&quot;Passes:&quot;, pass_count)</div>
+                <div id="e3m2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(6):</div>
+                <div id="e3m9" class="draggable" draggable="true" ondragstart="drag(event)">print(&quot;Highest:&quot;, highest)</div>
+                <div id="e3m6" class="draggable" draggable="true" ondragstart="drag(event)">pass_count = pass_count + 1</div>
+                <div id="e3m3" class="draggable" draggable="true" ondragstart="drag(event)">scores.append(int(input(&quot;Score: &quot;)))</div>
+                <div id="e3m7" class="draggable" draggable="true" ondragstart="drag(event)">if value &gt; highest: highest = value</div>
+                <div id="e3m5" class="draggable" draggable="true" ondragstart="drag(event)">if value &gt;= 50:</div>
+            </div>
+            <button onclick="verifyParsons('example3-modify-parsons', ['e3m1', 'e3m2', 'e3m3', 'e3m4', 'e3m5', 'e3m6', 'e3m7', 'e3m8', 'e3m9'], 'ex3ModifyTick')">Verify Logic</button>
+            <p id="ex3ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card step-section" data-step="10" data-step-id="step-10" data-requires="makeOutputTick">
+            <h2>10. Make Your Own Program</h2>
+            <p>Write your own array traversal program below, select a test case, then run and verify the output.</p>
+
+            <p><strong>Your Program</strong></p>
+            <textarea class="code-area" id="makeProgram" rows="12" placeholder="Write your program here..."></textarea>
+
+            <div class="question-block">
+                <p><strong>Test Case</strong></p>
+                <div class="question-input">
+                    <select id="makeCase" onchange="updateExpectedOutput()">
+                        <option value="case1">Case 1: 2, 3, 4, 5, 6, 7</option>
+                        <option value="case2">Case 2: 0, 10, 20, 30, 40, 50</option>
+                        <option value="case3">Case 3: 5, 5, 5, 5, 5, 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <p><strong>Expected Output</strong></p>
+            <pre><code id="makeExpected">Scores: 2, 3, 4, 5, 6, 7
+Total: 27
+Average: 4.5</code></pre>
+
+            <p><strong>Your Output</strong></p>
+            <div class="run-row">
+                <button class="check-btn" id="runProgramBtn" onclick="runProgram()" disabled>Run Program</button>
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="runStatus" class="run-status">Python runtime loading...</span>
+            </div>
+            <pre><code id="makeActual">Run your program to see the output here.</code></pre>
+
+            <div class="question-block">
+                <div class="question-input">
+                    <button class="check-btn" onclick="checkActualOutput('makeCase', 'makeActual', 'makeOutputTick')">Check Output</button>
+                    <span id="makeOutputTick" class="tick-mark"></span>
+                </div>
+            </div>
+        </section>
+
+        <div class="stepper-controls">
+            <button class="check-btn nav-btn back-btn" id="stepPrev">Back</button>
+            <button class="check-btn reset-btn" id="stepReset" onclick="resetAssessment()">Restart</button>
+            <button class="check-btn nav-btn" id="stepNext">Next</button>
+        </div>
+    </main>
+
+    <section class="completion-screen" id="completionScreen">
+        <div class="completion-card">
+            <p class="completion-eyebrow">Completed</p>
+            <h2>Example Finished</h2>
+            <p>You have completed this example.</p>
+            <p class="completion-note">Use Restart to try again or return home.</p>
+            <div class="completion-badges" data-completion-badges aria-label="Earned badges"></div>
+            <p class="completion-badge-summary" data-completion-badge-summary></p>
+            <div class="completion-actions">
+                <a class="check-btn nav-btn back-btn" href="/">Back to Home</a>
+                <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

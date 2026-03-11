@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  </head>
+  <body class="page page-inner">
+    <div class="appbar">
+      <div class="appbar-brand-wrap">
+        <span class="appbar-brand-icon" aria-hidden="true">&lt;/&gt;</span>
+        <div class="appbar-brand-stack">
+          <div class="appbar-brand">Crack the Code</div>
+          <div class="appbar-subtitle">National 5 Computing Science</div>
+        </div>
+      </div>
+    </div>
+
+    <main class="content" style="margin-top: 130px; max-width: 560px;">
+      <section class="card teacher-summary-card" aria-label="Sign in">
+        <h1 style="margin: 0;">Sign in</h1>
+        <p class="teacher-summary-intro">Please sign in to access the learning platform.</p>
+        <form method="post" class="teacher-gate__form" style="max-width: none;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next|default:'/' }}" />
+          <label for="username">Username</label>
+          <input id="username" class="teacher-gate__input" type="text" name="username" autocomplete="username" required />
+          <label for="password">Password</label>
+          <input id="password" class="teacher-gate__input" type="password" name="password" autocomplete="current-password" required />
+          {% if error %}
+            <p class="teacher-gate__error tick-mark is-incorrect is-visible" aria-live="polite">{{ error }}</p>
+          {% endif %}
+          <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+            <button type="submit" class="check-btn">Sign in</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

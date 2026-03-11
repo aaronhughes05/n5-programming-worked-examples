@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    {% load static %}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Crack the Code</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
   </head>
   <body class="page page-home">
     <div class="appbar" id="appbar">
@@ -20,10 +21,10 @@
       <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
 
       <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
-        <a class="appbar-nav-pill is-active" href="index.html">Home</a>
+        <a class="appbar-nav-pill is-active" href="/">Home</a>
         <a class="appbar-nav-pill" href="#examples">Examples</a>
-        <a class="appbar-nav-pill" href="pages/worksheets.html">Worksheets</a>
-        <a class="appbar-nav-pill" href="pages/assessment.html">Final Assessment</a>
+        <a class="appbar-nav-pill" href="/worksheets/">Worksheets</a>
+        <a class="appbar-nav-pill" href="/assessment/">Final Assessment</a>
         <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
           Resume
           <span class="appbar-status-dot" aria-hidden="true"></span>
@@ -38,8 +39,8 @@
         solution with a repeatable process: predict, build, check, and reflect.
       </p>
       <div class="hero-actions">
-        <a class="check-btn" href="pages/example1.html">Start with Input Validation</a>
-        <a class="check-btn outline-btn" href="pages/example3.html">Try Array Traversal</a>
+        <a class="check-btn" href="/examples/example1/">Start with Input Validation</a>
+        <a class="check-btn outline-btn" href="/examples/example3/">Try Array Traversal</a>
       </div>
     </header>
 
@@ -47,7 +48,7 @@
       <section class="card dashboard-card" id="dashboard">
         <div class="dashboard-top">
           <h2>Your Learning Dashboard</h2>
-          <a class="check-btn dashboard-continue-btn" id="dashboardContinueCta" href="pages/example1.html">Continue</a>
+          <a class="check-btn dashboard-continue-btn" id="dashboardContinueCta" href="/examples/example1/">Continue</a>
         </div>
         <p class="dashboard-intro">
           Track each activity, jump back in where you stopped, and follow the next recommended step.
@@ -66,7 +67,7 @@
           <div class="dashboard-next">
             <p class="dashboard-next__label">Next recommended step</p>
             <p class="dashboard-next__text" id="dashboardRecommendedText">Start with Example 1 to build your foundation.</p>
-            <a class="check-btn outline-btn dashboard-next__btn" id="dashboardRecommendedBtn" href="pages/example1.html">Open recommendation</a>
+            <a class="check-btn outline-btn dashboard-next__btn" id="dashboardRecommendedBtn" href="/examples/example1/">Open recommendation</a>
           </div>
 
           <div class="dashboard-progress-pane">
@@ -80,7 +81,7 @@
                   <span data-hints-used>Hints used: 0</span>
                   <span data-worked-revealed>Worked hints revealed: 0</span>
                 </p>
-                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/example1.html">Start</a>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="/examples/example1/">Start</a>
               </article>
 
               <article class="dashboard-progress-card" data-activity-key="example2">
@@ -92,7 +93,7 @@
                   <span data-hints-used>Hints used: 0</span>
                   <span data-worked-revealed>Worked hints revealed: 0</span>
                 </p>
-                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/example2.html">Start</a>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="/examples/example2/">Start</a>
               </article>
 
               <article class="dashboard-progress-card" data-activity-key="example3">
@@ -104,7 +105,7 @@
                   <span data-hints-used>Hints used: 0</span>
                   <span data-worked-revealed>Worked hints revealed: 0</span>
                 </p>
-                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/example3.html">Start</a>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="/examples/example3/">Start</a>
               </article>
 
               <article class="dashboard-progress-card" data-activity-key="assessment">
@@ -116,7 +117,7 @@
                   <span data-hints-used>Hints used: 0</span>
                   <span data-worked-revealed>Worked hints revealed: 0</span>
                 </p>
-                <a class="check-btn dashboard-progress-card__action" data-card-action href="pages/assessment.html">Start</a>
+                <a class="check-btn dashboard-progress-card__action" data-card-action href="/assessment/">Start</a>
               </article>
             </div>
           </div>
@@ -205,7 +206,7 @@
             <p class="examples-preview-description" id="examplePreviewDescription">
               Design checks that keep user input safe, sensible, and in range before processing.
             </p>
-            <a class="check-btn examples-start-btn" id="examplePreviewLink" href="pages/example1.html">Start Example 1</a>
+            <a class="check-btn examples-start-btn" id="examplePreviewLink" href="/examples/example1/">Start Example 1</a>
           </div>
         </article>
       </section>
@@ -247,6 +248,7 @@
       </div>
     </footer>
 
-    <script src="js/script.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
   </body>
 </html>

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    {% load static %}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Final Assessment</title>
-    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
   </head>
   <body class="page page-inner">
     <div class="appbar" id="appbar">
@@ -20,10 +21,10 @@
       <button class="appbar-menu-toggle" id="appbarMenuToggle" aria-expanded="false" aria-controls="appbarNavActions" type="button">Menu</button>
 
       <nav class="appbar-nav-actions" id="appbarNavActions" aria-label="Quick links">
-        <a class="appbar-nav-pill" href="../index.html">Home</a>
-        <a class="appbar-nav-pill" href="../index.html#examples">Examples</a>
-        <a class="appbar-nav-pill" href="worksheets.html">Worksheets</a>
-        <a class="appbar-nav-pill is-active" href="assessment.html">Final Assessment</a>
+        <a class="appbar-nav-pill" href="/">Home</a>
+        <a class="appbar-nav-pill" href="/#examples">Examples</a>
+        <a class="appbar-nav-pill" href="/worksheets/">Worksheets</a>
+        <a class="appbar-nav-pill is-active" href="/assessment/">Final Assessment</a>
         <a class="appbar-nav-pill appbar-resume" id="appbarResumeLink" href="#" hidden>
           Resume
           <span class="appbar-status-dot" aria-hidden="true"></span>
@@ -317,13 +318,14 @@ Average: 4.5</code></pre>
         <div class="completion-badges" data-completion-badges aria-label="Earned badges"></div>
         <p class="completion-badge-summary" data-completion-badge-summary></p>
         <div class="completion-actions">
-          <a class="check-btn nav-btn back-btn" href="../index.html">Back to Home</a>
+          <a class="check-btn nav-btn back-btn" href="/">Back to Home</a>
           <button class="check-btn reset-btn restart-btn" type="button" onclick="resetAssessment()">Restart</button>
         </div>
       </div>
     </section>
 
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
   </body>
 </html>

@@ -24,7 +24,21 @@ const STORAGE_NAMESPACE = "assessmentStepperState.v2";
 const getStorageKey = () => `${STORAGE_NAMESPACE}:${window.location.pathname}`;
 const HINT_STORAGE_NAMESPACE = "adaptiveHintState.v1";
 const getHintStorageKey = () => `${HINT_STORAGE_NAMESPACE}:${window.location.pathname}`;
-const ACTIVITY_PAGE_NAME = (window.location.pathname.split("/").pop() || "").toLowerCase();
+const getPathLeaf = (pathname) => {
+    const parts = String(pathname || "")
+        .split("/")
+        .filter(Boolean);
+    return (parts.pop() || "").toLowerCase();
+};
+const ACTIVITY_PAGE_NAME = (() => {
+    const leaf = getPathLeaf(window.location.pathname);
+    if (leaf && leaf.endsWith(".html")) return leaf;
+    if (leaf === "assessment") return "assessment.html";
+    if (/^example[0-9]+$/.test(leaf)) return `${leaf}.html`;
+    if (leaf === "teacher") return "teacher.html";
+    if (leaf === "worksheets") return "worksheets.html";
+    return leaf;
+})();
 
 const readStorage = (key) => {
     try {
@@ -50,184 +64,497 @@ const removeStorage = (key) => {
     }
 };
 
-const TEACHER_MODE_SESSION_KEY = "teacherModeEnabled.v1";
-const TEACHER_MODE_PASSCODE = "n5teacher";
+const hasApiAdapter = () => typeof window !== "undefined" && !!window.N5Api;
+const isApiLoggedIn = () => hasApiAdapter() && typeof window.N5Api.isLoggedIn === "function" && window.N5Api.isLoggedIn();
+const getApiUser = () => (hasApiAdapter() && typeof window.N5Api.getUser === "function" ? window.N5Api.getUser() : null);
+const getApiUserRole = () => {
+    const user = getApiUser();
+    return String(user?.role || "").toLowerCase();
+};
+const LOCAL_IMPORT_MARKER_PREFIX = "dbImportDone.v1:";
+const importedProgressRuntimeKeys = new Set();
+
+const normalizeActivityKeyFromPath = (pathValue) => {
+    const raw = String(pathValue || "").trim().toLowerCase();
+    if (!raw) return "";
+    const fromPath = getPathLeaf(raw) || raw;
+    return fromPath.endsWith(".html") ? fromPath.slice(0, -5) : fromPath;
+};
+
+const getImportMarkerKeysForUser = (user) => {
+    const keys = [];
+    const id = user?.id != null ? String(user.id).trim() : "";
+    const username = String(user?.username || "").trim();
+    const usernameLower = username.toLowerCase();
+
+    if (id) keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}id:${id}`);
+    if (username) keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}user:${username}`);
+    if (usernameLower && usernameLower !== username) {
+        keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}user:${usernameLower}`);
+    }
+    if (!keys.length) keys.push(`${LOCAL_IMPORT_MARKER_PREFIX}unknown`);
+    return Array.from(new Set(keys));
+};
+
+const getPrimaryImportRuntimeKey = (user) => getImportMarkerKeysForUser(user)[0];
+
+const hasImportedLocalProgressForUser = (user) => {
+    try {
+        const keys = getImportMarkerKeysForUser(user);
+        if (keys.some((key) => importedProgressRuntimeKeys.has(key))) return true;
+        return keys.some((key) => localStorage.getItem(key) === "1");
+    } catch {
+        return importedProgressRuntimeKeys.has(getPrimaryImportRuntimeKey(user));
+    }
+};
+
+const markImportedLocalProgressForUser = (user) => {
+    const keys = getImportMarkerKeysForUser(user);
+    keys.forEach((key) => importedProgressRuntimeKeys.add(key));
+    try {
+        keys.forEach((key) => localStorage.setItem(key, "1"));
+    } catch {
+        // Ignore storage failures.
+    }
+};
+
+const collectStoredProgressRecords = () => {
+    const rows = [];
+    try {
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
+            const path = key.slice(STORAGE_PREFIX.length);
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            try {
+                const payload = JSON.parse(raw);
+                rows.push({ path, payload });
+            } catch {
+                // Ignore malformed entries.
+            }
+        }
+    } catch {
+        // Ignore storage read failures.
+    }
+    return rows;
+};
+
+const collectStoredHintRecords = () => {
+    const rows = [];
+    try {
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (!key || !key.startsWith(HINT_STORAGE_PREFIX)) continue;
+            const path = key.slice(HINT_STORAGE_PREFIX.length);
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            try {
+                const payload = JSON.parse(raw);
+                rows.push({ path, payload });
+            } catch {
+                // Ignore malformed entries.
+            }
+        }
+    } catch {
+        // Ignore storage read failures.
+    }
+    return rows;
+};
+
+const importLocalProgressToDb = async () => {
+    if (!isApiLoggedIn()) return { imported: false, reason: "not_logged_in" };
+    const user = getApiUser();
+    if (!user) return { imported: false, reason: "missing_user" };
+    if (hasImportedLocalProgressForUser(user)) return { imported: false, reason: "already_imported" };
+
+    const progressRows = collectStoredProgressRecords();
+    const hintRows = collectStoredHintRecords();
+
+    for (const row of progressRows) {
+        const payload = row?.payload;
+        if (!payload || typeof payload !== "object") continue;
+        const activityKey = normalizeActivityKeyFromPath(payload.path || row.path);
+        if (!activityKey) continue;
+
+        const mergedInputs = payload.inputs && typeof payload.inputs === "object"
+            ? { ...payload.inputs }
+            : {};
+        if (typeof payload.makeProgram === "string" && !("makeProgram" in mergedInputs)) {
+            mergedInputs.makeProgram = payload.makeProgram;
+        }
+        if (typeof payload.makeCase === "string" && !("makeCase" in mergedInputs)) {
+            mergedInputs.makeCase = payload.makeCase;
+        }
+        if (typeof payload.makeActual === "string" && !("makeActual" in mergedInputs)) {
+            mergedInputs.makeActual = payload.makeActual;
+        }
+
+        await window.N5Api.putActivityProgress(activityKey, {
+            stepIndex: Number(payload.index || 0),
+            stepCount: Number(payload.stepCount || 0),
+            isComplete: payload.isComplete === true || payload.completed === true,
+            completedChecks: Array.isArray(payload.completedChecks) ? payload.completedChecks : [],
+            inputs: mergedInputs,
+            showWorkedExample: payload.showWorkedExample === true
+        });
+    }
+
+    for (const row of hintRows) {
+        const payload = row?.payload;
+        if (!payload || typeof payload !== "object") continue;
+        const activityKey = normalizeActivityKeyFromPath(row.path);
+        if (!activityKey) continue;
+        const checkpoints = payload.checkpoints && typeof payload.checkpoints === "object"
+            ? payload.checkpoints
+            : {};
+        const entries = Object.entries(checkpoints);
+        for (const [checkpointId, bucket] of entries) {
+            if (!checkpointId || !bucket || typeof bucket !== "object") continue;
+            await window.N5Api.postHint(activityKey, checkpointId, {
+                attempts: Number(bucket.attempts || 0),
+                shownLevel: Number(bucket.shownLevel || 0),
+                showCount: Number(bucket.showCount || 0),
+                revealCount: Number(bucket.revealCount || 0),
+                revealedWorked: bucket.revealedWorked === true,
+                lastUsedAt: Number(bucket.lastUsedAt || 0)
+            });
+        }
+    }
+
+    markImportedLocalProgressForUser(user);
+    return { imported: true, progressCount: progressRows.length, hintCount: hintRows.length };
+};
+
+const toLocalProgressPayload = (remoteProgress, path) => {
+    const inputs = remoteProgress?.inputs && typeof remoteProgress.inputs === "object"
+        ? remoteProgress.inputs
+        : {};
+    return {
+        path: path || window.location.pathname,
+        stepCount: Number(remoteProgress?.stepCount || 0),
+        index: Number(remoteProgress?.stepIndex || 0),
+        isComplete: remoteProgress?.isComplete === true,
+        updatedAt: Date.now(),
+        completedChecks: Array.isArray(remoteProgress?.completedChecks) ? remoteProgress.completedChecks : [],
+        inputs,
+        makeProgram: typeof inputs.makeProgram === "string" ? inputs.makeProgram : "",
+        makeCase: typeof inputs.makeCase === "string" ? inputs.makeCase : "case1",
+        makeActual: typeof inputs.makeActual === "string" ? inputs.makeActual : "",
+        showWorkedExample: remoteProgress?.showWorkedExample === true
+    };
+};
+
+const syncProgressPayloadToApi = async (payload) => {
+    if (!isApiLoggedIn()) return;
+    try {
+        await window.N5Api.putActivityProgress(payload.path || window.location.pathname, {
+            stepIndex: Number(payload.index || 0),
+            stepCount: Number(payload.stepCount || 0),
+            isComplete: payload.isComplete === true,
+            completedChecks: Array.isArray(payload.completedChecks) ? payload.completedChecks : [],
+            inputs: payload.inputs && typeof payload.inputs === "object" ? payload.inputs : {},
+            showWorkedExample: payload.showWorkedExample === true
+        });
+    } catch {
+        // Keep localStorage as resilient fallback if API sync fails.
+    }
+};
+
+const syncHintCheckpointToApi = async (checkpointId, bucket) => {
+    if (!isApiLoggedIn()) return;
+    if (!checkpointId || !bucket || typeof bucket !== "object") return;
+    try {
+        await window.N5Api.postHint(window.location.pathname, checkpointId, {
+            attempts: Number(bucket.attempts || 0),
+            shownLevel: Number(bucket.shownLevel || 0),
+            showCount: Number(bucket.showCount || 0),
+            revealCount: Number(bucket.revealCount || 0),
+            revealedWorked: bucket.revealedWorked === true,
+            lastUsedAt: Number(bucket.lastUsedAt || 0)
+        });
+    } catch {
+        // Keep local hint state unchanged when API is unavailable.
+    }
+};
+
+const syncCheckpointResultToApi = async (checkpointId, isCorrect) => {
+    if (!isApiLoggedIn()) return;
+    if (!checkpointId) return;
+    try {
+        await window.N5Api.postCheckpoint(window.location.pathname, {
+            checkpointId,
+            isCorrect: !!isCorrect,
+            stepIndex: Number(stepperState?.index || 0),
+            stepCount: Number(stepperState?.sections?.length || 0),
+            isComplete: !!stepperState?.completed
+        });
+    } catch {
+        // Keep local progression even if checkpoint sync fails.
+    }
+};
+
+const hydrateProgressFromApi = async () => {
+    if (!isApiLoggedIn()) return;
+    try {
+        const paths = new Set([window.location.pathname, ...ACTIVITY_DEFINITIONS.map((item) => item.path)]);
+        for (const path of paths) {
+            const remoteProgress = await window.N5Api.getActivityProgress(path);
+            if (!remoteProgress) continue;
+            writeStorage(`${STORAGE_NAMESPACE}:${path}`, JSON.stringify(toLocalProgressPayload(remoteProgress, path)));
+        }
+    } catch {
+        // Fall back to existing local data without interruption.
+    }
+};
 
 const isTruthyFlag = (value) => /^(1|true|yes|on)$/i.test(String(value || "").trim());
 
-const readTeacherModeSession = () => {
-    try {
-        return sessionStorage.getItem(TEACHER_MODE_SESSION_KEY) === "true";
-    } catch {
-        return false;
-    }
-};
+const getHomeHref = () => "/";
 
-const writeTeacherModeSession = (enabled) => {
-    try {
-        if (enabled) {
-            sessionStorage.setItem(TEACHER_MODE_SESSION_KEY, "true");
+const getTeacherHref = () => "/teacher/";
+
+const enforceRoleAccess = () => {
+    if (!hasApiAdapter()) return;
+    const isTeacher = isApiLoggedIn() && getApiUserRole() === "teacher";
+    const isTeacherPage = document.body.classList.contains("page-teacher");
+
+    document.querySelectorAll("[data-teacher-only]").forEach((el) => {
+        if (isTeacher) {
+            el.removeAttribute("hidden");
+            el.removeAttribute("aria-hidden");
         } else {
-            sessionStorage.removeItem(TEACHER_MODE_SESSION_KEY);
-        }
-    } catch {
-        // Ignore session storage errors.
-    }
-};
-
-const isTeacherMode = () => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("teacher")) {
-        return isTruthyFlag(params.get("teacher"));
-    }
-    return readTeacherModeSession();
-};
-
-const isInPagesDirectory = () => /\/pages\//.test(window.location.pathname);
-
-const getHomeHref = () => (isInPagesDirectory() ? "../index.html" : "index.html");
-
-const getTeacherHref = () => (isInPagesDirectory() ? "teacher.html" : "pages/teacher.html");
-
-const getTeacherDeniedHomeHref = () => {
-    const target = new URL(getHomeHref(), window.location.href);
-    target.searchParams.set("teacherDenied", "1");
-    return target.toString();
-};
-
-const applyTeacherModeClasses = (enabled) => {
-    const body = document.body;
-    if (!body) return;
-    body.classList.toggle("is-teacher-mode", !!enabled);
-    body.classList.toggle("is-student-mode", !enabled);
-};
-
-const initTeacherMode = () => {
-    const body = document.body;
-    if (!body) return false;
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("teacher")) {
-        writeTeacherModeSession(isTruthyFlag(params.get("teacher")));
-    }
-
-    const enabled = isTeacherMode();
-    applyTeacherModeClasses(enabled);
-    return true;
-};
-
-const initTeacherNavEntry = () => {
-    const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
-    if (!navs.length) return;
-
-    navs.forEach((nav) => {
-        if (nav.querySelector('a[href*="teacher.html"]')) return;
-
-        const link = document.createElement("a");
-        link.className = "appbar-nav-pill";
-        link.dataset.teacherNav = "true";
-        link.href = getTeacherHref();
-        link.textContent = "Teacher Mode";
-        if (document.body.classList.contains("page-teacher")) {
-            link.classList.add("is-active");
-            link.setAttribute("aria-current", "page");
-        }
-
-        const resumeLink = nav.querySelector(".appbar-resume");
-        if (resumeLink) {
-            nav.insertBefore(link, resumeLink);
-        } else {
-            nav.appendChild(link);
+            el.setAttribute("hidden", "true");
+            el.setAttribute("aria-hidden", "true");
         }
     });
+
+    document.querySelectorAll("[data-student-only]").forEach((el) => {
+        if (isTeacherPage) {
+            if (isTeacher) {
+                el.setAttribute("hidden", "true");
+                el.setAttribute("aria-hidden", "true");
+            } else {
+                el.removeAttribute("hidden");
+                el.removeAttribute("aria-hidden");
+            }
+            return;
+        }
+        // Teachers should retain student-side access on non-teacher pages.
+        el.removeAttribute("hidden");
+        el.removeAttribute("aria-hidden");
+    });
+
+    if (!isTeacherPage || isTeacher) return;
+
+    const lockedCard = document.querySelector("[data-student-only] p");
+    if (lockedCard) {
+        lockedCard.textContent = isApiLoggedIn()
+            ? "Teacher-only area. Your account does not have teacher access."
+            : "Please sign in with a teacher account to access this page.";
+    }
 };
 
-const initTeacherAccessNotice = () => {
-    const params = new URLSearchParams(window.location.search);
-    if (!isTruthyFlag(params.get("teacherDenied"))) return;
+const initAuthUX = () => {
+    if (!hasApiAdapter()) return;
 
-    const main = document.querySelector("main.content");
-    if (!main) return;
+    const user = getApiUser();
+    const isAuthenticated = isApiLoggedIn();
+    const role = getApiUserRole();
+    document.body.classList.toggle("is-authenticated", isAuthenticated);
+    document.body.classList.toggle("is-role-teacher", isAuthenticated && role === "teacher");
+    document.body.classList.toggle("is-role-student", isAuthenticated && role === "student");
 
-    const notice = document.createElement("section");
-    notice.className = "card teacher-access-notice";
-    notice.innerHTML = `
-      <h2>Teacher Mode Locked</h2>
-      <p>Access denied. Enter the teacher passcode on the Teacher Mode page to continue.</p>
-    `;
-    main.prepend(notice);
+    let modal = document.getElementById("authLoginModal");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "authLoginModal";
+        modal.className = "assessment-gate";
+        modal.setAttribute("aria-hidden", "true");
+        modal.innerHTML = `
+          <div class="assessment-gate__backdrop" data-auth-close="true"></div>
+          <div class="assessment-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="authLoginTitle">
+            <button type="button" class="assessment-gate__close" aria-label="Close login" data-auth-close="true">&times;</button>
+            <h3 id="authLoginTitle">Sign in</h3>
+            <p id="authLoginBody">Use your account credentials to load your saved progress.</p>
+            <form id="authLoginForm" class="teacher-gate__form">
+              <label for="authUsernameInput" class="teacher-gate__label">Username</label>
+              <input id="authUsernameInput" class="teacher-gate__input" type="text" name="username" autocomplete="username" required />
+              <label for="authPasswordInput" class="teacher-gate__label">Password</label>
+              <input id="authPasswordInput" class="teacher-gate__input" type="password" name="password" autocomplete="current-password" required />
+              <p id="authLoginError" class="teacher-gate__error" aria-live="polite"></p>
+              <div class="assessment-gate__actions">
+                <button type="submit" class="check-btn">Login</button>
+              </div>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+    }
 
-    params.delete("teacherDenied");
-    const nextQuery = params.toString();
-    const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
-    window.history.replaceState(null, "", cleanUrl);
-};
-
-const initTeacherPasscodeGate = () => {
-    const modal = document.getElementById("teacherGate");
-    const closeTriggers = modal
-        ? Array.from(modal.querySelectorAll("[data-close-teacher-gate='true']"))
-        : [];
-    const form = document.getElementById("teacherGateForm");
-    const input = document.getElementById("teacherPasscodeInput");
-    const error = document.getElementById("teacherGateError");
-    if (!modal || !form || !input || !error) return;
-
-    const closeGate = () => {
+    const closeModal = () => {
         modal.classList.remove("is-open");
         modal.setAttribute("aria-hidden", "true");
         document.body.classList.remove("is-modal-open");
     };
-
-    const openGate = () => {
+    const openModal = () => {
         modal.classList.add("is-open");
         modal.setAttribute("aria-hidden", "false");
         document.body.classList.add("is-modal-open");
-        error.textContent = "";
-        error.classList.remove("is-visible");
-        input.value = "";
-        setTimeout(() => input.focus(), 0);
+        const usernameInput = document.getElementById("authUsernameInput");
+        const errorEl = document.getElementById("authLoginError");
+        if (errorEl) {
+            errorEl.textContent = "";
+            errorEl.classList.remove("is-visible");
+        }
+        if (usernameInput) window.setTimeout(() => usernameInput.focus(), 0);
     };
 
-    if (!readTeacherModeSession()) {
-        openGate();
-    } else {
-        applyTeacherModeClasses(true);
+    modal.querySelectorAll("[data-auth-close='true']").forEach((el) => {
+        el.onclick = closeModal;
+    });
+
+    const loginForm = document.getElementById("authLoginForm");
+    if (loginForm && !loginForm.dataset.bound) {
+        loginForm.dataset.bound = "true";
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const usernameInput = document.getElementById("authUsernameInput");
+            const passwordInput = document.getElementById("authPasswordInput");
+            const errorEl = document.getElementById("authLoginError");
+            const username = (usernameInput?.value || "").trim();
+            const password = passwordInput?.value || "";
+            if (!username || !password) return;
+
+            try {
+                await window.N5Api.login(username, password);
+                closeModal();
+                window.location.reload();
+            } catch (err) {
+                if (errorEl) {
+                    errorEl.textContent = err?.message || "Login failed.";
+                    errorEl.classList.add("is-visible");
+                }
+            }
+        });
     }
 
-    form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const attempt = (input.value || "").trim();
-        if (attempt === TEACHER_MODE_PASSCODE) {
-            writeTeacherModeSession(true);
-            applyTeacherModeClasses(true);
-            error.textContent = "";
-            error.classList.remove("is-visible");
-            closeGate();
-            return;
+    const navs = Array.from(document.querySelectorAll(".appbar-nav-actions"));
+    navs.forEach((nav) => {
+        nav.querySelectorAll("[data-auth-state], [data-auth-action], [data-auth-import]").forEach((el) => el.remove());
+        nav.querySelectorAll('[data-teacher-nav="true"], a[href*="teacher.html"], a[href="/teacher/"]').forEach((el) => el.remove());
+
+        let avatarWrap = nav.querySelector("[data-avatar-wrap]");
+        if (!avatarWrap) {
+            avatarWrap = document.createElement("div");
+            avatarWrap.className = "appbar-avatar-wrap";
+            avatarWrap.dataset.avatarWrap = "true";
+            avatarWrap.innerHTML = `
+              <button type="button" class="appbar-avatar-btn" data-avatar-toggle="true" aria-expanded="false" aria-label="Open account menu">
+                <span class="appbar-avatar-initial" data-avatar-initial="true">G</span>
+              </button>
+              <div class="appbar-avatar-panel" data-avatar-menu="true" hidden>
+                <p class="appbar-avatar-meta" data-avatar-meta="true"></p>
+                <div class="appbar-avatar-actions" data-avatar-actions="true"></div>
+              </div>
+            `;
+            nav.appendChild(avatarWrap);
         }
-        writeTeacherModeSession(false);
-        applyTeacherModeClasses(false);
-        error.textContent = "Incorrect passcode. Try again.";
-        error.classList.add("is-visible");
-        input.select();
-    });
 
-    closeTriggers.forEach((trigger) => {
-        trigger.addEventListener("click", () => {
-            writeTeacherModeSession(false);
-            applyTeacherModeClasses(false);
-            window.location.replace(getTeacherDeniedHomeHref());
-        });
-    });
+        const toggleBtn = avatarWrap.querySelector("[data-avatar-toggle='true']");
+        const initialEl = avatarWrap.querySelector("[data-avatar-initial='true']");
+        const metaEl = avatarWrap.querySelector("[data-avatar-meta='true']");
+        const menuEl = avatarWrap.querySelector("[data-avatar-menu='true']");
+        const actionsEl = avatarWrap.querySelector("[data-avatar-actions='true']");
+        if (!toggleBtn || !initialEl || !metaEl || !menuEl || !actionsEl) return;
 
-    document.querySelectorAll("[data-teacher-lock]").forEach((btn) => {
-        btn.addEventListener("click", (event) => {
-            event.preventDefault();
-            writeTeacherModeSession(false);
-            applyTeacherModeClasses(false);
-            window.location.replace(getTeacherDeniedHomeHref());
-        });
+        const closeMenu = () => {
+            avatarWrap.classList.remove("is-open");
+            toggleBtn.setAttribute("aria-expanded", "false");
+            menuEl.hidden = true;
+        };
+
+        const openMenu = () => {
+            document.querySelectorAll(".appbar-avatar-wrap.is-open").forEach((wrap) => {
+                if (wrap === avatarWrap) return;
+                wrap.classList.remove("is-open");
+                const openToggle = wrap.querySelector("[data-avatar-toggle='true']");
+                const openMenuEl = wrap.querySelector("[data-avatar-menu='true']");
+                if (openToggle) openToggle.setAttribute("aria-expanded", "false");
+                if (openMenuEl) openMenuEl.hidden = true;
+            });
+            avatarWrap.classList.add("is-open");
+            toggleBtn.setAttribute("aria-expanded", "true");
+            menuEl.hidden = false;
+        };
+
+        if (!avatarWrap.dataset.bound) {
+            avatarWrap.dataset.bound = "true";
+            toggleBtn.addEventListener("click", () => {
+                if (avatarWrap.classList.contains("is-open")) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            });
+
+            document.addEventListener("click", (event) => {
+                if (!avatarWrap.contains(event.target)) closeMenu();
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") closeMenu();
+            });
+        }
+
+        actionsEl.innerHTML = "";
+        const userInitial = isAuthenticated && user?.username
+            ? user.username.trim().charAt(0).toUpperCase()
+            : "G";
+        initialEl.textContent = userInitial || "G";
+        initialEl.classList.toggle("is-teacher", isAuthenticated && role === "teacher");
+        metaEl.textContent = isAuthenticated && user
+            ? `${user.username} (${role || "student"})`
+            : "Guest account";
+
+        if (isAuthenticated && user) {
+            const alreadyImported = hasImportedLocalProgressForUser(user);
+            if (role === "teacher") {
+                const teacherLink = document.createElement("a");
+                teacherLink.className = "appbar-nav-pill";
+                teacherLink.href = getTeacherHref();
+                teacherLink.textContent = "Teacher Mode";
+                if (document.body.classList.contains("page-teacher")) {
+                    teacherLink.classList.add("is-active");
+                    teacherLink.setAttribute("aria-current", "page");
+                }
+                actionsEl.appendChild(teacherLink);
+            }
+
+            const signOutBtn = document.createElement("button");
+            signOutBtn.type = "button";
+            signOutBtn.className = "appbar-nav-pill";
+            signOutBtn.textContent = "Sign out";
+            signOutBtn.onclick = async () => {
+                try {
+                    await window.N5Api.logout();
+                } catch {
+                    // Force local unauth state regardless of transport issues.
+                }
+                window.location.href = getHomeHref();
+            };
+            actionsEl.appendChild(signOutBtn);
+        } else {
+            const loginBtn = document.createElement("button");
+            loginBtn.type = "button";
+            loginBtn.className = "appbar-nav-pill";
+            loginBtn.textContent = "Sign in";
+            loginBtn.onclick = () => {
+                closeMenu();
+                openModal();
+            };
+            actionsEl.appendChild(loginBtn);
+        }
     });
 };
 
@@ -343,6 +670,12 @@ const HINT_MODEL = {
             l3: "Choose the for counter in range(...) line.",
             worked: "The matching line is for counter in range(5):"
         },
+        sgE2Tick: {
+            l1: "A running total carries the previous value forward each row.",
+            l2: "Start from 0, then add each price in sequence.",
+            l3: "Use cumulative totals, not per-row resets.",
+            worked: "Running totals are 2, then 5, then 9."
+        },
         tick2Pred: {
             l1: "Decide whether repetition count is fixed or unknown.",
             l2: "The task always processes exactly 5 values.",
@@ -374,7 +707,87 @@ const HINT_MODEL = {
             worked: "Match expected output exactly after running your program."
         }
     },
+    "example3.html": {
+        fullCode: {
+            l1: "Trace the full pipeline: initialize -> collect values -> traverse once -> print summary.",
+            l2: "Keep list collection complete before traversal begins.",
+            l3: "During traversal, update pass_count and highest using each score value.",
+            worked: "Correct flow: create list/trackers, input loop with append, traversal loop with pass/highest updates, then final outputs."
+        },
+        ex3Pred1Tick: {
+            l1: "Traversal means visiting each stored value in order.",
+            l2: "Use the loop type designed to iterate through list items directly.",
+            l3: "The best fit is the loop that reads as: for value in scores.",
+            worked: "Use a for loop for list traversal."
+        },
+        ex3Pred2Tick: {
+            l1: "Traversal needs values to already exist in the list.",
+            l2: "Each new score must be added as it is entered.",
+            l3: "Pick the option that keeps every input for later processing.",
+            worked: "Store each score in the list using append before traversal."
+        },
+        ex3Pred3Tick: {
+            l1: "In `for value in scores`, the variable after `for` holds each item.",
+            l2: "The loop variable name is the identifier used inside traversal logic.",
+            l3: "Use the same word that appears between `for` and `in`.",
+            worked: "The loop variable is value."
+        },
+        ex3Pred4Tick: {
+            l1: "Check the problem description and collection loop count.",
+            l2: "The traversal starts only after all required scores are entered.",
+            l3: "Use the same fixed count from range(5).",
+            worked: "Enter 5 scores before traversal starts."
+        },
+        ex3SgATick: {
+            l1: "Subgoal A is setup/initialization.",
+            l2: "Look for the line that prepares storage before input starts.",
+            l3: "Creating the list is part of setup.",
+            worked: "scores = [] maps to Subgoal A."
+        },
+        ex3SgBTick: {
+            l1: "Subgoal B is collecting and storing input values.",
+            l2: "Pick the line that writes the latest input into the list.",
+            l3: "Appending scores is the storage action for this stage.",
+            worked: "scores.append(score) is the Subgoal B line."
+        },
+        ex3SgCTick: {
+            l1: "pass_count increases by one for each passing score.",
+            l2: "The blank should be the increment value, not a variable name.",
+            l3: "Use the standard counting update amount.",
+            worked: "Fill the blank with 1."
+        },
+        ex3SgDTick: {
+            l1: "A pass is any score that is 50 or more.",
+            l2: "Count qualifying values, then identify the maximum score in the list.",
+            l3: "Use the given list values to compute final pass count and highest.",
+            worked: "For [42, 67, 51, 30, 88], passes = 3 and highest = 88."
+        },
+        ex3SgETick: {
+            l1: "Pass-count logic uses a threshold check, not a maximum check.",
+            l2: "The pass condition compares each value with 50 or higher.",
+            l3: "Do not confuse pass logic with highest-tracking logic.",
+            worked: "Use if value >= 50: to count passes."
+        },
+        ex3ModifyTick: {
+            l1: "Start by grouping stages: setup/input -> traversal checks -> output.",
+            l2: "Keep the score input loop before traversal, then evaluate each stored value once.",
+            l3: "Place both output lines after traversal is complete.",
+            worked: "Use order: setup list, collect 6 values, traverse for pass/highest logic, then print results."
+        },
+        makeOutputTick: {
+            l1: "Compare your output exactly against the expected output block.",
+            l2: "Check line order, labels, commas, and spacing closely.",
+            l3: "Confirm total and average use all test-case values correctly.",
+            worked: "Match expected output exactly after running your program."
+        }
+    },
     "assessment.html": {
+        fullCode: {
+            l1: "Follow the full implementation in order: setup, fixed loop, validation, storage/update, traversal, output.",
+            l2: "Keep validation inside the input loop and output stages after data collection/traversal.",
+            l3: "Check each line against subgoal purpose before confirming.",
+            worked: "Correct sequence: initialize total/list, collect 5 valid prices, store/update total, traverse items, then print total."
+        },
         tick1: { l1: "Look at the required item count.", l2: "The loop count matches the number of prices collected.", l3: "Use the exact numeric count.", worked: "The loop repeats 5 times." },
         tick2: { l1: "Which loop keeps checking until input is valid?", l2: "Validation usually repeats while a bad condition is true.", l3: "Negative-price checking uses while.", worked: "Use while for repeated validation." },
         tick3: { l1: "Find the variable that accumulates values.", l2: "It starts at zero and is updated each loop.", l3: "Look for total = total + ...", worked: "The running total variable is total." },
@@ -502,6 +915,12 @@ const FEEDBACK_MAP = {
             misconception: "You may be selecting setup or output code instead of the loop header.",
             next: "Choose the line that controls repeated execution."
         },
+        sgE2Tick: {
+            correct: "Correct trace values.",
+            incorrect: "Trace values are off.",
+            misconception: "A common issue is resetting total each row instead of adding each new value to the previous total.",
+            next: "Build totals cumulatively: 0 + 2 = 2, then +3 = 5, then +4 = 9."
+        },
         tick2Pred: {
             correct: "Correct. A for loop is the strongest fit for a known number of repeats.",
             incorrect: "That choice does not match this fixed-count problem.",
@@ -534,7 +953,88 @@ const FEEDBACK_MAP = {
             next: "Compare your output line-by-line with expected output and rerun."
         }
     },
+    "example3.html": {
+        fullCode: {
+            correct: "Correct. You completed the full array traversal implementation sequence.",
+            incorrect: "Try again.",
+            misconception: "A common mix-up is blending collection and traversal stages into one unordered flow.",
+            next: "Follow the ordered pipeline: setup -> collect/store -> traverse/process -> output."
+        },
+        ex3Pred1Tick: {
+            correct: "Correct. A for loop is the best fit for traversing all list values.",
+            incorrect: "Not quite right.",
+            misconception: "A while loop can work, but here traversal is cleaner and clearer with a for loop over the list.",
+            next: "Choose the loop structure that directly visits each item in scores."
+        },
+        ex3Pred2Tick: {
+            correct: "Correct. Scores should be stored in the list before traversal starts.",
+            incorrect: "That would break later processing.",
+            misconception: "If values are only printed or discarded, traversal logic has no stored data to process.",
+            next: "Select the option that keeps each input value in the list."
+        },
+        ex3Pred3Tick: {
+            correct: "Correct. value is the loop variable in `for value in scores:`.",
+            incorrect: "Not correct yet.",
+            misconception: "You may be entering the list name or another variable instead of the traversal item variable.",
+            next: "Use the variable written directly after `for` in the loop header."
+        },
+        ex3Pred4Tick: {
+            correct: "Correct. The program collects 5 scores before traversal.",
+            incorrect: "That count is not aligned with this example.",
+            misconception: "A common error is mixing this step with the modify task count, which uses 6 for extension practice.",
+            next: "Use the fixed collection count shown in the main implementation step."
+        },
+        ex3SgATick: {
+            correct: "Correct subgoal mapping.",
+            incorrect: "That mapping is off.",
+            misconception: "You may be mapping by position instead of by purpose.",
+            next: "Subgoal A is setup, so match lines that initialize variables or storage."
+        },
+        ex3SgBTick: {
+            correct: "Correct line selection for Subgoal B.",
+            incorrect: "Wrong line selected.",
+            misconception: "The chosen line may test or initialize data rather than store new input.",
+            next: "Pick the line that appends each entered score into the list."
+        },
+        ex3SgCTick: {
+            correct: "Correct fill-in value.",
+            incorrect: "That value is not right yet.",
+            misconception: "pass_count is a counter, so it must increase by one per qualifying score.",
+            next: "Use the standard increment value in counting logic."
+        },
+        ex3SgDTick: {
+            correct: "Correct trace values.",
+            incorrect: "Trace values are off.",
+            misconception: "You may be missing one passing score or not updating highest after each comparison.",
+            next: "Recheck each score against >= 50 and track the maximum step-by-step."
+        },
+        ex3SgETick: {
+            correct: "Correct condition identification.",
+            incorrect: "That condition is not used for pass counting.",
+            misconception: "A common mix-up is selecting the highest-comparison condition instead of the pass-threshold condition.",
+            next: "Choose the condition that classifies a score as a pass (50 or above)."
+        },
+        ex3ModifyTick: {
+            correct: "Correct. The modified array traversal logic is now in the right order.",
+            incorrect: "Try again.",
+            misconception: "A common issue is mixing input collection lines into the traversal stage or printing before traversal is complete.",
+            next: "Rebuild as setup -> input loop/store -> traversal checks -> final output.",
+            alwaysShowMisconception: true
+        },
+        makeOutputTick: {
+            correct: "Output matches expected values and formatting.",
+            incorrect: "Output does not match expected yet.",
+            misconception: "Likely formatting mismatch, incorrect calculations, or missing output lines.",
+            next: "Compare your output line-by-line with expected output and rerun."
+        }
+    },
     "assessment.html": {
+        fullCode: {
+            correct: "Correct. You completed the full implementation sequence for the assessment program.",
+            incorrect: "Try again.",
+            misconception: "A common issue is placing validation or output in the wrong stage of the pipeline.",
+            next: "Rebuild in order: setup -> input loop -> validate -> store/update -> traverse/output."
+        },
         tick1: { correct: "Correct. The loop count matches the number of required inputs.", incorrect: "Not correct yet.", misconception: "You may be counting outputs instead of input iterations.", next: "Use the problem statement to confirm how many prices are entered." },
         tick2: { correct: "Correct. while is appropriate for repeated validation.", incorrect: "That loop choice is not best here.", misconception: "You may be choosing for when the number of retries is unknown.", next: "Pick the loop that repeats until input is valid." },
         tick3: { correct: "Correct. You identified the accumulator variable.", incorrect: "Not quite.", misconception: "You may be naming the list variable instead of the running total variable.", next: "Find the variable initialized to 0 and updated each iteration." },
@@ -713,6 +1213,7 @@ const updateHintCheckpointResult = (checkpointId, correct) => {
     }
     bucket.lastUsedAt = Date.now();
     saveHintState();
+    syncHintCheckpointToApi(checkpointId, bucket);
     syncAdaptiveHintsUI();
 };
 
@@ -762,6 +1263,7 @@ const initAdaptiveHints = () => {
             bucket.showCount += 1;
             bucket.lastUsedAt = Date.now();
             saveHintState();
+            syncHintCheckpointToApi(checkpointId, bucket);
             syncAdaptiveHintsUI();
         });
 
@@ -775,6 +1277,7 @@ const initAdaptiveHints = () => {
             bucket.revealCount += 1;
             bucket.lastUsedAt = Date.now();
             saveHintState();
+            syncHintCheckpointToApi(checkpointId, bucket);
             syncAdaptiveHintsUI();
         });
 
@@ -820,6 +1323,7 @@ const saveStepperState = () => {
     };
 
     writeStorage(getStorageKey(), JSON.stringify(payload));
+    syncProgressPayloadToApi(payload);
 };
 
 const loadStepperState = () => {
@@ -911,6 +1415,7 @@ const setTickState = (tick, correct, checkpointId = null) => {
     tick.textContent = correct ? "Correct" : "Try again";
     updateHintCheckpointResult(effectiveCheckpointId, correct);
     renderRichFeedback(tick, effectiveCheckpointId, correct, correct ? "Correct." : "Try again.");
+    syncCheckpointResultToApi(effectiveCheckpointId, correct);
     updateStepperState();
     saveStepperState();
 };
@@ -949,6 +1454,7 @@ const setFeedbackState = (el, correct, message, checkpointId = null) => {
     el.style.fontSize = "0.86rem";
     el.style.fontWeight = "600";
     el.style.lineHeight = "1.35";
+    syncCheckpointResultToApi(effectiveCheckpointId, correct);
     updateStepperState();
     saveStepperState();
 };
@@ -1330,12 +1836,13 @@ const initStepper = () => {
 
 const restartStepper = () => {
     showStepSection(0, { save: false });
+    saveStepperState();
     const main = document.querySelector("main.content");
     if (main) main.scrollIntoView({ behavior: "smooth" });
-    removeStorage(getStorageKey());
 };
 
 const resetAssessment = () => {
+    const previousHintCheckpointIds = Object.keys(hintState?.checkpoints || {});
     removeStorage(getStorageKey());
     stepperState.showWorkedExample = false;
     const workedExample = document.getElementById("workedExample");
@@ -1388,6 +1895,21 @@ const resetAssessment = () => {
     showStepSection(0, { save: false });
     removeStorage(getHintStorageKey());
     hintState = { checkpoints: {} };
+    saveHintState();
+    if (previousHintCheckpointIds.length) {
+        const resetStamp = Date.now();
+        previousHintCheckpointIds.forEach((checkpointId) => {
+            syncHintCheckpointToApi(checkpointId, {
+                attempts: 0,
+                shownLevel: 0,
+                showCount: 0,
+                revealCount: 0,
+                revealedWorked: false,
+                lastUsedAt: resetStamp
+            });
+        });
+    }
+    saveStepperState();
     syncAdaptiveHintsUI();
     renderCompletionBadges(buildActivitySummaries());
 };
@@ -1423,11 +1945,12 @@ const enableRunButton = () => {
 };
 
 const ACTIVITY_DEFINITIONS = [
-    { key: "example1", label: "Example 1", title: "Input Validation", path: "/docs/pages/example1.html" },
-    { key: "example2", label: "Example 2", title: "Running Total", path: "/docs/pages/example2.html" },
-    { key: "example3", label: "Example 3", title: "Array Traversal", path: "/docs/pages/example3.html" },
-    { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/docs/pages/assessment.html" }
+    { key: "example1", label: "Example 1", title: "Input Validation", path: "/examples/example1/" },
+    { key: "example2", label: "Example 2", title: "Running Total", path: "/examples/example2/" },
+    { key: "example3", label: "Example 3", title: "Array Traversal", path: "/examples/example3/" },
+    { key: "assessment", label: "Assessment", title: "Final Assessment", path: "/assessment/" }
 ];
+const ACTIVITY_META_BY_KEY = new Map(ACTIVITY_DEFINITIONS.map((item) => [item.key, item]));
 
 const CHECKPOINT_LABELS = {
     example1: {
@@ -1451,14 +1974,29 @@ const CHECKPOINT_LABELS = {
         sgB2Tick: "Code identification: input line",
         sgC2Tick: "Fill blank: running total update",
         sgD2Tick: "Code identification: repetition line",
+        sgE2Tick: "Trace running total values",
         tick2Pred: "Prediction Q2: Loop type",
         tick3Pred: "Prediction Q3: Running total variable",
         tick4Pred: "Prediction Q4: Initial total value",
         tick2: "Modify program: reorder 10-item flow",
         makeOutputTick: "Output verification"
     },
-    example3: {},
+    example3: {
+        fullCode: "Implementation: full solution sequence",
+        ex3Pred1Tick: "Prediction Q1: Traversal loop type",
+        ex3Pred2Tick: "Prediction Q2: Store-before-traverse step",
+        ex3Pred3Tick: "Prediction Q3: Loop variable name",
+        ex3Pred4Tick: "Prediction Q4: Input count before traversal",
+        ex3SgATick: "Subgoal mapping: list setup line",
+        ex3SgBTick: "Code identification: store input line",
+        ex3SgCTick: "Fill blank: pass counter increment",
+        ex3SgDTick: "Trace traversal: passes and highest",
+        ex3SgETick: "Code identification: pass condition",
+        ex3ModifyTick: "Modify program: traversal ordering",
+        makeOutputTick: "Output verification"
+    },
     assessment: {
+        fullCode: "Implementation: full solution sequence",
         tick1: "Prediction Q1: Loop count",
         tick2: "Prediction Q2: Validation loop",
         tick3: "Prediction Q3: Running total variable",
@@ -1478,9 +2016,14 @@ const HINT_STORAGE_PREFIX = `${HINT_STORAGE_NAMESPACE}:`;
 
 const getActivityPathSuffixes = (activityPath) => {
     const lower = String(activityPath || "").toLowerCase();
-    const fileName = lower.split("/").pop() || "";
+    const fileName = getPathLeaf(lower);
     const suffixes = new Set();
     if (fileName) suffixes.add(`/${fileName}`);
+    if (fileName && !fileName.endsWith(".html")) {
+        suffixes.add(`/pages/${fileName}.html`);
+        suffixes.add(`/docs/pages/${fileName}.html`);
+        suffixes.add(`/${fileName}.html`);
+    }
     if (lower.startsWith("/docs/")) {
         suffixes.add(lower.slice("/docs".length));
     }
@@ -1489,17 +2032,7 @@ const getActivityPathSuffixes = (activityPath) => {
 };
 
 const resolveActivityHref = (activityPath) => {
-    const inPagesDir = /\/pages\//.test(window.location.pathname);
-    const marker = "/docs/";
-    const markerIndex = activityPath.lastIndexOf(marker);
-    let relative = "pages/example1.html";
-    if (markerIndex !== -1) {
-        relative = activityPath.slice(markerIndex + marker.length);
-    }
-    if (inPagesDir && relative.startsWith("pages/")) {
-        return `../${relative}`;
-    }
-    return relative;
+    return activityPath;
 };
 
 const getCheckpointLabel = (activityKey, checkpointId) => {
@@ -1573,8 +2106,8 @@ const seedDemoProgress = () => {
         writeStorage(`${HINT_STORAGE_PREFIX}${path}`, JSON.stringify(payload));
     };
 
-    saveStep("/docs/pages/example1.html", {
-        path: "/docs/pages/example1.html",
+    saveStep("/examples/example1/", {
+        path: "/examples/example1/",
         stepCount: 10,
         index: 9,
         isComplete: true,
@@ -1597,7 +2130,7 @@ const seedDemoProgress = () => {
         },
         showWorkedExample: true
     });
-    saveHint("/docs/pages/example1.html", {
+    saveHint("/examples/example1/", {
         checkpoints: {
             tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 25 * minute },
             tick2: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 24 * minute },
@@ -1607,10 +2140,10 @@ const seedDemoProgress = () => {
         }
     });
 
-    saveStep("/docs/pages/example2.html", {
-        path: "/docs/pages/example2.html",
-        stepCount: 9,
-        index: 5,
+    saveStep("/examples/example2/", {
+        path: "/examples/example2/",
+        stepCount: 10,
+        index: 6,
         isComplete: false,
         updatedAt: now - 12 * minute,
         completedChecks: ["tick1", "tick2Pred", "tick3Pred", "tick4Pred", "fullCode", "sgA2Tick"],
@@ -1623,7 +2156,7 @@ const seedDemoProgress = () => {
         },
         showWorkedExample: false
     });
-    saveHint("/docs/pages/example2.html", {
+    saveHint("/examples/example2/", {
         checkpoints: {
             tick1: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 11 * minute },
             sgB2Tick: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 10 * minute },
@@ -1631,20 +2164,30 @@ const seedDemoProgress = () => {
         }
     });
 
-    saveStep("/docs/pages/example3.html", {
-        path: "/docs/pages/example3.html",
-        stepCount: 6,
-        index: 0,
+    saveStep("/examples/example3/", {
+        path: "/examples/example3/",
+        stepCount: 10,
+        index: 6,
         isComplete: false,
         updatedAt: now - 6 * minute,
-        completedChecks: [],
-        inputs: {},
+        completedChecks: ["ex3Pred1Tick", "ex3Pred2Tick", "ex3Pred3Tick", "ex3Pred4Tick", "fullCode", "ex3SgATick"],
+        inputs: {
+            ex3PredStore: "append",
+            ex3PredVariable: "value",
+            ex3PredCount: "5",
+            ex3SgCInput: "1"
+        },
         showWorkedExample: false
     });
-    saveHint("/docs/pages/example3.html", { checkpoints: {} });
+    saveHint("/examples/example3/", {
+        checkpoints: {
+            ex3SgBTick: { attempts: 2, shownLevel: 2, showCount: 2, revealCount: 0, revealedWorked: false, lastUsedAt: now - 5 * minute },
+            ex3SgDTick: { attempts: 3, shownLevel: 2, showCount: 2, revealCount: 1, revealedWorked: true, lastUsedAt: now - 4 * minute }
+        }
+    });
 
-    saveStep("/docs/pages/assessment.html", {
-        path: "/docs/pages/assessment.html",
+    saveStep("/assessment/", {
+        path: "/assessment/",
         stepCount: 10,
         index: 5,
         isComplete: false,
@@ -1658,7 +2201,7 @@ const seedDemoProgress = () => {
         },
         showWorkedExample: false
     });
-    saveHint("/docs/pages/assessment.html", {
+    saveHint("/assessment/", {
         checkpoints: {
             tick1: { attempts: 1, shownLevel: 1, showCount: 1, revealCount: 0, revealedWorked: false, lastUsedAt: now - 4 * minute },
             sgC1Tick: { attempts: 5, shownLevel: 3, showCount: 3, revealCount: 1, revealedWorked: true, lastUsedAt: now - 2 * minute },
@@ -2037,7 +2580,7 @@ const initLearningDashboard = () => {
         };
     } else {
         recommendation = {
-            href: assessment ? assessment.href : "pages/assessment.html",
+            href: assessment ? assessment.href : "/assessment/",
             text: "Everything is complete. You can review any activity whenever needed.",
             button: "Review Assessment"
         };
@@ -2050,9 +2593,641 @@ const initLearningDashboard = () => {
     }
 };
 
-const initTeacherSummaryPanel = () => {
+const initTeacherSummaryPanel = async () => {
     const root = document.getElementById("teacherSummaryPanel");
     if (!root) return;
+
+    const completeEl = document.getElementById("teacherCountComplete");
+    const inProgressEl = document.getElementById("teacherCountInProgress");
+    const notStartedEl = document.getElementById("teacherCountNotStarted");
+    const hintsUsedEl = document.getElementById("teacherHintsUsed");
+    const workedHintsEl = document.getElementById("teacherWorkedHints");
+    const listEl = document.getElementById("teacherSummaryList");
+    const attemptListEl = document.getElementById("teacherAttemptList");
+    const mostMissedEl = document.getElementById("teacherMostMissedList");
+    const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
+    const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
+    const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
+    const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
+    const createClassForm = document.getElementById("teacherCreateClassForm");
+    const classNameInput = document.getElementById("teacherClassNameInput");
+    const createClassFeedback = document.getElementById("teacherCreateClassFeedback");
+    const addStudentForm = document.getElementById("teacherAddStudentForm");
+    const classSelect = document.getElementById("teacherClassSelect");
+    const knownStudentSelect = document.getElementById("teacherKnownStudentSelect");
+    const studentUsernameInput = document.getElementById("teacherStudentUsernameInput");
+    const studentEmailInput = document.getElementById("teacherStudentEmailInput");
+    const studentPasswordInput = document.getElementById("teacherStudentPasswordInput");
+    const addStudentFeedback = document.getElementById("teacherAddStudentFeedback");
+    const classRosterList = document.getElementById("teacherClassRosterList");
+    const resetModal = document.getElementById("teacherResetModal");
+    const resetConfirmBtn = document.getElementById("teacherResetConfirmBtn");
+    const resetCloseTriggers = resetModal
+        ? Array.from(resetModal.querySelectorAll("[data-close-reset-modal='true']"))
+        : [];
+    const deleteClassModal = document.getElementById("teacherDeleteClassModal");
+    const deleteClassConfirmBtn = document.getElementById("teacherDeleteClassConfirmBtn");
+    const deleteClassCloseTriggers = deleteClassModal
+        ? Array.from(deleteClassModal.querySelectorAll("[data-close-delete-modal='true']"))
+        : [];
+    const studentModal = document.getElementById("teacherStudentModal");
+    const studentModalBody = document.getElementById("teacherStudentBody");
+    const studentModalContent = document.getElementById("teacherStudentAnalyticsContent");
+    const studentModalCloseTriggers = studentModal
+        ? Array.from(studentModal.querySelectorAll("[data-close-student-modal='true']"))
+        : [];
+    const seedModal = document.getElementById("teacherSeedModal");
+    const seedConfirmBtn = document.getElementById("teacherSeedConfirmBtn");
+    const seedCloseTriggers = seedModal
+        ? Array.from(seedModal.querySelectorAll("[data-close-seed-modal='true']"))
+        : [];
+    let pendingDeleteClassId = "";
+    let pendingDeleteTrigger = null;
+
+    const shouldUseTeacherApi = hasApiAdapter() && isApiLoggedIn() && getApiUserRole() === "teacher";
+    const closeSeedModal = () => {
+        if (!seedModal) return;
+        seedModal.classList.remove("is-open");
+        seedModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+    };
+    const openSeedModal = () => {
+        if (!seedModal) return;
+        seedModal.classList.add("is-open");
+        seedModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+        if (seedConfirmBtn) window.setTimeout(() => seedConfirmBtn.focus(), 0);
+    };
+
+    seedCloseTriggers.forEach((el) => {
+        el.onclick = closeSeedModal;
+    });
+
+    if (seedDemoBtn) {
+        seedDemoBtn.onclick = () => {
+            openSeedModal();
+        };
+    }
+
+    if (seedConfirmBtn) {
+        seedConfirmBtn.onclick = async () => {
+            seedConfirmBtn.disabled = true;
+            const originalLabel = seedConfirmBtn.textContent;
+            seedConfirmBtn.textContent = "Seeding...";
+            try {
+                if (shouldUseTeacherApi && hasApiAdapter() && typeof window.N5Api.seedTeacherDemo === "function") {
+                    await window.N5Api.seedTeacherDemo(true);
+                } else {
+                    seedDemoProgress();
+                }
+                closeSeedModal();
+                await initTeacherSummaryPanel();
+                initLearningDashboard();
+            } catch {
+                seedConfirmBtn.textContent = "Seed failed";
+                window.setTimeout(() => {
+                    seedConfirmBtn.textContent = originalLabel;
+                }, 1200);
+            } finally {
+                seedConfirmBtn.disabled = false;
+                if (seedConfirmBtn.textContent !== originalLabel) {
+                    seedConfirmBtn.textContent = originalLabel;
+                }
+            }
+        };
+    }
+
+    if (shouldUseTeacherApi) {
+        // In DB teacher mode, local-only reset remains hidden.
+        if (seedDemoBtn) {
+            seedDemoBtn.hidden = false;
+            seedDemoBtn.disabled = false;
+        }
+        if (resetProgressBtn) {
+            resetProgressBtn.hidden = true;
+            resetProgressBtn.disabled = true;
+        }
+
+        try {
+            const [classSummary, attemptAnalytics] = await Promise.all([
+                window.N5Api.getTeacherClassSummary(),
+                window.N5Api.getTeacherAttemptAnalytics()
+            ]);
+            const introEl = root.querySelector(".teacher-summary-intro");
+            if (introEl) {
+                introEl.textContent = "Snapshot from database-backed class progress data.";
+            }
+
+            const overall = classSummary?.overall || {};
+            if (completeEl) completeEl.textContent = String(Number(overall.activitiesCompleted || 0));
+            if (inProgressEl) inProgressEl.textContent = String(Number(overall.activitiesInProgress || 0));
+            if (notStartedEl) notStartedEl.textContent = String(Number(overall.activitiesNotStarted || 0));
+            if (hintsUsedEl) hintsUsedEl.textContent = String(Number(overall.hintsUsed || 0));
+            if (workedHintsEl) workedHintsEl.textContent = String(Number(overall.workedHintsRevealed || 0));
+
+            if (listEl) {
+                listEl.innerHTML = "";
+                const classes = Array.isArray(classSummary?.classes) ? classSummary.classes : [];
+                classes.forEach((classRow) => {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    const activityCards = (classRow.activityCounts || [])
+                        .map((activity) => {
+                            const normalizedKey = String(activity.activityKey || "").toLowerCase();
+                            const friendly = ACTIVITY_META_BY_KEY.get(normalizedKey)?.label
+                                || normalizedKey
+                                || "Activity";
+                            return `
+                              <article class="teacher-class-breakdown__item">
+                                <p class="teacher-class-breakdown__title">${friendly}</p>
+                                <div class="teacher-class-breakdown__stats" role="list" aria-label="${friendly} progress counts">
+                                  <span class="teacher-class-breakdown__stat teacher-class-breakdown__stat--complete" role="listitem">${activity.completed} complete</span>
+                                  <span class="teacher-class-breakdown__stat teacher-class-breakdown__stat--progress" role="listitem">${activity.inProgress} in progress</span>
+                                  <span class="teacher-class-breakdown__stat teacher-class-breakdown__stat--not-started" role="listitem">${activity.notStarted} not started</span>
+                                </div>
+                              </article>
+                            `;
+                        })
+                        .join("");
+                    const studentCount = Number(classRow.studentCount || 0);
+                    const studentLabel = studentCount === 1 ? "student" : "students";
+                    li.innerHTML = `
+                      <p class="teacher-summary-list__title">${classRow.classroomName} (${studentCount} ${studentLabel})</p>
+                      <div class="teacher-class-breakdown">${activityCards || '<p class="teacher-summary-list__meta">No activity data yet.</p>'}</div>
+                    `;
+                    listEl.appendChild(li);
+                });
+                if (!classes.length) {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    li.innerHTML = `<p class="teacher-summary-list__meta">No classes found for this teacher account yet.</p>`;
+                    listEl.appendChild(li);
+                }
+            }
+
+            const checkpointRows = Array.isArray(attemptAnalytics?.checkpointAnalytics)
+                ? attemptAnalytics.checkpointAnalytics
+                : [];
+            const byActivity = new Map();
+            checkpointRows.forEach((row) => {
+                const key = String(row.activityKey || "").toLowerCase();
+                const existing = byActivity.get(key) || {
+                    activityKey: key,
+                    attempts: 0,
+                    checkpointsTried: 0,
+                    missSignals: 0,
+                    toughest: null
+                };
+                existing.attempts += Number(row.attempts || 0);
+                existing.checkpointsTried += 1;
+                existing.missSignals += Number(row.missSignals || 0);
+                if (!existing.toughest || Number(row.missSignals || 0) > Number(existing.toughest.missSignals || 0)) {
+                    existing.toughest = row;
+                }
+                byActivity.set(key, existing);
+            });
+
+            if (attemptListEl) {
+                attemptListEl.innerHTML = "";
+                Array.from(byActivity.values()).forEach((row) => {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    const meta = ACTIVITY_META_BY_KEY.get(row.activityKey);
+                    const label = meta?.label || row.activityKey || "Activity";
+                    const title = meta?.title || "";
+                    const signal = row.missSignals >= 10
+                        ? "High difficulty signal"
+                        : row.missSignals >= 4
+                            ? "Moderate difficulty signal"
+                            : row.missSignals > 0
+                                ? "Low difficulty signal"
+                                : "No difficulty signal yet";
+                    const toughestText = row.toughest
+                        ? `${getCheckpointLabel(row.activityKey, row.toughest.checkpointId)} (${row.toughest.missSignals} miss signals)`
+                        : "None yet";
+                    li.innerHTML = `
+                      <p class="teacher-summary-list__title">${label}${title ? `: ${title}` : ""}</p>
+                      <p class="teacher-summary-list__meta">Attempts: ${row.attempts} across ${row.checkpointsTried} checkpoints</p>
+                      <p class="teacher-summary-list__meta">${signal}</p>
+                      <p class="teacher-summary-list__meta">Most missed in this activity: ${toughestText}</p>
+                    `;
+                    attemptListEl.appendChild(li);
+                });
+                if (!byActivity.size) {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    li.innerHTML = `<p class="teacher-summary-list__meta">No checkpoint attempt data yet.</p>`;
+                    attemptListEl.appendChild(li);
+                }
+            }
+
+            if (mostMissedEl) {
+                mostMissedEl.innerHTML = "";
+                const topMissed = Array.isArray(attemptAnalytics?.mostMissed)
+                    ? attemptAnalytics.mostMissed
+                        .filter((item) => Number(item?.missSignals || 0) > 0)
+                        .slice(0, 5)
+                    : [];
+                if (!topMissed.length) {
+                    const li = document.createElement("li");
+                    li.className = "teacher-summary-list__item";
+                    li.innerHTML = `<p class="teacher-summary-list__meta">No missed checkpoint data yet.</p>`;
+                    mostMissedEl.appendChild(li);
+                } else {
+                    topMissed.forEach((item) => {
+                        const li = document.createElement("li");
+                        li.className = "teacher-summary-list__item";
+                        const meta = ACTIVITY_META_BY_KEY.get(String(item.activityKey || "").toLowerCase());
+                        li.innerHTML = `
+                          <p class="teacher-summary-list__title">${meta?.label || item.activityKey}: ${getCheckpointLabel(item.activityKey, item.checkpointId)}</p>
+                          <p class="teacher-summary-list__meta">${item.missSignals} miss signals (${item.attempts} attempts)</p>
+                        `;
+                        mostMissedEl.appendChild(li);
+                    });
+                }
+            }
+
+            if (exportJsonBtn) {
+                exportJsonBtn.onclick = () => {
+                    window.location.href = "/api/teacher/export.json";
+                };
+            }
+            if (exportCsvBtn) {
+                exportCsvBtn.onclick = () => {
+                    window.location.href = "/api/teacher/export.csv";
+                };
+            }
+            const setRosterFeedback = (el, message, isError = false) => {
+                if (!el) return;
+                el.textContent = message || "";
+                el.classList.toggle("is-visible", !!message);
+                el.classList.toggle("tick-mark", !!message);
+                el.classList.toggle("is-incorrect", !!message && isError);
+                el.classList.toggle("is-correct", !!message && !isError);
+            };
+
+            const closeStudentModal = () => {
+                if (!studentModal) return;
+                studentModal.classList.remove("is-open");
+                studentModal.setAttribute("aria-hidden", "true");
+                document.body.classList.remove("is-modal-open");
+            };
+
+            const openStudentModal = () => {
+                if (!studentModal) return;
+                studentModal.classList.add("is-open");
+                studentModal.setAttribute("aria-hidden", "false");
+                document.body.classList.add("is-modal-open");
+            };
+
+            const renderStudentAnalytics = (payload) => {
+                if (!studentModalBody || !studentModalContent) return;
+                const student = payload?.student || {};
+                const summary = payload?.summary || {};
+                const activities = Array.isArray(payload?.activities) ? payload.activities : [];
+                const mostMissed = Array.isArray(payload?.mostMissed) ? payload.mostMissed.slice(0, 6) : [];
+
+                studentModalBody.textContent = `Progress snapshot for ${student.username || "student"}${student.email ? ` (${student.email})` : ""}.`;
+                studentModalContent.innerHTML = "";
+
+                const summaryBlock = document.createElement("article");
+                summaryBlock.className = "teacher-student-analytics__block";
+                summaryBlock.innerHTML = `
+                  <p class="teacher-student-analytics__title">Summary</p>
+                  <p class="teacher-student-analytics__meta">Activities started: ${Number(summary.activitiesStarted || 0)} • Completed: ${Number(summary.activitiesCompleted || 0)}</p>
+                  <p class="teacher-student-analytics__meta">Hints used: ${Number(summary.hintsUsed || 0)} • Worked hints revealed: ${Number(summary.workedHintsRevealed || 0)} • Attempts: ${Number(summary.attempts || 0)}</p>
+                `;
+                studentModalContent.appendChild(summaryBlock);
+
+                const activityBlock = document.createElement("article");
+                activityBlock.className = "teacher-student-analytics__block";
+                const activityLines = activities.map((row) => {
+                    const key = String(row.activityKey || "").toLowerCase();
+                    const label = ACTIVITY_META_BY_KEY.get(key)?.label || key || "Activity";
+                    return `<p class="teacher-student-analytics__meta">${label}: ${row.status || "Not Started"}</p>`;
+                }).join("");
+                activityBlock.innerHTML = `
+                  <p class="teacher-student-analytics__title">Activity status</p>
+                  ${activityLines || '<p class="teacher-student-analytics__meta">No activity records yet.</p>'}
+                `;
+                studentModalContent.appendChild(activityBlock);
+
+                const missedBlock = document.createElement("article");
+                missedBlock.className = "teacher-student-analytics__block";
+                const missedLines = mostMissed.map((row) => {
+                    const key = String(row.activityKey || "").toLowerCase();
+                    const label = ACTIVITY_META_BY_KEY.get(key)?.label || key || "Activity";
+                    return `<p class="teacher-student-analytics__meta">${label} • ${getCheckpointLabel(key, row.checkpointId)}: ${Number(row.missSignals || 0)} miss signals</p>`;
+                }).join("");
+                missedBlock.innerHTML = `
+                  <p class="teacher-student-analytics__title">Most missed checkpoints</p>
+                  ${missedLines || '<p class="teacher-student-analytics__meta">No checkpoint misses recorded.</p>'}
+                `;
+                studentModalContent.appendChild(missedBlock);
+            };
+
+            const loadAndShowStudentAnalytics = async (studentId) => {
+                if (!studentModalBody || !studentModalContent) return;
+                studentModalBody.textContent = "Loading student activity analytics...";
+                studentModalContent.innerHTML = "";
+                openStudentModal();
+                try {
+                    const payload = await window.N5Api.getTeacherStudentAnalytics(studentId);
+                    renderStudentAnalytics(payload);
+                } catch (err) {
+                    studentModalBody.textContent = err?.message || "Unable to load student analytics.";
+                }
+            };
+
+            const renderClasses = (classes) => {
+                const rows = Array.isArray(classes) ? classes : [];
+                if (classSelect) {
+                    const current = classSelect.value;
+                    classSelect.innerHTML = '<option value="">Select class</option>';
+                    rows.forEach((item) => {
+                        const option = document.createElement("option");
+                        option.value = String(item.id);
+                        option.textContent = `${item.name} (${item.studentCount} students)`;
+                        classSelect.appendChild(option);
+                    });
+                    if (current && rows.some((item) => String(item.id) === current)) {
+                        classSelect.value = current;
+                    }
+                }
+
+                if (classRosterList) {
+                    classRosterList.innerHTML = "";
+                    if (!rows.length) {
+                        const li = document.createElement("li");
+                        li.className = "teacher-summary-list__item";
+                        li.innerHTML = `<p class="teacher-summary-list__meta">No classes yet. Create your first class above.</p>`;
+                        classRosterList.appendChild(li);
+                    } else {
+                        rows.forEach((item) => {
+                            const li = document.createElement("li");
+                            li.className = "teacher-summary-list__item";
+                            const students = Array.isArray(item.students) ? item.students : [];
+                            const studentsHtml = students.length
+                                ? students.map((s) => (
+                                    `<span class="teacher-roster-chip teacher-roster-chip--clickable" data-view-student data-student-id="${s.id}" role="button" tabindex="0" title="View student analytics">
+                                      <span class="teacher-roster-chip__name">${s.username}</span>
+                                      <button type="button" class="teacher-roster-remove-btn" data-remove-student data-class-id="${item.id}" data-student-id="${s.id}" aria-label="Remove student from class" title="Remove student"></button>
+                                    </span>`
+                                )).join(" ")
+                                : "No students enrolled yet.";
+                            li.innerHTML = `
+                              <p class="teacher-summary-list__title">${item.name} (${item.studentCount} students)</p>
+                              <p class="teacher-summary-list__meta">${studentsHtml}</p>
+                              <div class="teacher-summary-actions teacher-summary-actions--in-summary">
+                                <button type="button" class="teacher-delete-class-btn" data-delete-class data-class-id="${item.id}" aria-label="Delete class" title="Delete class">
+                                  <span class="teacher-delete-class-btn__icon" aria-hidden="true"></span>
+                                  <span>Delete class</span>
+                                </button>
+                              </div>
+                            `;
+                            classRosterList.appendChild(li);
+                        });
+                    }
+                }
+            };
+
+            const loadClasses = async () => {
+                const payload = await window.N5Api.getTeacherClasses();
+                const knownStudents = Array.isArray(payload?.teacherStudents) ? payload.teacherStudents : [];
+                if (knownStudentSelect) {
+                    const current = knownStudentSelect.value;
+                    knownStudentSelect.innerHTML = '<option value="">Choose existing student (optional)</option>';
+                    knownStudents.forEach((student) => {
+                        const option = document.createElement("option");
+                        option.value = String(student.username || "");
+                        option.textContent = student.email
+                            ? `${student.username} (${student.email})`
+                            : String(student.username || "");
+                        option.dataset.email = String(student.email || "");
+                        knownStudentSelect.appendChild(option);
+                    });
+                    if (current && knownStudents.some((student) => String(student.username || "") === current)) {
+                        knownStudentSelect.value = current;
+                    }
+                }
+                renderClasses(payload?.classes || []);
+            };
+
+            if (createClassForm && !createClassForm.dataset.bound) {
+                createClassForm.dataset.bound = "true";
+                createClassForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const className = (classNameInput?.value || "").trim();
+                    if (!className) return;
+                    try {
+                        await window.N5Api.createTeacherClass(className);
+                        if (classNameInput) classNameInput.value = "";
+                        setRosterFeedback(createClassFeedback, "Class created.", false);
+                        await loadClasses();
+                        await initTeacherSummaryPanel();
+                    } catch (err) {
+                        setRosterFeedback(createClassFeedback, err?.message || "Unable to create class.", true);
+                    }
+                });
+            }
+
+            if (addStudentForm && !addStudentForm.dataset.bound) {
+                addStudentForm.dataset.bound = "true";
+                addStudentForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const classroomId = (classSelect?.value || "").trim();
+                    const username = (studentUsernameInput?.value || "").trim();
+                    const email = (studentEmailInput?.value || "").trim();
+                    const password = (studentPasswordInput?.value || "").trim();
+                    if (!classroomId || !username) return;
+                    try {
+                        await window.N5Api.addTeacherStudent(classroomId, { username, email, password });
+                        if (studentUsernameInput) studentUsernameInput.value = "";
+                        if (studentEmailInput) studentEmailInput.value = "";
+                        if (studentPasswordInput) studentPasswordInput.value = "";
+                        setRosterFeedback(addStudentFeedback, "Student added to class.", false);
+                        await loadClasses();
+                        await initTeacherSummaryPanel();
+                    } catch (err) {
+                        setRosterFeedback(addStudentFeedback, err?.message || "Unable to add student.", true);
+                    }
+                });
+            }
+
+            if (knownStudentSelect && knownStudentSelect.dataset.bound !== "true") {
+                knownStudentSelect.dataset.bound = "true";
+                knownStudentSelect.addEventListener("change", () => {
+                    const selectedUsername = String(knownStudentSelect.value || "").trim();
+                    const selectedOption = knownStudentSelect.options[knownStudentSelect.selectedIndex];
+                    const selectedEmail = String(selectedOption?.dataset?.email || "").trim();
+                    if (selectedUsername && studentUsernameInput) {
+                        studentUsernameInput.value = selectedUsername;
+                    }
+                    if (selectedEmail && studentEmailInput) {
+                        studentEmailInput.value = selectedEmail;
+                    }
+                });
+            }
+
+            if (classRosterList && !classRosterList.dataset.bound) {
+                classRosterList.dataset.bound = "true";
+                classRosterList.addEventListener("click", async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    if (!target) return;
+
+                    const removeBtn = target.closest("[data-remove-student]");
+                    if (removeBtn) {
+                        const classId = String(removeBtn.getAttribute("data-class-id") || "").trim();
+                        const studentId = String(removeBtn.getAttribute("data-student-id") || "").trim();
+                        if (!classId || !studentId) return;
+                        removeBtn.setAttribute("disabled", "true");
+                        try {
+                            await window.N5Api.removeTeacherStudent(classId, studentId);
+                            setRosterFeedback(addStudentFeedback, "Student removed from class.", false);
+                            await loadClasses();
+                            await initTeacherSummaryPanel();
+                        } catch (err) {
+                            setRosterFeedback(addStudentFeedback, err?.message || "Unable to remove student.", true);
+                        } finally {
+                            removeBtn.removeAttribute("disabled");
+                        }
+                        return;
+                    }
+
+                    const viewStudentBtn = target.closest("[data-view-student]");
+                    if (viewStudentBtn) {
+                        const studentId = String(viewStudentBtn.getAttribute("data-student-id") || "").trim();
+                        if (!studentId) return;
+                        await loadAndShowStudentAnalytics(studentId);
+                        return;
+                    }
+
+                    const deleteBtn = target.closest("[data-delete-class]");
+                    if (deleteBtn) {
+                        const classId = String(deleteBtn.getAttribute("data-class-id") || "").trim();
+                        if (!classId) return;
+                        if (!deleteClassModal || !deleteClassConfirmBtn) {
+                            deleteBtn.setAttribute("disabled", "true");
+                            try {
+                                await window.N5Api.deleteTeacherClass(classId);
+                                setRosterFeedback(createClassFeedback, "Class deleted.", false);
+                                await loadClasses();
+                                await initTeacherSummaryPanel();
+                            } catch (err) {
+                                setRosterFeedback(createClassFeedback, err?.message || "Unable to delete class.", true);
+                            } finally {
+                                deleteBtn.removeAttribute("disabled");
+                            }
+                            return;
+                        }
+                        pendingDeleteClassId = classId;
+                        pendingDeleteTrigger = deleteBtn;
+                        deleteClassModal.classList.add("is-open");
+                        deleteClassModal.setAttribute("aria-hidden", "false");
+                        document.body.classList.add("is-modal-open");
+                        window.setTimeout(() => deleteClassConfirmBtn.focus(), 0);
+                    }
+                });
+
+                classRosterList.addEventListener("keydown", async (event) => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    if (!target) return;
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    const viewStudentBtn = target.closest("[data-view-student]");
+                    if (!viewStudentBtn) return;
+                    event.preventDefault();
+                    const studentId = String(viewStudentBtn.getAttribute("data-student-id") || "").trim();
+                    if (!studentId) return;
+                    await loadAndShowStudentAnalytics(studentId);
+                });
+            }
+
+            const closeDeleteClassModal = () => {
+                if (!deleteClassModal) return;
+                deleteClassModal.classList.remove("is-open");
+                deleteClassModal.setAttribute("aria-hidden", "true");
+                document.body.classList.remove("is-modal-open");
+                pendingDeleteClassId = "";
+                pendingDeleteTrigger = null;
+            };
+
+            deleteClassCloseTriggers.forEach((el) => {
+                if (el.dataset.bound === "true") return;
+                el.dataset.bound = "true";
+                el.onclick = closeDeleteClassModal;
+            });
+
+            studentModalCloseTriggers.forEach((el) => {
+                if (el.dataset.bound === "true") return;
+                el.dataset.bound = "true";
+                el.onclick = closeStudentModal;
+            });
+
+            if (deleteClassConfirmBtn && deleteClassConfirmBtn.dataset.bound !== "true") {
+                deleteClassConfirmBtn.dataset.bound = "true";
+                deleteClassConfirmBtn.onclick = async () => {
+                    const classId = String(pendingDeleteClassId || "").trim();
+                    if (!classId) {
+                        closeDeleteClassModal();
+                        return;
+                    }
+                    if (pendingDeleteTrigger) pendingDeleteTrigger.setAttribute("disabled", "true");
+                    deleteClassConfirmBtn.setAttribute("disabled", "true");
+                    try {
+                        await window.N5Api.deleteTeacherClass(classId);
+                        setRosterFeedback(createClassFeedback, "Class deleted.", false);
+                        closeDeleteClassModal();
+                        await loadClasses();
+                        await initTeacherSummaryPanel();
+                    } catch (err) {
+                        setRosterFeedback(createClassFeedback, err?.message || "Unable to delete class.", true);
+                    } finally {
+                        deleteClassConfirmBtn.removeAttribute("disabled");
+                        if (pendingDeleteTrigger) pendingDeleteTrigger.removeAttribute("disabled");
+                    }
+                };
+            }
+
+            await loadClasses();
+            return;
+        } catch {
+            // Keep DB-mode controls; only data fetch failed.
+            const introEl = root.querySelector(".teacher-summary-intro");
+            if (introEl) {
+                introEl.textContent = "Unable to load teacher analytics from the server right now.";
+            }
+            if (listEl && !listEl.childElementCount) {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `<p class="teacher-summary-list__meta">Analytics endpoint unavailable. Try refreshing.</p>`;
+                listEl.appendChild(li);
+            }
+            if (attemptListEl && !attemptListEl.childElementCount) {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `<p class="teacher-summary-list__meta">Attempt analytics endpoint unavailable.</p>`;
+                attemptListEl.appendChild(li);
+            }
+            if (mostMissedEl && !mostMissedEl.childElementCount) {
+                const li = document.createElement("li");
+                li.className = "teacher-summary-list__item";
+                li.innerHTML = `<p class="teacher-summary-list__meta">Most-missed checkpoint endpoint unavailable.</p>`;
+                mostMissedEl.appendChild(li);
+            }
+            return;
+        }
+    }
+
+    if (seedDemoBtn) {
+        seedDemoBtn.hidden = false;
+        seedDemoBtn.disabled = false;
+        seedDemoBtn.title = "Reset and seed local demo progress data.";
+    }
+    if (resetProgressBtn) {
+        resetProgressBtn.hidden = false;
+        resetProgressBtn.disabled = false;
+        resetProgressBtn.title = "";
+    }
 
     const summaries = buildActivitySummaries();
     const completeCount = summaries.filter((item) => item.isComplete).length;
@@ -2067,23 +3242,31 @@ const initTeacherSummaryPanel = () => {
         0
     );
 
-    const completeEl = document.getElementById("teacherCountComplete");
-    const inProgressEl = document.getElementById("teacherCountInProgress");
-    const notStartedEl = document.getElementById("teacherCountNotStarted");
-    const hintsUsedEl = document.getElementById("teacherHintsUsed");
-    const workedHintsEl = document.getElementById("teacherWorkedHints");
-    const listEl = document.getElementById("teacherSummaryList");
-    const attemptListEl = document.getElementById("teacherAttemptList");
-    const mostMissedEl = document.getElementById("teacherMostMissedList");
-    const exportCsvBtn = document.getElementById("teacherExportCsvBtn");
-    const exportJsonBtn = document.getElementById("teacherExportJsonBtn");
-    const resetProgressBtn = document.getElementById("teacherResetProgressBtn");
-    const seedDemoBtn = document.getElementById("teacherSeedDemoBtn");
-    const resetModal = document.getElementById("teacherResetModal");
-    const resetConfirmBtn = document.getElementById("teacherResetConfirmBtn");
-    const resetCloseTriggers = resetModal
-        ? Array.from(resetModal.querySelectorAll("[data-close-reset-modal='true']"))
-        : [];
+    if (createClassForm) {
+        createClassForm.querySelectorAll("input, button, select").forEach((el) => {
+            el.disabled = true;
+        });
+    }
+    if (addStudentForm) {
+        addStudentForm.querySelectorAll("input, button, select").forEach((el) => {
+            el.disabled = true;
+        });
+    }
+    if (createClassFeedback) {
+        createClassFeedback.textContent = "Sign in with a teacher account to manage classes in database mode.";
+        createClassFeedback.classList.add("is-visible", "tick-mark", "is-incorrect");
+    }
+    if (addStudentFeedback) {
+        addStudentFeedback.textContent = "Class and student management is disabled in local-only fallback mode.";
+        addStudentFeedback.classList.add("is-visible", "tick-mark", "is-incorrect");
+    }
+    if (classRosterList) {
+        classRosterList.innerHTML = "";
+        const li = document.createElement("li");
+        li.className = "teacher-summary-list__item";
+        li.innerHTML = `<p class="teacher-summary-list__meta">Class roster tools are available when backend teacher auth is active.</p>`;
+        classRosterList.appendChild(li);
+    }
 
     if (completeEl) completeEl.textContent = String(completeCount);
     if (inProgressEl) inProgressEl.textContent = String(inProgressCount);
@@ -2180,6 +3363,7 @@ const initTeacherSummaryPanel = () => {
     if (mostMissedEl) {
         mostMissedEl.innerHTML = "";
         const topMissed = Array.from(missedAgg.values())
+            .filter((item) => Number(item?.attempts || 0) > 0)
             .sort((a, b) => b.attempts - a.attempts)
             .slice(0, 5);
 
@@ -2314,12 +3498,6 @@ const initTeacherSummaryPanel = () => {
         };
     });
 
-    if (seedDemoBtn) {
-        seedDemoBtn.onclick = () => {
-            seedDemoProgress();
-            initTeacherSummaryPanel();
-        };
-    }
 };
 
 const initBackToTopFab = () => {
@@ -2479,7 +3657,7 @@ const initExamplesShowcase = () => {
             kicker: "Example 1",
             title: "Input Validation",
             description: "Design checks that keep user input safe, sensible, and in range before processing.",
-            href: "pages/example1.html",
+            href: "/examples/example1/",
             cta: "Start Example 1",
             image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=960&q=80",
             alt: "Student coding at a laptop"
@@ -2488,7 +3666,7 @@ const initExamplesShowcase = () => {
             kicker: "Example 2",
             title: "Running Total",
             description: "Use loops and accumulators to build totals step by step while handling multiple inputs.",
-            href: "pages/example2.html",
+            href: "/examples/example2/",
             cta: "Start Example 2",
             image: "https://images.unsplash.com/photo-1551033406-611cf9a28f67?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Numbers and calculator representing totals"
@@ -2497,7 +3675,7 @@ const initExamplesShowcase = () => {
             kicker: "Example 3",
             title: "Array Traversal",
             description: "Work through list data item by item and apply the same logic cleanly across each value.",
-            href: "pages/example3.html",
+            href: "/examples/example3/",
             cta: "Start Example 3",
             image: "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2978&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Data dashboard representing arrays and values"
@@ -2506,7 +3684,7 @@ const initExamplesShowcase = () => {
             kicker: "Final Assessment",
             title: "Combining Concepts",
             description: "Bring validation, totals, and traversal together in one mixed challenge to check understanding.",
-            href: "pages/assessment.html",
+            href: "/assessment/",
             cta: "Start Assessment",
             image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2938&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             alt: "Notebook and study materials for assessment"
@@ -2652,6 +3830,7 @@ const initDefaultTooltipCopy = () => {
         const sectionLabel = sectionTitle ? ` in ${sectionTitle}` : "";
 
         if (el.classList.contains("appbar-menu-toggle")) return "Show quick links";
+        if (el.classList.contains("appbar-avatar-btn")) return "Open account menu";
         if (el.classList.contains("appbar-resume")) return "Resume your saved progress";
         if (el.classList.contains("hint-panel__btn-show")) return `Show a progressive hint${sectionLabel}`;
         if (el.classList.contains("hint-panel__btn-reveal")) return `Reveal a worked hint${sectionLabel}`;
@@ -2669,19 +3848,18 @@ const initDefaultTooltipCopy = () => {
         if (id === "dashboardrecommendedbtn") return "Open the recommended next activity";
         if (id === "teacherexportcsvbtn") return "Export class progress and hints as CSV";
         if (id === "teacherexportjsonbtn") return "Export class progress and hints as JSON";
-        if (id === "teacherseeddemobtn") return "Insert demo progress data for presentation";
+        if (id === "teacherimportprogressbtn") return "Import one-time local progress into your account";
+        if (id === "authimportbtn") return "Import one-time local progress into your account";
+        if (id === "teacherseeddemobtn") return "Seed demo teacher and student analytics data";
         if (id === "teacherresetprogressbtn") return "Open confirmation to clear all local progress";
         if (id === "teacherresetconfirmbtn") return "Permanently clear all local progress on this device";
-        if (id === "teachergateunlock") return "Unlock teacher mode with the passcode";
         if (id === "assessmentgatereview") return "Open the next incomplete example";
         if (id === "assessmentgateproceed") return "Continue to the assessment without prerequisites";
 
-        if (el.classList.contains("teacher-gate__close")) return "Close teacher mode login";
         if (el.classList.contains("teacher-reset-modal__close")) return "Close reset confirmation dialog";
         if (el.classList.contains("assessment-gate__close")) return "Close assessment warning";
         if (el.hasAttribute("data-close-reset-modal")) return "Close reset confirmation dialog";
         if (el.hasAttribute("data-close-gate")) return "Close assessment warning";
-        if (el.hasAttribute("data-teacher-lock")) return "Lock teacher mode and return to student view";
 
         if (el.classList.contains("examples-tab")) {
             const key = (el.dataset.exampleKey || "").toLowerCase();
@@ -2739,12 +3917,14 @@ const initDefaultTooltipCopy = () => {
         if (lower.includes("download summary")) return "Download your progress summary as a text file";
         if (lower.includes("open recommendation")) return "Open the recommended next activity";
         if (lower.includes("insert test data")) return "Insert demo progress data for presentation";
+        if (lower.includes("import local progress")) return "Import one-time local progress into your account";
         if (lower.includes("export csv")) return "Export class progress and hints as CSV";
         if (lower.includes("export json")) return "Export class progress and hints as JSON";
         if (lower.includes("proceed anyway")) return "Continue to the assessment without prerequisites";
         if (lower.includes("go to next incomplete example")) return "Open the next incomplete example";
         if (lower.includes("unlock")) return "Unlock teacher mode with the passcode";
-        if (lower.includes("lock")) return "Lock teacher mode and return to student view";
+        if (lower.includes("lock")) return "Sign out of teacher mode";
+        if (lower.includes("sign out")) return "Sign out of teacher mode";
         if (lower.includes("preview")) return "Preview this section";
         if (lower.includes("example 1")) return "Preview example 1";
         if (lower.includes("example 2")) return "Preview example 2";
@@ -2764,6 +3944,7 @@ const initDefaultTooltipCopy = () => {
 
     const selector = [
         ".appbar-nav-pill",
+        ".appbar-avatar-btn",
         ".appbar-menu-toggle",
         ".examples-tab",
         ".check-btn",
@@ -2873,16 +4054,14 @@ const initGlassTooltips = () => {
 };
 
 const initAssessmentGate = () => {
-    const isAssessmentPage = /\/assessment\.html$/i.test(window.location.pathname);
+    const isAssessmentPage = /\/assessment\/?$/i.test(window.location.pathname) || /\/assessment\.html$/i.test(window.location.pathname);
     if (isAssessmentPage) return;
 
     const STORAGE_PREFIX = "assessmentStepperState.v2:";
-    const inPagesDir = /\/pages\//.test(window.location.pathname);
-    const toExampleHref = (fileName) => (inPagesDir ? fileName : `pages/${fileName}`);
     const requiredExamples = [
-        { path: "/docs/pages/example1.html", label: "Example 1", href: toExampleHref("example1.html") },
-        { path: "/docs/pages/example2.html", label: "Example 2", href: toExampleHref("example2.html") },
-        { path: "/docs/pages/example3.html", label: "Example 3", href: toExampleHref("example3.html") }
+        { path: "/examples/example1/", label: "Example 1", href: "/examples/example1/" },
+        { path: "/examples/example2/", label: "Example 2", href: "/examples/example2/" },
+        { path: "/examples/example3/", label: "Example 3", href: "/examples/example3/" }
     ];
 
     const readExampleCompletion = (pathSuffixes) => {
@@ -3235,14 +4414,28 @@ document.addEventListener("change", (event) => {
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    const teacherModeReady = initTeacherMode();
-    if (!teacherModeReady) return;
-    initTeacherNavEntry();
-    initTeacherAccessNotice();
+document.addEventListener("DOMContentLoaded", async () => {
+    if (hasApiAdapter()) {
+        try {
+            await window.N5Api.init();
+            await hydrateProgressFromApi();
+        } catch {
+            // Keep local-only mode when backend auth/API is unavailable.
+        }
+    }
+    initAuthUX();
+    enforceRoleAccess();
     if (document.body.classList.contains("page-teacher")) {
-        initTeacherPasscodeGate();
-        initTeacherSummaryPanel();
+        const canUseTeacherPanel = !hasApiAdapter() || (isApiLoggedIn() && getApiUserRole() === "teacher");
+        if (hasApiAdapter() && !canUseTeacherPanel) {
+            const lockedCard = document.querySelector("[data-student-only] p");
+            if (lockedCard) {
+                lockedCard.textContent = isApiLoggedIn()
+                    ? "A teacher account is required to access this page."
+                    : "Please sign in with a teacher account to continue.";
+            }
+        }
+        if (canUseTeacherPanel) initTeacherSummaryPanel();
     }
     initAccessibilityEnhancements();
     initAppbarEnhancements();
