@@ -404,9 +404,28 @@ const initAuthUX = () => {
             <button type="button" class="assessment-gate__close" aria-label="Close change password dialog" data-change-password-close="true">&times;</button>
             <h3 id="authChangePasswordTitle">Change Password</h3>
             <p id="authChangePasswordBody">Update your account password securely. You will stay signed in after updating it.</p>
-            <div class="assessment-gate__actions">
-              <button type="button" class="check-btn" data-change-password-close="true">Done</button>
-            </div>
+            <form id="authChangePasswordForm" class="teacher-gate__form">
+              <label for="authCurrentPasswordInput" class="teacher-gate__label">Current password</label>
+              <div class="teacher-gate__password-row">
+                <input id="authCurrentPasswordInput" class="teacher-gate__input" type="password" name="currentPassword" autocomplete="current-password" required />
+                <button type="button" class="check-btn outline-btn teacher-gate__toggle" data-toggle-password="authCurrentPasswordInput">Show</button>
+              </div>
+              <label for="authNewPasswordInput" class="teacher-gate__label">New password</label>
+              <div class="teacher-gate__password-row">
+                <input id="authNewPasswordInput" class="teacher-gate__input" type="password" name="newPassword" autocomplete="new-password" required />
+                <button type="button" class="check-btn outline-btn teacher-gate__toggle" data-toggle-password="authNewPasswordInput">Show</button>
+              </div>
+              <label for="authConfirmPasswordInput" class="teacher-gate__label">Confirm new password</label>
+              <div class="teacher-gate__password-row">
+                <input id="authConfirmPasswordInput" class="teacher-gate__input" type="password" name="confirmPassword" autocomplete="new-password" required />
+                <button type="button" class="check-btn outline-btn teacher-gate__toggle" data-toggle-password="authConfirmPasswordInput">Show</button>
+              </div>
+              <p id="authChangePasswordHint" class="teacher-gate__hint">Use at least 8 characters. Avoid common passwords.</p>
+              <p id="authChangePasswordError" class="teacher-gate__error" aria-live="polite"></p>
+              <div class="assessment-gate__actions assessment-gate__actions--single">
+                <button type="submit" class="check-btn" id="authChangePasswordSubmit" disabled>Update password</button>
+              </div>
+            </form>
           </div>
         `;
         document.body.appendChild(changePasswordModal);
@@ -437,9 +456,22 @@ const initAuthUX = () => {
     };
 
     const openChangePasswordModal = () => {
+        const form = document.getElementById("authChangePasswordForm");
+        const errorEl = document.getElementById("authChangePasswordError");
+        const hintEl = document.getElementById("authChangePasswordHint");
+        const submitBtn = document.getElementById("authChangePasswordSubmit");
+        if (form) form.reset();
+        if (errorEl) {
+            errorEl.textContent = "";
+            errorEl.classList.remove("is-visible", "tick-mark", "is-correct", "is-incorrect");
+        }
+        if (hintEl) hintEl.textContent = "Use at least 8 characters. Avoid common passwords.";
+        if (submitBtn) submitBtn.disabled = true;
         changePasswordModal.classList.add("is-open");
         changePasswordModal.setAttribute("aria-hidden", "false");
         document.body.classList.add("is-modal-open");
+        const currentInput = document.getElementById("authCurrentPasswordInput");
+        if (currentInput) window.setTimeout(() => currentInput.focus(), 0);
     };
 
     modal.querySelectorAll("[data-auth-close='true']").forEach((el) => {
@@ -447,6 +479,19 @@ const initAuthUX = () => {
     });
     changePasswordModal.querySelectorAll("[data-change-password-close='true']").forEach((el) => {
         el.onclick = closeChangePasswordModal;
+    });
+    changePasswordModal.querySelectorAll("[data-toggle-password]").forEach((btn) => {
+        if (btn.dataset.bound === "true") return;
+        btn.dataset.bound = "true";
+        btn.addEventListener("click", () => {
+            const targetId = String(btn.getAttribute("data-toggle-password") || "").trim();
+            if (!targetId) return;
+            const input = document.getElementById(targetId);
+            if (!input) return;
+            const show = input.type === "password";
+            input.type = show ? "text" : "password";
+            btn.textContent = show ? "Hide" : "Show";
+        });
     });
 
     const loginForm = document.getElementById("authLoginForm");
@@ -470,6 +515,106 @@ const initAuthUX = () => {
                     errorEl.textContent = err?.message || "Login failed.";
                     errorEl.classList.add("is-visible");
                 }
+            }
+        });
+    }
+
+    const changePasswordForm = document.getElementById("authChangePasswordForm");
+    const currentPasswordInput = document.getElementById("authCurrentPasswordInput");
+    const newPasswordInput = document.getElementById("authNewPasswordInput");
+    const confirmPasswordInput = document.getElementById("authConfirmPasswordInput");
+    const changePasswordHint = document.getElementById("authChangePasswordHint");
+    const changePasswordError = document.getElementById("authChangePasswordError");
+    const changePasswordSubmit = document.getElementById("authChangePasswordSubmit");
+
+    const setChangePasswordFeedback = (message, isError) => {
+        if (!changePasswordError) return;
+        changePasswordError.textContent = message || "";
+        changePasswordError.classList.remove("is-correct", "is-incorrect");
+        changePasswordError.classList.add("is-visible", "tick-mark", isError ? "is-incorrect" : "is-correct");
+    };
+
+    const clearFieldInvalid = () => {
+        [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach((el) => {
+            if (!el) return;
+            el.removeAttribute("aria-invalid");
+        });
+    };
+
+    const validateChangePasswordForm = () => {
+        const currentPassword = (currentPasswordInput?.value || "").trim();
+        const newPassword = newPasswordInput?.value || "";
+        const confirmPassword = confirmPasswordInput?.value || "";
+        const canSubmit = !!(
+            currentPassword &&
+            newPassword &&
+            confirmPassword &&
+            newPassword.length >= 8 &&
+            newPassword === confirmPassword &&
+            newPassword !== currentPassword
+        );
+        if (changePasswordSubmit) changePasswordSubmit.disabled = !canSubmit;
+        if (!changePasswordHint) return canSubmit;
+
+        if (!newPassword && !confirmPassword) {
+            changePasswordHint.textContent = "Use at least 8 characters. Avoid common passwords.";
+        } else if (newPassword.length > 0 && newPassword.length < 8) {
+            changePasswordHint.textContent = "Password must be at least 8 characters.";
+        } else if (newPassword && currentPassword && newPassword === currentPassword) {
+            changePasswordHint.textContent = "New password must be different from current password.";
+        } else if (confirmPassword && newPassword !== confirmPassword) {
+            changePasswordHint.textContent = "New password and confirmation must match.";
+        } else {
+            changePasswordHint.textContent = "Looks good. Ready to update password.";
+        }
+        return canSubmit;
+    };
+
+    if (changePasswordForm && !changePasswordForm.dataset.bound) {
+        changePasswordForm.dataset.bound = "true";
+        [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach((el) => {
+            if (!el) return;
+            el.addEventListener("input", () => {
+                clearFieldInvalid();
+                if (changePasswordError) {
+                    changePasswordError.textContent = "";
+                    changePasswordError.classList.remove("is-visible", "tick-mark", "is-correct", "is-incorrect");
+                }
+                validateChangePasswordForm();
+            });
+        });
+
+        changePasswordForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!validateChangePasswordForm()) return;
+            const currentPassword = currentPasswordInput?.value || "";
+            const newPassword = newPasswordInput?.value || "";
+            const confirmPassword = confirmPasswordInput?.value || "";
+            if (changePasswordSubmit) changePasswordSubmit.setAttribute("disabled", "true");
+            clearFieldInvalid();
+
+            try {
+                await window.N5Api.changePassword(currentPassword, newPassword, confirmPassword);
+                setChangePasswordFeedback("Password updated successfully.", false);
+                changePasswordForm.reset();
+                if (changePasswordHint) {
+                    changePasswordHint.textContent = "Password changed. You can close this dialog.";
+                }
+                validateChangePasswordForm();
+            } catch (err) {
+                const payload = err?.payload || {};
+                const fieldErrors = payload?.fieldErrors && typeof payload.fieldErrors === "object"
+                    ? payload.fieldErrors
+                    : {};
+                if (fieldErrors.currentPassword && currentPasswordInput) currentPasswordInput.setAttribute("aria-invalid", "true");
+                if (fieldErrors.newPassword && newPasswordInput) newPasswordInput.setAttribute("aria-invalid", "true");
+                if (fieldErrors.confirmPassword && confirmPasswordInput) confirmPasswordInput.setAttribute("aria-invalid", "true");
+                const messages = Object.values(fieldErrors).filter((msg) => String(msg || "").trim().length > 0);
+                const message = messages.length ? messages.join(" ") : (err?.message || "Unable to update password.");
+                setChangePasswordFeedback(message, true);
+                validateChangePasswordForm();
+            } finally {
+                if (changePasswordSubmit) changePasswordSubmit.removeAttribute("disabled");
             }
         });
     }

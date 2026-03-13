@@ -86,6 +86,17 @@
             return { ok: true };
         },
 
+        async changePassword(currentPassword, newPassword, confirmPassword) {
+            return await jsonFetch("/auth/change-password", {
+                method: "POST",
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                    confirmPassword,
+                }),
+            });
+        },
+
         isLoggedIn() {
             return !!state.authenticated;
         },
