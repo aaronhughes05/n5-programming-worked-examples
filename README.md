@@ -11,11 +11,22 @@ The app now runs as a single Django + PostgreSQL web application (no static-only
 ## Key Features
 
 - PRIMM-style worked examples with checkpoint gating
+- Intended Learning Outcomes (ILOs) embedded in the Problem Description step of Example 1, Example 2, Example 3, and Final Assessment
 - Rich corrective feedback and adaptive hinting per checkpoint
 - Persistent account-based progress and hint analytics
 - Role-based access (`student` and `teacher`)
 - Teacher dashboard with class summary, attempt analytics, student drill-down, and exports
 - Worksheet pages for revision/printing
+
+---
+
+## Pedagogical Alignment
+
+- Activity-level learning objectives are aligned to National 5 Software Design and Development expectations.
+- Each activity now states:
+  - student-facing learning outcomes (`By the end of this activity...`)
+  - teacher-facing expectation criteria (`Teacher expects...`)
+- Objective blocks use a consistent visual pattern across all activities for clarity and classroom use.
 
 ---
 
