@@ -1,0 +1,220 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!60!black,
+  pdftitle={Crack the Code End User Guide},
+  pdfauthor={Crack the Code Team}
+}
+
+\setlist[itemize]{leftmargin=1.6em}
+\setlist[enumerate]{leftmargin=1.8em}
+
+\title{\textbf{Crack the Code}\\End User Guide\\v1.2.1}
+\author{National 5 Computing Science Worked Examples}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Purpose of this document}
+This guide explains how students and teachers should use the Crack the Code web app.
+It is written for end users and client stakeholders, and can be used as a reference during normal classroom use.
+
+\section{System overview}
+Crack the Code is an interactive learning platform for National 5 Computing Science.
+It includes:
+\begin{itemize}
+  \item scaffolded worked examples,
+  \item prediction, tracing, modify, and make tasks,
+  \item adaptive hints and rich feedback,
+  \item progress tracking and completion badges,
+  \item teacher analytics and class management tools.
+\end{itemize}
+
+\section{Accessing the system}
+\subsection{System links}
+\begin{itemize}
+  \item GitHub repository: \url{https://github.com/aaronhughes05/n5-programming-worked-examples}
+  \item Live hosted site (Render): \url{https://n5-programming-worked-examples.onrender.com/}
+  \item Admin view (Render): \url{https://n5-programming-worked-examples.onrender.com/admin}
+\end{itemize}
+
+\subsection{Web address}
+Open the deployed site in a web browser:
+\begin{itemize}
+  \item \url{https://n5-programming-worked-examples.onrender.com}
+\end{itemize}
+
+\subsection{Sign in}
+\begin{enumerate}
+  \item Open the website.
+  \item Enter your username and password on the sign-in screen.
+  \item Select \textbf{Login}.
+\end{enumerate}
+
+\textbf{Note:} Users must be signed in to access learning pages.
+
+\section{Navigation}
+The app bar provides direct links to:
+\begin{itemize}
+  \item Home
+  \item Examples
+  \item Worksheets
+  \item Final Assessment
+\end{itemize}
+
+The avatar menu (top right) provides account actions:
+\begin{itemize}
+  \item Change password
+  \item Teacher mode (teacher accounts only)
+  \item Sign out
+\end{itemize}
+
+\section{Student guide}
+\subsection{Complete an example}
+\begin{enumerate}
+  \item Open an example from \textbf{Examples}.
+  \item Read the \textbf{Problem Description} and \textbf{Learning Objectives}.
+  \item Complete each step in order.
+  \item Use \textbf{Check} buttons to validate answers.
+  \item Continue until the completion screen appears.
+\end{enumerate}
+
+\subsection{How checkpoint gating works}
+Some steps require earlier checkpoints to be correct before progression.
+If a step does not unlock:
+\begin{itemize}
+  \item re-check missing answers,
+  \item review feedback and hints,
+  \item retry the task.
+\end{itemize}
+
+\subsection{Using hints and feedback}
+\begin{itemize}
+  \item Feedback appears after each check attempt.
+  \item Hints can be revealed gradually to support learning.
+  \item Worked hints are available for harder checkpoints.
+\end{itemize}
+
+\subsection{Final assessment}
+The assessment combines all core concepts:
+\begin{itemize}
+  \item validation,
+  \item loops and totals,
+  \item list storage and traversal.
+\end{itemize}
+
+Students should complete examples first to improve readiness.
+
+\subsection{Resume and persistence}
+Progress is saved automatically to your account.
+You can return later and continue from your saved state.
+
+\section{Teacher guide}
+\subsection{Open teacher mode}
+\begin{enumerate}
+  \item Sign in with a teacher account.
+  \item Open the avatar menu.
+  \item Select \textbf{Teacher Mode}.
+\end{enumerate}
+
+\subsection{Class and roster management}
+In teacher mode you can:
+\begin{itemize}
+  \item create classes,
+  \item add students to classes,
+  \item remove students from classes,
+  \item delete classes.
+\end{itemize}
+
+\subsection{Analytics available}
+Teacher mode provides:
+\begin{itemize}
+  \item class progress summary (complete, in progress, not started),
+  \item hint usage totals,
+  \item checkpoint attempt analytics,
+  \item most-missed checkpoints,
+  \item per-student analytics via clickable student chips.
+\end{itemize}
+
+\subsection{Data export}
+Teachers can export analytics as:
+\begin{itemize}
+  \item CSV
+  \item JSON
+\end{itemize}
+
+\subsection{Demo data}
+Teacher mode includes a seed action for inserting test/demo data.
+Use this for presentations and controlled testing.
+
+\section{Changing your password}
+All authenticated users can change their own password.
+
+\begin{enumerate}
+  \item Open the avatar menu.
+  \item Select \textbf{Change password}.
+  \item Enter current password, new password, and confirmation.
+  \item Select \textbf{Update password}.
+\end{enumerate}
+
+Password rules:
+\begin{itemize}
+  \item new password must differ from current password,
+  \item new and confirmation must match,
+  \item minimum strength/length is enforced by server policy.
+\end{itemize}
+
+\section{Troubleshooting}
+\subsection{Cannot sign in}
+\begin{itemize}
+  \item Check username/password spelling.
+  \item Confirm account exists.
+  \item Contact teacher/admin if credentials are unknown.
+\end{itemize}
+
+\subsection{Step does not unlock}
+\begin{itemize}
+  \item Re-check required checkpoints in the previous step.
+  \item Read rich feedback carefully and retry.
+  \item Use hints where available.
+\end{itemize}
+
+\subsection{Teacher page access denied}
+\begin{itemize}
+  \item Only users with teacher role can access teacher mode.
+  \item Sign in with a teacher account.
+\end{itemize}
+
+\subsection{Password change fails}
+\begin{itemize}
+  \item Ensure current password is correct.
+  \item Ensure new password meets policy rules.
+  \item If too many failed attempts occur, wait and retry.
+\end{itemize}
+
+\section{Good practice}
+\begin{itemize}
+  \item Students: complete each example before assessment.
+  \item Teachers: review most-missed checkpoints for targeted support.
+  \item All users: sign out after use on shared devices.
+\end{itemize}
+
+\section{Document control}
+\begin{itemize}
+  \item Artefact: Crack the Code end user guide
+  \item Version: v1.2.1
+  \item Intended audience: students, teachers, client stakeholders
+\end{itemize}
+
+\end{document}
