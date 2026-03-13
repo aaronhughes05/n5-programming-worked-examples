@@ -15,6 +15,7 @@ The app now runs as a single Django + PostgreSQL web application (no static-only
 - Rich corrective feedback and adaptive hinting per checkpoint
 - Persistent account-based progress and hint analytics
 - Role-based access (`student` and `teacher`)
+- Account menu with secure in-app password change flow
 - Teacher dashboard with class summary, attempt analytics, student drill-down, and exports
 - Worksheet pages for revision/printing
 
@@ -62,6 +63,7 @@ API routes:
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
+- `POST /auth/change-password`
 - `GET /api/progress-summary`
 - `GET|PUT /api/progress/<activity_key>`
 - `POST /api/progress/<activity_key>/checkpoint`
@@ -135,6 +137,7 @@ py -m venv .venv
 - `student`: learner pages only.
 - `teacher`: learner pages + teacher mode + teacher APIs.
 - Teacher access is role-account based (legacy passcode flow removed from production path).
+- Any authenticated account can change its own password from the avatar/account menu.
 
 ---
 
