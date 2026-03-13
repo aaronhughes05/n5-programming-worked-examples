@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db.models import Sum
@@ -37,6 +38,9 @@ PAGE_TEMPLATE_MAP = {
     "worksheet-assessment": "pages/worksheet-assessment.html",
     "example-template": "pages/example-template.html",
 }
+
+AUTH_THROTTLE_WINDOW_SECONDS = 10 * 60
+AUTH_CHANGE_PASSWORD_MAX_FAILURES = 8
 
 
 @require_GET
@@ -113,6 +117,55 @@ def _redirect_to_login(request: HttpRequest):
 
 def _json_error(message: str, status: int = 400) -> JsonResponse:
     return JsonResponse({"error": message}, status=status)
+
+
+def _auth_error(
+    message: str,
+    *,
+    status: int = 400,
+    code: str = "auth_error",
+    field_errors: dict | None = None,
+    extra: dict | None = None,
+) -> JsonResponse:
+    payload = {
+        "ok": False,
+        "error": message,
+        "code": code,
+        "fieldErrors": field_errors or {},
+    }
+    if extra:
+        payload.update(extra)
+    return JsonResponse(payload, status=status)
+
+
+def _client_ip(request: HttpRequest) -> str:
+    forwarded_for = str(request.META.get("HTTP_X_FORWARDED_FOR", "")).strip()
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return str(request.META.get("REMOTE_ADDR", "")).strip() or "unknown"
+
+
+def _throttle_key(scope: str, identifier: str) -> str:
+    return f"auth_throttle:{scope}:{identifier}"
+
+
+def _get_throttle_count(key: str) -> int:
+    try:
+        return int(cache.get(key, 0) or 0)
+    except Exception:
+        return 0
+
+
+def _record_throttle_failure(key: str, window_seconds: int) -> int:
+    if cache.add(key, 1, timeout=window_seconds):
+        return 1
+    try:
+        return int(cache.incr(key))
+    except Exception:
+        current = _get_throttle_count(key)
+        updated = current + 1
+        cache.set(key, updated, timeout=window_seconds)
+        return updated
 
 
 def _get_json_payload(request: HttpRequest):
@@ -428,11 +481,25 @@ def auth_login(request: HttpRequest):
     username = str(payload.get("username", "")).strip()
     password = str(payload.get("password", ""))
     if not username or not password:
-        return JsonResponse({"error": "username and password are required."}, status=400)
+        field_errors = {}
+        if not username:
+            field_errors["username"] = "Username is required."
+        if not password:
+            field_errors["password"] = "Password is required."
+        return _auth_error(
+            "Username and password are required.",
+            status=400,
+            code="auth_validation_failed",
+            field_errors=field_errors,
+        )
 
     user = authenticate(request, username=username, password=password)
     if user is None:
-        return JsonResponse({"error": "Invalid credentials."}, status=401)
+        return _auth_error(
+            "Invalid credentials.",
+            status=401,
+            code="invalid_credentials",
+        )
 
     login(request, user)
     role = getattr(getattr(user, "profile", None), "role", "student")
@@ -490,6 +557,16 @@ def auth_change_password(request: HttpRequest):
     confirm_password = str(payload.get("confirmPassword", ""))
 
     field_errors = {}
+    throttle_identifier = f"user:{user.id}:ip:{_client_ip(request)}"
+    throttle_key = _throttle_key("change_password", throttle_identifier)
+    current_failures = _get_throttle_count(throttle_key)
+    if current_failures >= AUTH_CHANGE_PASSWORD_MAX_FAILURES:
+        return _auth_error(
+            "Too many password change attempts. Please wait and try again.",
+            status=429,
+            code="rate_limited",
+            extra={"retryAfterSeconds": AUTH_THROTTLE_WINDOW_SECONDS},
+        )
 
     if not current_password:
         field_errors["currentPassword"] = "Current password is required."
@@ -512,21 +589,34 @@ def auth_change_password(request: HttpRequest):
         try:
             validate_password(new_password, user=user)
         except ValidationError as exc:
-            field_errors["newPassword"] = " ".join(str(msg) for msg in exc.messages)
+            friendly_messages = []
+            for error in exc.error_list:
+                code = getattr(error, "code", "")
+                if code == "password_too_short":
+                    friendly_messages.append("Use at least 8 characters.")
+                elif code == "password_too_common":
+                    friendly_messages.append("Choose a less common password.")
+                elif code == "password_too_similar":
+                    friendly_messages.append("Password is too similar to your account details.")
+                elif code == "password_entirely_numeric":
+                    friendly_messages.append("Password cannot be entirely numeric.")
+                else:
+                    friendly_messages.append(str(error))
+            field_errors["newPassword"] = " ".join(friendly_messages)
 
     if field_errors:
-        return JsonResponse(
-            {
-                "ok": False,
-                "error": "Password change validation failed.",
-                "fieldErrors": field_errors,
-            },
+        _record_throttle_failure(throttle_key, AUTH_THROTTLE_WINDOW_SECONDS)
+        return _auth_error(
+            "Password change validation failed.",
             status=400,
+            code="password_validation_failed",
+            field_errors=field_errors,
         )
 
     user.set_password(new_password)
     user.save(update_fields=["password"])
     update_session_auth_hash(request, user)
+    cache.delete(throttle_key)
 
     return JsonResponse(
         {
