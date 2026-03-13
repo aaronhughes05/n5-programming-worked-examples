@@ -115,6 +115,7 @@ Auth:
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
+- `POST /auth/change-password`
 
 Learner progress:
 
@@ -139,6 +140,26 @@ Teacher analytics and management:
 Health:
 
 - `GET /health/`
+
+`POST /auth/change-password` payload:
+
+```json
+{
+  "currentPassword": "current password",
+  "newPassword": "new secure password",
+  "confirmPassword": "new secure password"
+}
+```
+
+Validation behavior:
+
+- session-auth required
+- current password must match
+- new password and confirmation must match
+- new password must differ from current password
+- Django password validators enforce minimum strength/length rules
+- response includes normalized `code` + `fieldErrors` for frontend display
+- simple throttle guard returns `429` after repeated failed attempts in a short window
 
 ---
 
