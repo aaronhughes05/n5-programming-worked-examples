@@ -392,6 +392,26 @@ const initAuthUX = () => {
         document.body.appendChild(modal);
     }
 
+    let changePasswordModal = document.getElementById("authChangePasswordModal");
+    if (!changePasswordModal) {
+        changePasswordModal = document.createElement("div");
+        changePasswordModal.id = "authChangePasswordModal";
+        changePasswordModal.className = "assessment-gate";
+        changePasswordModal.setAttribute("aria-hidden", "true");
+        changePasswordModal.innerHTML = `
+          <div class="assessment-gate__backdrop" data-change-password-close="true"></div>
+          <div class="assessment-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="authChangePasswordTitle" aria-describedby="authChangePasswordBody">
+            <button type="button" class="assessment-gate__close" aria-label="Close change password dialog" data-change-password-close="true">&times;</button>
+            <h3 id="authChangePasswordTitle">Change Password</h3>
+            <p id="authChangePasswordBody">Update your account password securely. You will stay signed in after updating it.</p>
+            <div class="assessment-gate__actions">
+              <button type="button" class="check-btn" data-change-password-close="true">Done</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(changePasswordModal);
+    }
+
     const closeModal = () => {
         modal.classList.remove("is-open");
         modal.setAttribute("aria-hidden", "true");
@@ -410,8 +430,23 @@ const initAuthUX = () => {
         if (usernameInput) window.setTimeout(() => usernameInput.focus(), 0);
     };
 
+    const closeChangePasswordModal = () => {
+        changePasswordModal.classList.remove("is-open");
+        changePasswordModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-modal-open");
+    };
+
+    const openChangePasswordModal = () => {
+        changePasswordModal.classList.add("is-open");
+        changePasswordModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("is-modal-open");
+    };
+
     modal.querySelectorAll("[data-auth-close='true']").forEach((el) => {
         el.onclick = closeModal;
+    });
+    changePasswordModal.querySelectorAll("[data-change-password-close='true']").forEach((el) => {
+        el.onclick = closeChangePasswordModal;
     });
 
     const loginForm = document.getElementById("authLoginForm");
@@ -530,6 +565,16 @@ const initAuthUX = () => {
                 }
                 actionsEl.appendChild(teacherLink);
             }
+
+            const changePasswordBtn = document.createElement("button");
+            changePasswordBtn.type = "button";
+            changePasswordBtn.className = "appbar-nav-pill";
+            changePasswordBtn.textContent = "Change password";
+            changePasswordBtn.onclick = () => {
+                closeMenu();
+                openChangePasswordModal();
+            };
+            actionsEl.appendChild(changePasswordBtn);
 
             const signOutBtn = document.createElement("button");
             signOutBtn.type = "button";
@@ -3917,6 +3962,7 @@ const initDefaultTooltipCopy = () => {
         if (lower.includes("download summary")) return "Download your progress summary as a text file";
         if (lower.includes("open recommendation")) return "Open the recommended next activity";
         if (lower.includes("insert test data")) return "Insert demo progress data for presentation";
+        if (lower.includes("change password")) return "Open change password dialog";
         if (lower.includes("import local progress")) return "Import one-time local progress into your account";
         if (lower.includes("export csv")) return "Export class progress and hints as CSV";
         if (lower.includes("export json")) return "Export class progress and hints as JSON";
