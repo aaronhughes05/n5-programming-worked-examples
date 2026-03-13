@@ -4,6 +4,9 @@ from datetime import timezone as dt_timezone
 from urllib.parse import urlencode
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -467,6 +470,68 @@ def auth_me(request: HttpRequest):
                 "username": user.username,
                 "role": role,
             },
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def auth_change_password(request: HttpRequest):
+    user, error = _require_authenticated_user(request)
+    if error:
+        return error
+
+    payload, parse_error = _get_json_payload(request)
+    if parse_error:
+        return parse_error
+
+    current_password = str(payload.get("currentPassword", ""))
+    new_password = str(payload.get("newPassword", ""))
+    confirm_password = str(payload.get("confirmPassword", ""))
+
+    field_errors = {}
+
+    if not current_password:
+        field_errors["currentPassword"] = "Current password is required."
+    elif not user.check_password(current_password):
+        field_errors["currentPassword"] = "Current password is incorrect."
+
+    if not new_password:
+        field_errors["newPassword"] = "New password is required."
+
+    if not confirm_password:
+        field_errors["confirmPassword"] = "Please confirm your new password."
+
+    if new_password and confirm_password and new_password != confirm_password:
+        field_errors["confirmPassword"] = "New password and confirmation do not match."
+
+    if current_password and new_password and current_password == new_password:
+        field_errors["newPassword"] = "New password must be different from current password."
+
+    if new_password and "newPassword" not in field_errors:
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as exc:
+            field_errors["newPassword"] = " ".join(str(msg) for msg in exc.messages)
+
+    if field_errors:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "Password change validation failed.",
+                "fieldErrors": field_errors,
+            },
+            status=400,
+        )
+
+    user.set_password(new_password)
+    user.save(update_fields=["password"])
+    update_session_auth_hash(request, user)
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "Password updated successfully.",
         }
     )
 

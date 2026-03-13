@@ -6,6 +6,7 @@ from core.views import (
     auth_login,
     auth_logout,
     auth_me,
+    auth_change_password,
     examples_page,
     hints_checkpoint,
     home_page,
@@ -58,4 +59,5 @@ urlpatterns = [
     path("auth/login", auth_login, name="auth-login"),
     path("auth/logout", auth_logout, name="auth-logout"),
     path("auth/me", auth_me, name="auth-me"),
+    path("auth/change-password", auth_change_password, name="auth-change-password"),
 ]
