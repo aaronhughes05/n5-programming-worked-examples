@@ -4524,6 +4524,174 @@ const initExpanderAnimations = () => {
     });
 };
 
+const PYODIDE_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/";
+const PYTHON_COLD_START_TIMEOUT_MS = 45000;
+const PYTHON_RUN_TIMEOUT_MS = 12000;
+let pythonRunnerWorker = null;
+let pythonRunnerPending = null;
+let pythonRunnerRequestId = 0;
+let pythonRunnerIsWarm = false;
+
+const terminatePythonRunnerWorker = () => {
+    if (pythonRunnerWorker) {
+        pythonRunnerWorker.terminate();
+        pythonRunnerWorker = null;
+    }
+    if (pythonRunnerPending?.timerId) {
+        clearTimeout(pythonRunnerPending.timerId);
+    }
+    pythonRunnerPending = null;
+    pythonRunnerIsWarm = false;
+};
+
+const createPythonRunnerWorker = () => {
+    const workerSource = `
+let pyodideInstance = null;
+let pyodideLoader = null;
+
+const ensurePyodide = async (indexURL) => {
+  if (pyodideInstance) return pyodideInstance;
+  if (!pyodideLoader) {
+    importScripts(indexURL + "pyodide.js");
+    pyodideLoader = self.loadPyodide({ indexURL });
+  }
+  pyodideInstance = await pyodideLoader;
+  return pyodideInstance;
+};
+
+const runPython = async ({ indexURL, code, inputs }) => {
+  const pyodide = await ensurePyodide(indexURL);
+  pyodide.globals.set("INPUTS", Array.isArray(inputs) ? inputs.map((value) => String(value)) : []);
+  pyodide.globals.set("USER_CODE", String(code || ""));
+  return pyodide.runPythonAsync(\`
+import sys, io, builtins
+inputs = list(INPUTS)
+
+def input(prompt=""):
+    if inputs:
+        return str(inputs.pop(0))
+    raise EOFError("No more prepared input values for this test case.")
+
+class _LimitedBuffer(io.StringIO):
+    LIMIT = 20000
+    def write(self, s):
+        current = self.tell()
+        if current >= self.LIMIT:
+            return 0
+        chunk = str(s)
+        remaining = self.LIMIT - current
+        if len(chunk) > remaining:
+            chunk = chunk[:remaining]
+        return super().write(chunk)
+
+builtins.input = input
+_buffer = _LimitedBuffer()
+_old_stdout = sys.stdout
+_old_stderr = sys.stderr
+sys.stdout = _buffer
+sys.stderr = _buffer
+try:
+    exec(USER_CODE, {})
+finally:
+    sys.stdout = _old_stdout
+    sys.stderr = _old_stderr
+_buffer.getvalue()
+  \`);
+};
+
+self.onmessage = async (event) => {
+  const payload = event?.data || {};
+  if (payload.type !== "run") return;
+  const requestId = Number(payload.requestId || 0);
+  try {
+    const output = await runPython(payload);
+    self.postMessage({ type: "result", requestId, output: String(output || "") });
+  } catch (error) {
+    self.postMessage({
+      type: "error",
+      requestId,
+      message: error && error.message ? String(error.message) : "Unknown Python runtime error."
+    });
+  }
+};
+    `;
+    const blob = new Blob([workerSource], { type: "application/javascript" });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    return worker;
+};
+
+const ensurePythonRunnerWorker = () => {
+    if (pythonRunnerWorker) return pythonRunnerWorker;
+    if (typeof Worker === "undefined") {
+        throw new Error("This browser does not support background workers for Python execution.");
+    }
+
+    const worker = createPythonRunnerWorker();
+    worker.addEventListener("message", (event) => {
+        const payload = event?.data || {};
+        const pending = pythonRunnerPending;
+        if (!pending) return;
+        if (Number(payload.requestId || 0) !== pending.requestId) return;
+
+        clearTimeout(pending.timerId);
+        pythonRunnerPending = null;
+
+        if (payload.type === "result") {
+            pythonRunnerIsWarm = true;
+            pending.resolve(String(payload.output || ""));
+            return;
+        }
+
+        const message = String(payload.message || "Unknown Python runtime error.");
+        pending.reject(new Error(message));
+    });
+
+    worker.addEventListener("error", () => {
+        const pending = pythonRunnerPending;
+        terminatePythonRunnerWorker();
+        if (pending) {
+            pending.reject(new Error("Python worker crashed. Please run again."));
+        }
+    });
+
+    pythonRunnerWorker = worker;
+    return worker;
+};
+
+const runPythonInWorker = (code, inputs, timeoutMs = PYTHON_RUN_TIMEOUT_MS) => new Promise((resolve, reject) => {
+    if (pythonRunnerPending) {
+        reject(new Error("Python is already running. Please wait for the current run to finish."));
+        return;
+    }
+
+    let worker;
+    try {
+        worker = ensurePythonRunnerWorker();
+    } catch (error) {
+        reject(error);
+        return;
+    }
+
+    const requestId = ++pythonRunnerRequestId;
+    const timerId = window.setTimeout(() => {
+        const pending = pythonRunnerPending;
+        if (!pending || pending.requestId !== requestId) return;
+        terminatePythonRunnerWorker();
+        reject(new Error("Execution timed out. Check for an infinite loop or waiting input."));
+    }, timeoutMs);
+
+    pythonRunnerPending = { requestId, resolve, reject, timerId };
+    worker.postMessage({
+        type: "run",
+        requestId,
+        indexURL: PYODIDE_INDEX_URL,
+        code,
+        inputs
+    });
+});
+
 const runProgram = async () => {
     const programEl = document.getElementById("makeProgram");
     const caseSelect = document.getElementById("makeCase");
@@ -4542,45 +4710,34 @@ const runProgram = async () => {
     if (statusEl) statusEl.textContent = "Running Python...";
     if (spinner) spinner.classList.remove("is-hidden");
 
+    const usesColdStartTimeout = !pythonRunnerIsWarm;
+
     try {
-        if (!window.loadPyodide) {
-            throw new Error("Python runtime not loaded.");
+        if (statusEl) {
+            statusEl.textContent = usesColdStartTimeout
+                ? "Loading Python runtime (this can take up to 45 seconds)..."
+                : "Running Python in runtime...";
         }
-
-        if (!window.pyodide) {
-            if (statusEl) statusEl.textContent = "Loading Python runtime...";
-            window.pyodide = await loadPyodide({
-                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
-            });
-            if (statusEl) statusEl.textContent = "Python ready.";
-        }
-
         const inputs = getMakeInputs(caseSelect.value);
-        window.pyodide.globals.set("INPUTS", inputs);
-        window.pyodide.globals.set("USER_CODE", code);
-
-        const result = await window.pyodide.runPythonAsync(`
-import sys, io, builtins
-inputs = list(INPUTS)
-
-def input(prompt=""):
-    return inputs.pop(0) if inputs else ""
-
-builtins.input = input
-_buffer = io.StringIO()
-_old = sys.stdout
-sys.stdout = _buffer
-try:
-    exec(USER_CODE, {})
-finally:
-    sys.stdout = _old
-_buffer.getvalue()
-        `);
+        const result = await runPythonInWorker(
+            code,
+            inputs,
+            usesColdStartTimeout ? PYTHON_COLD_START_TIMEOUT_MS : PYTHON_RUN_TIMEOUT_MS
+        );
 
         outputEl.textContent = result || "(no output)";
         if (statusEl) statusEl.textContent = "Python ready.";
     } catch (err) {
-        outputEl.textContent = "Error running code: " + err.message;
+        const message = String(err?.message || "Unknown Python error.");
+        if (message.includes("No more prepared input values")) {
+            outputEl.textContent = "Error running code: test input was exhausted. Check loop conditions and input validation.";
+        } else if (message.includes("Execution timed out")) {
+            outputEl.textContent = usesColdStartTimeout
+                ? "Error running code: Python runtime startup timed out. Check connection and run again."
+                : "Error running code: Execution timed out. Check for an infinite loop or waiting input.";
+        } else {
+            outputEl.textContent = "Error running code: " + message;
+        }
         if (statusEl) statusEl.textContent = "Python error.";
     } finally {
         runBtn.textContent = "Run Program";
@@ -4588,6 +4745,10 @@ _buffer.getvalue()
         if (spinner) spinner.classList.add("is-hidden");
     }
 };
+
+window.addEventListener("beforeunload", () => {
+    terminatePythonRunnerWorker();
+});
 
 document.addEventListener("input", (event) => {
     if (event.target && event.target.id === "makeProgram") {
