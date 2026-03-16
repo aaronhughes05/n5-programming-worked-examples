@@ -51,6 +51,21 @@
           <li class="subgoal-item"><span class="subgoal-code">E</span><span class="subgoal-text">Display final results (total and summary output)</span></li>
         </ul>
       </details>
+      <details id="workedExample" class="card expander-card worked-example-panel hidden">
+        <summary>Full Solution</summary>
+        <p class="subgoal-intro">Complete program with subgoal labels.</p>
+        <pre><code>A: total = 0
+A: items = []
+B: for counter in range(5):
+C:     price = float(input("Price: "))
+C:     while price &lt; 0:
+C:         price = float(input("Enter a valid price: "))
+C:     items.append(price)
+C:     total = total + price
+D: for value in items:
+D:     print(value)
+E: print("Total:", total)</code></pre>
+      </details>
       <div class="stepper-header">
         <div class="stepper-progress" id="stepperProgress">Step 1 of 10</div>
         <div class="stepper-bar" aria-hidden="true">
