@@ -1837,12 +1837,22 @@ function getDragAfterElement(container, y) {
 
 const getParsonsOrder = (container) => Array.from(container.getElementsByClassName("draggable")).map((el) => el.id);
 
-const hasSameParsonsItems = (order, expectedIds) => {
-    if (!Array.isArray(order) || !Array.isArray(expectedIds)) return false;
-    if (order.length !== expectedIds.length) return false;
+const compareParsonsItems = (order, expectedIds) => {
+    if (!Array.isArray(order) || !Array.isArray(expectedIds)) {
+        return { ok: false, reason: "missing_line" };
+    }
+    if (order.length !== expectedIds.length) {
+        return { ok: false, reason: "missing_line" };
+    }
     const seen = new Set(order);
-    if (seen.size !== order.length) return false;
-    return expectedIds.every((id) => seen.has(id));
+    if (seen.size !== order.length) {
+        return { ok: false, reason: "duplicate_line" };
+    }
+    const hasAllExpected = expectedIds.every((id) => seen.has(id));
+    if (!hasAllExpected) {
+        return { ok: false, reason: "missing_line" };
+    }
+    return { ok: true };
 };
 
 const buildIndexMap = (order) => {
@@ -1852,51 +1862,82 @@ const buildIndexMap = (order) => {
 };
 
 const validateParsonsExample3Flexible = (order, expectedIds) => {
-    if (!hasSameParsonsItems(order, expectedIds)) return false;
+    const inventory = compareParsonsItems(order, expectedIds);
+    if (!inventory.ok) return inventory;
     const idx = buildIndexMap(order);
 
     if (!(idx.get("e3m1") < idx.get("e3m2") && idx.get("e3m2") < idx.get("e3m3") && idx.get("e3m3") < idx.get("e3m4"))) {
-        return false;
+        return { ok: false, reason: "structure_position" };
     }
     if (!(idx.get("e3m4") < idx.get("e3m5") && idx.get("e3m5") < idx.get("e3m6"))) {
-        return false;
+        return { ok: false, reason: "indentation_block" };
     }
     if (!(idx.get("e3m4") < idx.get("e3m7"))) {
-        return false;
+        return { ok: false, reason: "indentation_block" };
     }
 
     const latestProcessing = Math.max(idx.get("e3m5"), idx.get("e3m6"), idx.get("e3m7"));
     const earliestOutput = Math.min(idx.get("e3m8"), idx.get("e3m9"));
     if (!(latestProcessing < earliestOutput)) {
-        return false;
+        return { ok: false, reason: "output_position" };
     }
 
-    return true;
+    return { ok: true };
 };
 
 const validateParsonsAssessmentFlexible = (order, expectedIds) => {
-    if (!hasSameParsonsItems(order, expectedIds)) return false;
+    const inventory = compareParsonsItems(order, expectedIds);
+    if (!inventory.ok) return inventory;
     const idx = buildIndexMap(order);
 
     if (!(idx.get("a2") < idx.get("a4") && idx.get("a3") < idx.get("a4"))) {
-        return false;
+        return { ok: false, reason: "structure_position" };
     }
     if (!(idx.get("a4") < idx.get("a1") && idx.get("a1") < idx.get("a5") && idx.get("a5") < idx.get("a6"))) {
-        return false;
+        return { ok: false, reason: "indentation_block" };
     }
     if (!(idx.get("a6") < idx.get("a7") && idx.get("a7") < idx.get("a9") && idx.get("a9") < idx.get("a8"))) {
-        return false;
+        return { ok: false, reason: "indentation_block" };
     }
     if (!(idx.get("a8") < idx.get("a10") && idx.get("a8") < idx.get("a11"))) {
-        return false;
+        return { ok: false, reason: "output_position" };
     }
 
-    return true;
+    return { ok: true };
 };
 
 const PARSONS_VALIDATORS = {
     "example3-modify-parsons": validateParsonsExample3Flexible,
     "assessment-parsons": validateParsonsAssessmentFlexible
+};
+
+const PARSONS_REASON_MESSAGES = {
+    missing_line: "Not quite: one or more lines are missing or extra.",
+    duplicate_line: "Not quite: a line appears more than once.",
+    indentation_block: "Close, but block structure is off. Keep loop/if body lines inside their parent block.",
+    structure_position: "Close, but the program stages are out of order. Place setup before loops and processing.",
+    output_position: "Close, but output is too early. Print results only after calculations are complete."
+};
+
+const validateParsonsStrict = (order, expectedIds) => {
+    const inventory = compareParsonsItems(order, expectedIds);
+    if (!inventory.ok) return inventory;
+    const exact = order.length === expectedIds.length && order.every((id, index) => id === expectedIds[index]);
+    if (exact) return { ok: true };
+    return { ok: false, reason: "structure_position" };
+};
+
+const getParsonsSuccessMessage = (containerId, order, expectedIds) => {
+    const isExact = order.length === expectedIds.length && order.every((id, index) => id === expectedIds[index]);
+    const hasFlexibleValidator = Object.prototype.hasOwnProperty.call(PARSONS_VALIDATORS, containerId);
+    if (hasFlexibleValidator && !isExact) {
+        return "Excellent! Correct logic. This alternative valid order also works.";
+    }
+    return "Excellent! The logic is in the correct order.";
+};
+
+const getParsonsFailureMessage = (reason) => {
+    return PARSONS_REASON_MESSAGES[reason] || "Try again. Think: Initialize -> Loop -> Process -> Output.";
 };
 
 const verifyParsons = (containerId, correctIds, feedbackId) => {
@@ -1910,14 +1951,14 @@ const verifyParsons = (containerId, correctIds, feedbackId) => {
 
     const order = getParsonsOrder(container);
     const validator = PARSONS_VALIDATORS[containerId];
-    const isCorrect = typeof validator === "function"
+    const result = typeof validator === "function"
         ? validator(order, correctIds)
-        : order.length === correctIds.length && order.every((id, index) => id === correctIds[index]);
+        : validateParsonsStrict(order, correctIds);
 
-    if (isCorrect) {
-        setFeedbackState(feedback, true, "Excellent! The logic is in the correct order.", feedbackId);
+    if (result.ok) {
+        setFeedbackState(feedback, true, getParsonsSuccessMessage(containerId, order, correctIds), feedbackId);
     } else {
-        setFeedbackState(feedback, false, "Try again. Think: Initialize -> Loop -> Process -> Output.", feedbackId);
+        setFeedbackState(feedback, false, getParsonsFailureMessage(result.reason), feedbackId);
     }
 };
 
