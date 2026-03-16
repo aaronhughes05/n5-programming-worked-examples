@@ -1835,6 +1835,70 @@ function getDragAfterElement(container, y) {
     ).element;
 }
 
+const getParsonsOrder = (container) => Array.from(container.getElementsByClassName("draggable")).map((el) => el.id);
+
+const hasSameParsonsItems = (order, expectedIds) => {
+    if (!Array.isArray(order) || !Array.isArray(expectedIds)) return false;
+    if (order.length !== expectedIds.length) return false;
+    const seen = new Set(order);
+    if (seen.size !== order.length) return false;
+    return expectedIds.every((id) => seen.has(id));
+};
+
+const buildIndexMap = (order) => {
+    const map = new Map();
+    order.forEach((id, index) => map.set(id, index));
+    return map;
+};
+
+const validateParsonsExample3Flexible = (order, expectedIds) => {
+    if (!hasSameParsonsItems(order, expectedIds)) return false;
+    const idx = buildIndexMap(order);
+
+    if (!(idx.get("e3m1") < idx.get("e3m2") && idx.get("e3m2") < idx.get("e3m3") && idx.get("e3m3") < idx.get("e3m4"))) {
+        return false;
+    }
+    if (!(idx.get("e3m4") < idx.get("e3m5") && idx.get("e3m5") < idx.get("e3m6"))) {
+        return false;
+    }
+    if (!(idx.get("e3m4") < idx.get("e3m7"))) {
+        return false;
+    }
+
+    const latestProcessing = Math.max(idx.get("e3m5"), idx.get("e3m6"), idx.get("e3m7"));
+    const earliestOutput = Math.min(idx.get("e3m8"), idx.get("e3m9"));
+    if (!(latestProcessing < earliestOutput)) {
+        return false;
+    }
+
+    return true;
+};
+
+const validateParsonsAssessmentFlexible = (order, expectedIds) => {
+    if (!hasSameParsonsItems(order, expectedIds)) return false;
+    const idx = buildIndexMap(order);
+
+    if (!(idx.get("a2") < idx.get("a4") && idx.get("a3") < idx.get("a4"))) {
+        return false;
+    }
+    if (!(idx.get("a4") < idx.get("a1") && idx.get("a1") < idx.get("a5") && idx.get("a5") < idx.get("a6"))) {
+        return false;
+    }
+    if (!(idx.get("a6") < idx.get("a7") && idx.get("a7") < idx.get("a9") && idx.get("a9") < idx.get("a8"))) {
+        return false;
+    }
+    if (!(idx.get("a8") < idx.get("a10") && idx.get("a8") < idx.get("a11"))) {
+        return false;
+    }
+
+    return true;
+};
+
+const PARSONS_VALIDATORS = {
+    "example3-modify-parsons": validateParsonsExample3Flexible,
+    "assessment-parsons": validateParsonsAssessmentFlexible
+};
+
 const verifyParsons = (containerId, correctIds, feedbackId) => {
     const container = document.getElementById(containerId);
     const feedback = document.getElementById(feedbackId);
@@ -1844,19 +1908,11 @@ const verifyParsons = (containerId, correctIds, feedbackId) => {
         return;
     }
 
-    const items = container.getElementsByClassName('draggable');
-    let isCorrect = true;
-
-    if (items.length !== correctIds.length) {
-        isCorrect = false;
-    } else {
-        for (let i = 0; i < correctIds.length; i++) {
-            if (items[i].id !== correctIds[i]) {
-                isCorrect = false;
-                break;
-            }
-        }
-    }
+    const order = getParsonsOrder(container);
+    const validator = PARSONS_VALIDATORS[containerId];
+    const isCorrect = typeof validator === "function"
+        ? validator(order, correctIds)
+        : order.length === correctIds.length && order.every((id, index) => id === correctIds[index]);
 
     if (isCorrect) {
         setFeedbackState(feedback, true, "Excellent! The logic is in the correct order.", feedbackId);

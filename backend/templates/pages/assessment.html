@@ -293,17 +293,17 @@ E: print("Total:", total)</code></pre>
           <li>Prints the total and average</li>
         </ul>
         <div id="assessment-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-          <div id="a3" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
-          <div id="a8" class="draggable" draggable="true" ondragstart="drag(event)">average = total / len(prices)</div>
-          <div id="a2" class="draggable" draggable="true" ondragstart="drag(event)">prices = []</div>
-          <div id="a5" class="draggable" draggable="true" ondragstart="drag(event)">while price &lt; 0:</div>
-          <div id="a10" class="draggable" draggable="true" ondragstart="drag(event)">print("Total:", total)</div>
-          <div id="a4" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(8):</div>
-          <div id="a6" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Enter a valid price: "))</div>
-          <div id="a7" class="draggable" draggable="true" ondragstart="drag(event)">prices.append(price)</div>
-          <div id="a1" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
-          <div id="a9" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
-          <div id="a11" class="draggable" draggable="true" ondragstart="drag(event)">print("Average:", average)</div>
+          <div id="a3" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">total = 0</div>
+          <div id="a8" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">average = total / len(prices)</div>
+          <div id="a2" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">prices = []</div>
+          <div id="a5" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">while price &lt; 0:</div>
+          <div id="a10" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print("Total:", total)</div>
+          <div id="a4" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">for counter in range(8):</div>
+          <div id="a6" class="draggable parsons-indent-2" draggable="true" ondragstart="drag(event)">price = float(input("Enter a valid price: "))</div>
+          <div id="a7" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">prices.append(price)</div>
+          <div id="a1" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
+          <div id="a9" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">total = total + price</div>
+          <div id="a11" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print("Average:", average)</div>
         </div>
         <button onclick="verifyParsons('assessment-parsons', ['a3','a2','a4','a1','a5','a6','a7','a9','a8','a10','a11'], 'assessmentFeedback')">Verify Logic</button>
         <p id="assessmentFeedback" class="result-feedback" role="status" aria-live="polite"></p>

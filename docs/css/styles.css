@@ -3193,6 +3193,16 @@ body.is-modal-open {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+.draggable.parsons-indent-1 {
+  padding-left: calc(var(--space-3) + 18px);
+  border-left: 3px solid rgba(37, 99, 235, 0.35);
+}
+
+.draggable.parsons-indent-2 {
+  padding-left: calc(var(--space-3) + 34px);
+  border-left: 3px solid rgba(20, 184, 166, 0.45);
+}
+
 .draggable:hover {
   border-color: #bfd6f6;
   box-shadow: 0 8px 14px rgba(13, 24, 43, 0.12);

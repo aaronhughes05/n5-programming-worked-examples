@@ -260,11 +260,11 @@ D: print(total)</code></pre>
                 <li>Print the final total after the loop</li>
             </ul>
             <div id="example2-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="m3" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
-                <div id="m1" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
-                <div id="m5" class="draggable" draggable="true" ondragstart="drag(event)">print(total)</div>
-                <div id="m4" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
-                <div id="m2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(10):</div>
+                <div id="m3" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
+                <div id="m1" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">total = 0</div>
+                <div id="m5" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print(total)</div>
+                <div id="m4" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">total = total + price</div>
+                <div id="m2" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">for counter in range(10):</div>
             </div>
             <button onclick="verifyParsons('example2-modify-parsons', ['m1', 'm2', 'm3', 'm4', 'm5'], 'tick2')">Verify Logic</button>
             <p id="tick2" class="result-feedback" role="status" aria-live="polite"></p>
