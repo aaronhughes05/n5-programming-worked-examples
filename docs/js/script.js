@@ -4524,6 +4524,11 @@ const initExpanderAnimations = () => {
         const summary = details.querySelector(":scope > summary");
         if (!summary) return;
 
+        // Subgoals should be visible by default when opening an exercise page.
+        if (details.classList.contains("subgoals-panel")) {
+            details.open = true;
+        }
+
         let content = details.querySelector(":scope > .expander-content");
         if (!content) {
             content = document.createElement("div");
@@ -4551,11 +4556,19 @@ const initExpanderAnimations = () => {
         if (prefersReducedMotion) return;
 
         let isAnimating = false;
+        let animationFallbackId = null;
+        const clearAnimationFallback = () => {
+            if (animationFallbackId) {
+                clearTimeout(animationFallbackId);
+                animationFallbackId = null;
+            }
+        };
 
         summary.addEventListener("click", (event) => {
             event.preventDefault();
             if (isAnimating) return;
             isAnimating = true;
+            clearAnimationFallback();
 
             if (details.open) {
                 const startHeight = content.scrollHeight;
@@ -4569,12 +4582,19 @@ const initExpanderAnimations = () => {
                 });
 
                 const onCollapseEnd = (evt) => {
-                    if (evt.propertyName !== "height") return;
+                    if (evt.target !== content || evt.propertyName !== "height") return;
+                    clearAnimationFallback();
                     content.removeEventListener("transitionend", onCollapseEnd);
                     details.open = false;
                     isAnimating = false;
                 };
                 content.addEventListener("transitionend", onCollapseEnd);
+                animationFallbackId = window.setTimeout(() => {
+                    content.removeEventListener("transitionend", onCollapseEnd);
+                    details.open = false;
+                    isAnimating = false;
+                    clearAnimationFallback();
+                }, 350);
                 return;
             }
 
@@ -4590,12 +4610,19 @@ const initExpanderAnimations = () => {
             });
 
             const onExpandEnd = (evt) => {
-                if (evt.propertyName !== "height") return;
+                if (evt.target !== content || evt.propertyName !== "height") return;
+                clearAnimationFallback();
                 content.removeEventListener("transitionend", onExpandEnd);
                 content.style.height = "auto";
                 isAnimating = false;
             };
             content.addEventListener("transitionend", onExpandEnd);
+            animationFallbackId = window.setTimeout(() => {
+                content.removeEventListener("transitionend", onExpandEnd);
+                content.style.height = "auto";
+                isAnimating = false;
+                clearAnimationFallback();
+            }, 350);
         });
     });
 };
