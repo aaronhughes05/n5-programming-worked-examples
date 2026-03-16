@@ -817,10 +817,25 @@ const HINT_MODEL = {
             worked: "Correct order: input, while invalid, print error, re-input, final success print."
         },
         makeOutputTick: {
-            l1: "Compare formatting and values against expected output.",
-            l2: "Check commas, spacing, and line order exactly.",
-            l3: "For this activity, outputs should reflect 3 accepted scores after validation.",
-            worked: "Match expected output exactly after running your program."
+            l1: "Start with scores = [] and total = 0, then collect until you have exactly 3 valid scores.",
+            l2: "Use nested validation: read a score, and while score < 5 keep asking for a valid score before appending.",
+            l3: "After appending each valid score, update total, then print Scores, Total, and Average using the exact label format.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+total = 0
+
+while len(scores) < 3:
+    score = int(input("Score: "))
+    while score < 5:
+        score = int(input("Enter a valid score: "))
+    scores.append(score)
+    total = total + score
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
         }
     },
     "example2.html": {
@@ -891,10 +906,23 @@ const HINT_MODEL = {
             worked: "Correct order: total = 0 -> for counter in range(10): -> price input -> total update -> print(total)."
         },
         makeOutputTick: {
-            l1: "Compare formatting and values against expected output.",
-            l2: "Check spacing, commas, and line order exactly.",
-            l3: "Ensure totals and average are calculated from the selected test case.",
-            worked: "Match expected output exactly after running your program."
+            l1: "Set up scores = [] and total = 0 before the loop.",
+            l2: "Use a fixed loop of 6 inputs, append each score, and update the running total each pass.",
+            l3: "Calculate average from total / len(scores), then print the three output lines with exact labels and formatting.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+total = 0
+
+for _ in range(6):
+    score = int(input("Score: "))
+    scores.append(score)
+    total = total + score
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
         }
     },
     "example3.html": {
@@ -965,10 +993,25 @@ const HINT_MODEL = {
             worked: "Use order: setup list, collect 6 values, traverse for pass/highest logic, then print results."
         },
         makeOutputTick: {
-            l1: "Compare your output exactly against the expected output block.",
-            l2: "Check line order, labels, commas, and spacing closely.",
-            l3: "Confirm total and average use all test-case values correctly.",
-            worked: "Match expected output exactly after running your program."
+            l1: "Collect exactly 6 scores into a list first; keep traversal logic separate from input collection.",
+            l2: "Traverse the list in a second loop to compute total (do not hard-code totals).",
+            l3: "Compute average using len(scores), then print Scores, Total, and Average in the exact expected format.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+
+for _ in range(6):
+    score = int(input("Score: "))
+    scores.append(score)
+
+total = 0
+for value in scores:
+    total = total + value
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
         }
     },
     "assessment.html": {
@@ -988,7 +1031,29 @@ const HINT_MODEL = {
         sgD1Tick: { l1: "This line traverses items for display.", l2: "Traversal/processing list values is subgoal D.", l3: "Map line purpose, not syntax shape.", worked: "Answer: D." },
         sgE1Tick: { l1: "Update total cumulatively row by row.", l2: "Start from 0, then add each new input.", l3: "Totals should be 2, then 5, then 9.", worked: "Running totals: 2, 5, 9." },
         assessmentFeedback: { l1: "Order by problem flow: setup -> input loop -> validate -> store/update -> output.", l2: "Ensure validation (while) sits inside the main loop.", l3: "Average is calculated after data collection and before final prints.", worked: "Use the sequence shown in the expected arrangement for each stage." },
-        makeOutputTick: { l1: "Compare formatting and values against expected output.", l2: "Check spacing, commas, and order of lines.", l3: "Ensure totals/averages are computed from the chosen test case.", worked: "Match expected output exactly after running your program." }
+        makeOutputTick: {
+            l1: "Combine validation, storage, and traversal: collect exactly 6 scores and reject negatives with a while loop.",
+            l2: "Append only valid scores, then traverse the stored list to calculate total.",
+            l3: "Calculate average from total / len(scores), and print the three lines in the exact expected format.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+total = 0
+
+while len(scores) < 6:
+    score = int(input("Score: "))
+    while score < 0:
+        score = int(input("Enter a valid score: "))
+    scores.append(score)
+
+for value in scores:
+    total = total + value
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
+        }
     }
 };
 
@@ -1350,6 +1415,13 @@ const getActiveCheckpointId = (section) => {
     return firstIncomplete || ids[0];
 };
 
+const escapeHtml = (value) => {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+};
+
 const renderHintPanel = (panelData) => {
     const { section, metaEl, hintEl, showBtn, revealBtn } = panelData;
     const checkpointId = getActiveCheckpointId(section);
@@ -1371,7 +1443,11 @@ const renderHintPanel = (panelData) => {
     if (displayedLevel > 0) {
         hintEl.innerHTML = `<p><strong>Hint Level ${displayedLevel}:</strong> ${hints[`l${displayedLevel}`]}</p>`;
         if (bucket.revealedWorked) {
-            hintEl.innerHTML += `<p class="hint-panel__worked"><strong>Worked hint:</strong> ${hints.worked}</p>`;
+            const workedText = String(hints.worked || "Use this worked solution.");
+            hintEl.innerHTML += `<p class="hint-panel__worked"><strong>Worked hint:</strong> ${workedText}</p>`;
+            if (typeof hints.workedCode === "string" && hints.workedCode.trim().length > 0) {
+                hintEl.innerHTML += `<pre><code>${escapeHtml(hints.workedCode)}</code></pre>`;
+            }
         }
     } else {
         hintEl.innerHTML = "<p>Need a nudge? Use Show hint to reveal a guided clue.</p>";
