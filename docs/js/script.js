@@ -2809,15 +2809,13 @@ const initLearningDashboard = () => {
         }
     });
 
-    const inProgress = summaries.filter((item) => item.inProgress).sort((a, b) => {
-        if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt;
-        return b.progress - a.progress;
-    });
+    const inProgress = summaries.filter((item) => item.inProgress);
 
     if (continueCta) {
-        if (inProgress.length) {
-            continueCta.href = inProgress[0].href;
-            continueCta.textContent = `Continue ${inProgress[0].label}`;
+        const firstInSequence = inProgress[0];
+        if (firstInSequence) {
+            continueCta.href = firstInSequence.href;
+            continueCta.textContent = `Continue ${firstInSequence.label}`;
         } else {
             const fallback = summaries.find((item) => !item.isComplete) || summaries[summaries.length - 1];
             continueCta.href = fallback.href;
