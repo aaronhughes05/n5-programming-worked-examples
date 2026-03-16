@@ -817,10 +817,25 @@ const HINT_MODEL = {
             worked: "Correct order: input, while invalid, print error, re-input, final success print."
         },
         makeOutputTick: {
-            l1: "Compare formatting and values against expected output.",
-            l2: "Check commas, spacing, and line order exactly.",
-            l3: "For this activity, outputs should reflect 3 accepted scores after validation.",
-            worked: "Match expected output exactly after running your program."
+            l1: "Start with scores = [] and total = 0, then collect until you have exactly 3 valid scores.",
+            l2: "Use nested validation: read a score, and while score < 5 keep asking for a valid score before appending.",
+            l3: "After appending each valid score, update total, then print Scores, Total, and Average using the exact label format.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+total = 0
+
+while len(scores) < 3:
+    score = int(input("Score: "))
+    while score < 5:
+        score = int(input("Enter a valid score: "))
+    scores.append(score)
+    total = total + score
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
         }
     },
     "example2.html": {
@@ -891,10 +906,23 @@ const HINT_MODEL = {
             worked: "Correct order: total = 0 -> for counter in range(10): -> price input -> total update -> print(total)."
         },
         makeOutputTick: {
-            l1: "Compare formatting and values against expected output.",
-            l2: "Check spacing, commas, and line order exactly.",
-            l3: "Ensure totals and average are calculated from the selected test case.",
-            worked: "Match expected output exactly after running your program."
+            l1: "Set up scores = [] and total = 0 before the loop.",
+            l2: "Use a fixed loop of 6 inputs, append each score, and update the running total each pass.",
+            l3: "Calculate average from total / len(scores), then print the three output lines with exact labels and formatting.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+total = 0
+
+for _ in range(6):
+    score = int(input("Score: "))
+    scores.append(score)
+    total = total + score
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
         }
     },
     "example3.html": {
@@ -965,10 +993,25 @@ const HINT_MODEL = {
             worked: "Use order: setup list, collect 6 values, traverse for pass/highest logic, then print results."
         },
         makeOutputTick: {
-            l1: "Compare your output exactly against the expected output block.",
-            l2: "Check line order, labels, commas, and spacing closely.",
-            l3: "Confirm total and average use all test-case values correctly.",
-            worked: "Match expected output exactly after running your program."
+            l1: "Collect exactly 6 scores into a list first; keep traversal logic separate from input collection.",
+            l2: "Traverse the list in a second loop to compute total (do not hard-code totals).",
+            l3: "Compute average using len(scores), then print Scores, Total, and Average in the exact expected format.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+
+for _ in range(6):
+    score = int(input("Score: "))
+    scores.append(score)
+
+total = 0
+for value in scores:
+    total = total + value
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
         }
     },
     "assessment.html": {
@@ -988,7 +1031,29 @@ const HINT_MODEL = {
         sgD1Tick: { l1: "This line traverses items for display.", l2: "Traversal/processing list values is subgoal D.", l3: "Map line purpose, not syntax shape.", worked: "Answer: D." },
         sgE1Tick: { l1: "Update total cumulatively row by row.", l2: "Start from 0, then add each new input.", l3: "Totals should be 2, then 5, then 9.", worked: "Running totals: 2, 5, 9." },
         assessmentFeedback: { l1: "Order by problem flow: setup -> input loop -> validate -> store/update -> output.", l2: "Ensure validation (while) sits inside the main loop.", l3: "Average is calculated after data collection and before final prints.", worked: "Use the sequence shown in the expected arrangement for each stage." },
-        makeOutputTick: { l1: "Compare formatting and values against expected output.", l2: "Check spacing, commas, and order of lines.", l3: "Ensure totals/averages are computed from the chosen test case.", worked: "Match expected output exactly after running your program." }
+        makeOutputTick: {
+            l1: "Combine validation, storage, and traversal: collect exactly 6 scores and reject negatives with a while loop.",
+            l2: "Append only valid scores, then traverse the stored list to calculate total.",
+            l3: "Calculate average from total / len(scores), and print the three lines in the exact expected format.",
+            worked: "Use this full solution:",
+            workedCode: `scores = []
+total = 0
+
+while len(scores) < 6:
+    score = int(input("Score: "))
+    while score < 0:
+        score = int(input("Enter a valid score: "))
+    scores.append(score)
+
+for value in scores:
+    total = total + value
+
+average = total / len(scores)
+
+print("Scores:", ", ".join(str(s) for s in scores))
+print("Total:", total)
+print("Average:", average)`
+        }
     }
 };
 
@@ -1350,6 +1415,13 @@ const getActiveCheckpointId = (section) => {
     return firstIncomplete || ids[0];
 };
 
+const escapeHtml = (value) => {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+};
+
 const renderHintPanel = (panelData) => {
     const { section, metaEl, hintEl, showBtn, revealBtn } = panelData;
     const checkpointId = getActiveCheckpointId(section);
@@ -1371,7 +1443,11 @@ const renderHintPanel = (panelData) => {
     if (displayedLevel > 0) {
         hintEl.innerHTML = `<p><strong>Hint Level ${displayedLevel}:</strong> ${hints[`l${displayedLevel}`]}</p>`;
         if (bucket.revealedWorked) {
-            hintEl.innerHTML += `<p class="hint-panel__worked"><strong>Worked hint:</strong> ${hints.worked}</p>`;
+            const workedText = String(hints.worked || "Use this worked solution.");
+            hintEl.innerHTML += `<p class="hint-panel__worked"><strong>Worked hint:</strong> ${workedText}</p>`;
+            if (typeof hints.workedCode === "string" && hints.workedCode.trim().length > 0) {
+                hintEl.innerHTML += `<pre><code>${escapeHtml(hints.workedCode)}</code></pre>`;
+            }
         }
     } else {
         hintEl.innerHTML = "<p>Need a nudge? Use Show hint to reveal a guided clue.</p>";
@@ -4448,6 +4524,11 @@ const initExpanderAnimations = () => {
         const summary = details.querySelector(":scope > summary");
         if (!summary) return;
 
+        // Subgoals should be visible by default when opening an exercise page.
+        if (details.classList.contains("subgoals-panel")) {
+            details.open = true;
+        }
+
         let content = details.querySelector(":scope > .expander-content");
         if (!content) {
             content = document.createElement("div");
@@ -4475,11 +4556,19 @@ const initExpanderAnimations = () => {
         if (prefersReducedMotion) return;
 
         let isAnimating = false;
+        let animationFallbackId = null;
+        const clearAnimationFallback = () => {
+            if (animationFallbackId) {
+                clearTimeout(animationFallbackId);
+                animationFallbackId = null;
+            }
+        };
 
         summary.addEventListener("click", (event) => {
             event.preventDefault();
             if (isAnimating) return;
             isAnimating = true;
+            clearAnimationFallback();
 
             if (details.open) {
                 const startHeight = content.scrollHeight;
@@ -4493,12 +4582,19 @@ const initExpanderAnimations = () => {
                 });
 
                 const onCollapseEnd = (evt) => {
-                    if (evt.propertyName !== "height") return;
+                    if (evt.target !== content || evt.propertyName !== "height") return;
+                    clearAnimationFallback();
                     content.removeEventListener("transitionend", onCollapseEnd);
                     details.open = false;
                     isAnimating = false;
                 };
                 content.addEventListener("transitionend", onCollapseEnd);
+                animationFallbackId = window.setTimeout(() => {
+                    content.removeEventListener("transitionend", onCollapseEnd);
+                    details.open = false;
+                    isAnimating = false;
+                    clearAnimationFallback();
+                }, 350);
                 return;
             }
 
@@ -4514,15 +4610,190 @@ const initExpanderAnimations = () => {
             });
 
             const onExpandEnd = (evt) => {
-                if (evt.propertyName !== "height") return;
+                if (evt.target !== content || evt.propertyName !== "height") return;
+                clearAnimationFallback();
                 content.removeEventListener("transitionend", onExpandEnd);
                 content.style.height = "auto";
                 isAnimating = false;
             };
             content.addEventListener("transitionend", onExpandEnd);
+            animationFallbackId = window.setTimeout(() => {
+                content.removeEventListener("transitionend", onExpandEnd);
+                content.style.height = "auto";
+                isAnimating = false;
+                clearAnimationFallback();
+            }, 350);
         });
     });
 };
+
+const PYODIDE_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/";
+const PYTHON_COLD_START_TIMEOUT_MS = 45000;
+const PYTHON_RUN_TIMEOUT_MS = 12000;
+let pythonRunnerWorker = null;
+let pythonRunnerPending = null;
+let pythonRunnerRequestId = 0;
+let pythonRunnerIsWarm = false;
+
+const terminatePythonRunnerWorker = () => {
+    if (pythonRunnerWorker) {
+        pythonRunnerWorker.terminate();
+        pythonRunnerWorker = null;
+    }
+    if (pythonRunnerPending?.timerId) {
+        clearTimeout(pythonRunnerPending.timerId);
+    }
+    pythonRunnerPending = null;
+    pythonRunnerIsWarm = false;
+};
+
+const createPythonRunnerWorker = () => {
+    const workerSource = `
+let pyodideInstance = null;
+let pyodideLoader = null;
+
+const ensurePyodide = async (indexURL) => {
+  if (pyodideInstance) return pyodideInstance;
+  if (!pyodideLoader) {
+    importScripts(indexURL + "pyodide.js");
+    pyodideLoader = self.loadPyodide({ indexURL });
+  }
+  pyodideInstance = await pyodideLoader;
+  return pyodideInstance;
+};
+
+const runPython = async ({ indexURL, code, inputs }) => {
+  const pyodide = await ensurePyodide(indexURL);
+  pyodide.globals.set("INPUTS", Array.isArray(inputs) ? inputs.map((value) => String(value)) : []);
+  pyodide.globals.set("USER_CODE", String(code || ""));
+  return pyodide.runPythonAsync(\`
+import sys, io, builtins
+inputs = list(INPUTS)
+
+def input(prompt=""):
+    if inputs:
+        return str(inputs.pop(0))
+    raise EOFError("No more prepared input values for this test case.")
+
+class _LimitedBuffer(io.StringIO):
+    LIMIT = 20000
+    def write(self, s):
+        current = self.tell()
+        if current >= self.LIMIT:
+            return 0
+        chunk = str(s)
+        remaining = self.LIMIT - current
+        if len(chunk) > remaining:
+            chunk = chunk[:remaining]
+        return super().write(chunk)
+
+builtins.input = input
+_buffer = _LimitedBuffer()
+_old_stdout = sys.stdout
+_old_stderr = sys.stderr
+sys.stdout = _buffer
+sys.stderr = _buffer
+try:
+    exec(USER_CODE, {})
+finally:
+    sys.stdout = _old_stdout
+    sys.stderr = _old_stderr
+_buffer.getvalue()
+  \`);
+};
+
+self.onmessage = async (event) => {
+  const payload = event?.data || {};
+  if (payload.type !== "run") return;
+  const requestId = Number(payload.requestId || 0);
+  try {
+    const output = await runPython(payload);
+    self.postMessage({ type: "result", requestId, output: String(output || "") });
+  } catch (error) {
+    self.postMessage({
+      type: "error",
+      requestId,
+      message: error && error.message ? String(error.message) : "Unknown Python runtime error."
+    });
+  }
+};
+    `;
+    const blob = new Blob([workerSource], { type: "application/javascript" });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    return worker;
+};
+
+const ensurePythonRunnerWorker = () => {
+    if (pythonRunnerWorker) return pythonRunnerWorker;
+    if (typeof Worker === "undefined") {
+        throw new Error("This browser does not support background workers for Python execution.");
+    }
+
+    const worker = createPythonRunnerWorker();
+    worker.addEventListener("message", (event) => {
+        const payload = event?.data || {};
+        const pending = pythonRunnerPending;
+        if (!pending) return;
+        if (Number(payload.requestId || 0) !== pending.requestId) return;
+
+        clearTimeout(pending.timerId);
+        pythonRunnerPending = null;
+
+        if (payload.type === "result") {
+            pythonRunnerIsWarm = true;
+            pending.resolve(String(payload.output || ""));
+            return;
+        }
+
+        const message = String(payload.message || "Unknown Python runtime error.");
+        pending.reject(new Error(message));
+    });
+
+    worker.addEventListener("error", () => {
+        const pending = pythonRunnerPending;
+        terminatePythonRunnerWorker();
+        if (pending) {
+            pending.reject(new Error("Python worker crashed. Please run again."));
+        }
+    });
+
+    pythonRunnerWorker = worker;
+    return worker;
+};
+
+const runPythonInWorker = (code, inputs, timeoutMs = PYTHON_RUN_TIMEOUT_MS) => new Promise((resolve, reject) => {
+    if (pythonRunnerPending) {
+        reject(new Error("Python is already running. Please wait for the current run to finish."));
+        return;
+    }
+
+    let worker;
+    try {
+        worker = ensurePythonRunnerWorker();
+    } catch (error) {
+        reject(error);
+        return;
+    }
+
+    const requestId = ++pythonRunnerRequestId;
+    const timerId = window.setTimeout(() => {
+        const pending = pythonRunnerPending;
+        if (!pending || pending.requestId !== requestId) return;
+        terminatePythonRunnerWorker();
+        reject(new Error("Execution timed out. Check for an infinite loop or waiting input."));
+    }, timeoutMs);
+
+    pythonRunnerPending = { requestId, resolve, reject, timerId };
+    worker.postMessage({
+        type: "run",
+        requestId,
+        indexURL: PYODIDE_INDEX_URL,
+        code,
+        inputs
+    });
+});
 
 const runProgram = async () => {
     const programEl = document.getElementById("makeProgram");
@@ -4542,45 +4813,34 @@ const runProgram = async () => {
     if (statusEl) statusEl.textContent = "Running Python...";
     if (spinner) spinner.classList.remove("is-hidden");
 
+    const usesColdStartTimeout = !pythonRunnerIsWarm;
+
     try {
-        if (!window.loadPyodide) {
-            throw new Error("Python runtime not loaded.");
+        if (statusEl) {
+            statusEl.textContent = usesColdStartTimeout
+                ? "Loading Python runtime (this can take up to 45 seconds)..."
+                : "Running Python in runtime...";
         }
-
-        if (!window.pyodide) {
-            if (statusEl) statusEl.textContent = "Loading Python runtime...";
-            window.pyodide = await loadPyodide({
-                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
-            });
-            if (statusEl) statusEl.textContent = "Python ready.";
-        }
-
         const inputs = getMakeInputs(caseSelect.value);
-        window.pyodide.globals.set("INPUTS", inputs);
-        window.pyodide.globals.set("USER_CODE", code);
-
-        const result = await window.pyodide.runPythonAsync(`
-import sys, io, builtins
-inputs = list(INPUTS)
-
-def input(prompt=""):
-    return inputs.pop(0) if inputs else ""
-
-builtins.input = input
-_buffer = io.StringIO()
-_old = sys.stdout
-sys.stdout = _buffer
-try:
-    exec(USER_CODE, {})
-finally:
-    sys.stdout = _old
-_buffer.getvalue()
-        `);
+        const result = await runPythonInWorker(
+            code,
+            inputs,
+            usesColdStartTimeout ? PYTHON_COLD_START_TIMEOUT_MS : PYTHON_RUN_TIMEOUT_MS
+        );
 
         outputEl.textContent = result || "(no output)";
         if (statusEl) statusEl.textContent = "Python ready.";
     } catch (err) {
-        outputEl.textContent = "Error running code: " + err.message;
+        const message = String(err?.message || "Unknown Python error.");
+        if (message.includes("No more prepared input values")) {
+            outputEl.textContent = "Error running code: test input was exhausted. Check loop conditions and input validation.";
+        } else if (message.includes("Execution timed out")) {
+            outputEl.textContent = usesColdStartTimeout
+                ? "Error running code: Python runtime startup timed out. Check connection and run again."
+                : "Error running code: Execution timed out. Check for an infinite loop or waiting input.";
+        } else {
+            outputEl.textContent = "Error running code: " + message;
+        }
         if (statusEl) statusEl.textContent = "Python error.";
     } finally {
         runBtn.textContent = "Run Program";
@@ -4588,6 +4848,10 @@ _buffer.getvalue()
         if (spinner) spinner.classList.add("is-hidden");
     }
 };
+
+window.addEventListener("beforeunload", () => {
+    terminatePythonRunnerWorker();
+});
 
 document.addEventListener("input", (event) => {
     if (event.target && event.target.id === "makeProgram") {
