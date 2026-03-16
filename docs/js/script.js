@@ -4491,6 +4491,8 @@ const initAssessmentGate = () => {
         const hrefAttr = link.getAttribute("href") || "";
         const hrefResolved = link.href || "";
         const isAssessmentTarget =
+            /(^|\/)assessment\/?($|[?#])/i.test(hrefAttr) ||
+            /(^|\/)assessment\/?($|[?#])/i.test(hrefResolved) ||
             /(^|\/)assessment\.html($|[?#])/i.test(hrefAttr) ||
             /(^|\/)assessment\.html($|[?#])/i.test(hrefResolved);
         if (!isAssessmentTarget) return;
