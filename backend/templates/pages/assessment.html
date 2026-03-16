@@ -97,8 +97,19 @@ E: print("Total:", total)</code></pre>
 
       <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2,tick3,tick4">
         <h2>2. Predictions</h2>
+        <div class="step-box">
+          <p><strong>Code Preview:</strong> Read this partial solution before answering.</p>
+          <pre><code>total = 0
+items = []
+for counter in range(5):
+    price = float(input("Price: "))
+    while price &lt; 0:
+        price = float(input("Enter a valid price: "))
+    items.append(price)
+    total = total + price</code></pre>
+        </div>
         <div class="question-block">
-          <p>How many times will the main loop repeat?</p>
+          <p>Based on the preview, how many times will the main loop repeat?</p>
           <div class="question-input">
             <input type="text" id="pred1" class="w-80" placeholder="Enter a number">
             <button onclick="checkAnswer('pred1', '5', 'tick1')">Check</button>
@@ -107,28 +118,36 @@ E: print("Total:", total)</code></pre>
         </div>
 
         <div class="question-block">
-          <p>Which loop would you use to reject negative prices?</p>
-          <div class="question-input">
-            <input type="text" id="pred2" class="w-140" placeholder="Is it while or for?">
-            <button onclick="checkAnswer('pred2', 'while', 'tick2')">Check</button>
+          <p>Which loop in the preview handles repeated validation for negative input?</p>
+          <div class="question-input question-input--stacked">
+            <label><input type="radio" name="assessmentPredLoopType" id="pred2-while"> while loop</label>
+            <label><input type="radio" name="assessmentPredLoopType" id="pred2-for"> for loop</label>
+            <label><input type="radio" name="assessmentPredLoopType" id="pred2-if"> if statement only</label>
+            <button onclick="checkRadioButton('pred2-while', 'tick2')">Check</button>
             <span id="tick2" class="tick-mark"></span>
           </div>
         </div>
 
         <div class="question-block">
-          <p>What variable stores the running total?</p>
+          <p>Which variable in the preview is the running total accumulator?</p>
           <div class="question-input">
-            <input type="text" id="pred3" class="w-140" placeholder="Enter variable name">
+            <select id="pred3" class="w-160">
+              <option value="">Select a variable</option>
+              <option value="items">items</option>
+              <option value="price">price</option>
+              <option value="total">total</option>
+            </select>
             <button onclick="checkAnswer('pred3', 'total', 'tick3')">Check</button>
             <span id="tick3" class="tick-mark"></span>
           </div>
         </div>
 
         <div class="question-block">
-          <p>Should the list store each valid price?</p>
-          <div class="question-input">
-            <input type="text" id="pred4" class="w-100" placeholder="Enter yes or no">
-            <button onclick="checkAnswer('pred4', 'yes', 'tick4')">Check</button>
+          <p>Should each valid price be appended to a list before traversal/output?</p>
+          <div class="question-input question-input--stacked">
+            <label><input type="radio" name="assessmentPredStore" id="pred4-yes"> Yes</label>
+            <label><input type="radio" name="assessmentPredStore" id="pred4-no"> No</label>
+            <button onclick="checkRadioButton('pred4-yes', 'tick4')">Check</button>
             <span id="tick4" class="tick-mark"></span>
           </div>
         </div>
@@ -274,17 +293,17 @@ E: print("Total:", total)</code></pre>
           <li>Prints the total and average</li>
         </ul>
         <div id="assessment-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-          <div id="a3" class="draggable" draggable="true" ondragstart="drag(event)">total = 0</div>
-          <div id="a8" class="draggable" draggable="true" ondragstart="drag(event)">average = total / len(prices)</div>
-          <div id="a2" class="draggable" draggable="true" ondragstart="drag(event)">prices = []</div>
-          <div id="a5" class="draggable" draggable="true" ondragstart="drag(event)">while price &lt; 0:</div>
-          <div id="a10" class="draggable" draggable="true" ondragstart="drag(event)">print("Total:", total)</div>
-          <div id="a4" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(8):</div>
-          <div id="a6" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Enter a valid price: "))</div>
-          <div id="a7" class="draggable" draggable="true" ondragstart="drag(event)">prices.append(price)</div>
-          <div id="a1" class="draggable" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
-          <div id="a9" class="draggable" draggable="true" ondragstart="drag(event)">total = total + price</div>
-          <div id="a11" class="draggable" draggable="true" ondragstart="drag(event)">print("Average:", average)</div>
+          <div id="a3" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">total = 0</div>
+          <div id="a8" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">average = total / len(prices)</div>
+          <div id="a2" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">prices = []</div>
+          <div id="a5" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">while price &lt; 0:</div>
+          <div id="a10" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print("Total:", total)</div>
+          <div id="a4" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">for counter in range(8):</div>
+          <div id="a6" class="draggable parsons-indent-2" draggable="true" ondragstart="drag(event)">price = float(input("Enter a valid price: "))</div>
+          <div id="a7" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">prices.append(price)</div>
+          <div id="a1" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">price = float(input("Price: "))</div>
+          <div id="a9" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">total = total + price</div>
+          <div id="a11" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print("Average:", average)</div>
         </div>
         <button onclick="verifyParsons('assessment-parsons', ['a3','a2','a4','a1','a5','a6','a7','a9','a8','a10','a11'], 'assessmentFeedback')">Verify Logic</button>
         <p id="assessmentFeedback" class="result-feedback" role="status" aria-live="polite"></p>

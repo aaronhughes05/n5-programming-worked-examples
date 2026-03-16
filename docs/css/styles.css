@@ -3193,6 +3193,14 @@ body.is-modal-open {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+.draggable.parsons-indent-1 {
+  margin-left: 18px;
+}
+
+.draggable.parsons-indent-2 {
+  margin-left: 34px;
+}
+
 .draggable:hover {
   border-color: #bfd6f6;
   box-shadow: 0 8px 14px rgba(13, 24, 43, 0.12);

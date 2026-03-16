@@ -86,6 +86,13 @@ D: print("Your username is: " + username)</code></pre>
 
         <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="tick1,tick2,tick3,tick4">
             <h2>2. Prediction Activity</h2>
+            <div class="step-box">
+                <p><strong>Code Preview:</strong> Use these lines to help your predictions.</p>
+                <pre><code>username = input("Enter username: ")
+while len(username) &lt; 5:
+    print("Username must be at least 5 characters long.")
+    username = input("Enter username: ")</code></pre>
+            </div>
             <div class="question-block">
                 <p>Do we need a loop to solve this problem?</p>
                 <div class="question-input-part">
@@ -115,9 +122,14 @@ D: print("Your username is: " + username)</code></pre>
                 </div>
             </div>
             <div class="question-block">
-                <p>Type the exact condition used to detect an invalid username.</p>
+                <p>From the preview, which condition detects an invalid username?</p>
                 <div class="question-input">
-                    <input type="text" id="pred3" class="w-200" placeholder="e.g. len(username)...">
+                    <select id="pred3" class="w-220">
+                        <option value="">Select one</option>
+                        <option value="len(username) == 5">len(username) == 5</option>
+                        <option value="len(username) &lt; 5">len(username) &lt; 5</option>
+                        <option value="len(username) &gt; 5">len(username) &gt; 5</option>
+                    </select>
                     <button onclick="checkAnswer('pred3', 'len(username) &lt; 5', 'tick3')">Check</button>
                     <span id="tick3" class="tick-mark padded"></span>
                 </div>
@@ -269,11 +281,11 @@ D: print("Your username is: " + username)</code></pre>
                 <li>Print the accepted username at the end</li>
             </ul>
             <div id="ex1-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="ex1m4" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
-                <div id="ex1m2" class="draggable" draggable="true" ondragstart="drag(event)">while len(username) &lt; 5 or len(username) &gt; 20:</div>
-                <div id="ex1m5" class="draggable" draggable="true" ondragstart="drag(event)">print("Your username is: " + username)</div>
-                <div id="ex1m3" class="draggable" draggable="true" ondragstart="drag(event)">username = input("Enter a valid username: ")</div>
-                <div id="ex1m1" class="draggable" draggable="true" ondragstart="drag(event)">print("Username must be between 5 and 20 characters long.")</div>
+                <div id="ex1m4" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">username = input("Enter username: ")</div>
+                <div id="ex1m2" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">while len(username) &lt; 5 or len(username) &gt; 20:</div>
+                <div id="ex1m5" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print("Your username is: " + username)</div>
+                <div id="ex1m3" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">username = input("Enter a valid username: ")</div>
+                <div id="ex1m1" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">print("Username must be between 5 and 20 characters long.")</div>
             </div>
             <button onclick="verifyParsons('ex1-modify-parsons', ['ex1m4', 'ex1m2', 'ex1m1', 'ex1m3', 'ex1m5'], 'ex1ModifyTick')">Verify Logic</button>
             <p id="ex1ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>

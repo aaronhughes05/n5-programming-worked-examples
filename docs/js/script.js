@@ -1835,6 +1835,111 @@ function getDragAfterElement(container, y) {
     ).element;
 }
 
+const getParsonsOrder = (container) => Array.from(container.getElementsByClassName("draggable")).map((el) => el.id);
+
+const compareParsonsItems = (order, expectedIds) => {
+    if (!Array.isArray(order) || !Array.isArray(expectedIds)) {
+        return { ok: false, reason: "missing_line" };
+    }
+    if (order.length !== expectedIds.length) {
+        return { ok: false, reason: "missing_line" };
+    }
+    const seen = new Set(order);
+    if (seen.size !== order.length) {
+        return { ok: false, reason: "duplicate_line" };
+    }
+    const hasAllExpected = expectedIds.every((id) => seen.has(id));
+    if (!hasAllExpected) {
+        return { ok: false, reason: "missing_line" };
+    }
+    return { ok: true };
+};
+
+const buildIndexMap = (order) => {
+    const map = new Map();
+    order.forEach((id, index) => map.set(id, index));
+    return map;
+};
+
+const validateParsonsExample3Flexible = (order, expectedIds) => {
+    const inventory = compareParsonsItems(order, expectedIds);
+    if (!inventory.ok) return inventory;
+    const idx = buildIndexMap(order);
+
+    if (!(idx.get("e3m1") < idx.get("e3m2") && idx.get("e3m2") < idx.get("e3m3") && idx.get("e3m3") < idx.get("e3m4"))) {
+        return { ok: false, reason: "structure_position" };
+    }
+    if (!(idx.get("e3m4") < idx.get("e3m5") && idx.get("e3m5") < idx.get("e3m6"))) {
+        return { ok: false, reason: "indentation_block" };
+    }
+    if (!(idx.get("e3m4") < idx.get("e3m7"))) {
+        return { ok: false, reason: "indentation_block" };
+    }
+
+    const latestProcessing = Math.max(idx.get("e3m5"), idx.get("e3m6"), idx.get("e3m7"));
+    const earliestOutput = Math.min(idx.get("e3m8"), idx.get("e3m9"));
+    if (!(latestProcessing < earliestOutput)) {
+        return { ok: false, reason: "output_position" };
+    }
+
+    return { ok: true };
+};
+
+const validateParsonsAssessmentFlexible = (order, expectedIds) => {
+    const inventory = compareParsonsItems(order, expectedIds);
+    if (!inventory.ok) return inventory;
+    const idx = buildIndexMap(order);
+
+    if (!(idx.get("a2") < idx.get("a4") && idx.get("a3") < idx.get("a4"))) {
+        return { ok: false, reason: "structure_position" };
+    }
+    if (!(idx.get("a4") < idx.get("a1") && idx.get("a1") < idx.get("a5") && idx.get("a5") < idx.get("a6"))) {
+        return { ok: false, reason: "indentation_block" };
+    }
+    if (!(idx.get("a6") < idx.get("a7") && idx.get("a7") < idx.get("a9") && idx.get("a9") < idx.get("a8"))) {
+        return { ok: false, reason: "indentation_block" };
+    }
+    if (!(idx.get("a8") < idx.get("a10") && idx.get("a8") < idx.get("a11"))) {
+        return { ok: false, reason: "output_position" };
+    }
+
+    return { ok: true };
+};
+
+const PARSONS_VALIDATORS = {
+    "example3-modify-parsons": validateParsonsExample3Flexible,
+    "assessment-parsons": validateParsonsAssessmentFlexible
+};
+
+const PARSONS_REASON_MESSAGES = {
+    missing_line: "Not quite: one or more lines are missing or extra.",
+    duplicate_line: "Not quite: a line appears more than once.",
+    indentation_block: "Close, but block structure is off. Keep loop/if body lines inside their parent block.",
+    structure_position: "Close, but the program stages are out of order. Place setup before loops and processing.",
+    output_position: "Close, but output is too early. Print results only after calculations are complete."
+};
+
+const validateParsonsStrict = (order, expectedIds) => {
+    const inventory = compareParsonsItems(order, expectedIds);
+    if (!inventory.ok) return inventory;
+    const exact = order.length === expectedIds.length && order.every((id, index) => id === expectedIds[index]);
+    if (exact) return { ok: true };
+    return { ok: false, reason: "structure_position" };
+};
+
+const getParsonsSuccessMessage = (containerId, order, expectedIds) => {
+    const isExact = order.length === expectedIds.length && order.every((id, index) => id === expectedIds[index]);
+    const hasFlexibleValidator = Object.prototype.hasOwnProperty.call(PARSONS_VALIDATORS, containerId);
+    if (hasFlexibleValidator && !isExact) {
+        return "Excellent! Correct logic. This alternative valid order also works.";
+    }
+    return "Excellent! The logic is in the correct order.";
+};
+
+const getParsonsFailureMessage = (reason) => {
+    return PARSONS_REASON_MESSAGES[reason] || "Try again. Think: Initialize -> Loop -> Process -> Output.";
+};
+
 const verifyParsons = (containerId, correctIds, feedbackId) => {
     const container = document.getElementById(containerId);
     const feedback = document.getElementById(feedbackId);
@@ -1844,24 +1949,16 @@ const verifyParsons = (containerId, correctIds, feedbackId) => {
         return;
     }
 
-    const items = container.getElementsByClassName('draggable');
-    let isCorrect = true;
+    const order = getParsonsOrder(container);
+    const validator = PARSONS_VALIDATORS[containerId];
+    const result = typeof validator === "function"
+        ? validator(order, correctIds)
+        : validateParsonsStrict(order, correctIds);
 
-    if (items.length !== correctIds.length) {
-        isCorrect = false;
+    if (result.ok) {
+        setFeedbackState(feedback, true, getParsonsSuccessMessage(containerId, order, correctIds), feedbackId);
     } else {
-        for (let i = 0; i < correctIds.length; i++) {
-            if (items[i].id !== correctIds[i]) {
-                isCorrect = false;
-                break;
-            }
-        }
-    }
-
-    if (isCorrect) {
-        setFeedbackState(feedback, true, "Excellent! The logic is in the correct order.", feedbackId);
-    } else {
-        setFeedbackState(feedback, false, "Try again. Think: Initialize -> Loop -> Process -> Output.", feedbackId);
+        setFeedbackState(feedback, false, getParsonsFailureMessage(result.reason), feedbackId);
     }
 };
 
@@ -2809,15 +2906,13 @@ const initLearningDashboard = () => {
         }
     });
 
-    const inProgress = summaries.filter((item) => item.inProgress).sort((a, b) => {
-        if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt;
-        return b.progress - a.progress;
-    });
+    const inProgress = summaries.filter((item) => item.inProgress);
 
     if (continueCta) {
-        if (inProgress.length) {
-            continueCta.href = inProgress[0].href;
-            continueCta.textContent = `Continue ${inProgress[0].label}`;
+        const firstInSequence = inProgress[0];
+        if (firstInSequence) {
+            continueCta.href = firstInSequence.href;
+            continueCta.textContent = `Continue ${firstInSequence.label}`;
         } else {
             const fallback = summaries.find((item) => !item.isComplete) || summaries[summaries.length - 1];
             continueCta.href = fallback.href;
@@ -4491,6 +4586,8 @@ const initAssessmentGate = () => {
         const hrefAttr = link.getAttribute("href") || "";
         const hrefResolved = link.href || "";
         const isAssessmentTarget =
+            /(^|\/)assessment\/?($|[?#])/i.test(hrefAttr) ||
+            /(^|\/)assessment\/?($|[?#])/i.test(hrefResolved) ||
             /(^|\/)assessment\.html($|[?#])/i.test(hrefAttr) ||
             /(^|\/)assessment\.html($|[?#])/i.test(hrefResolved);
         if (!isAssessmentTarget) return;

@@ -100,6 +100,17 @@ D: print("Highest:", highest)</code></pre>
 
         <section class="card step-section" data-step="2" data-step-id="step-2" data-requires="ex3Pred1Tick,ex3Pred2Tick,ex3Pred3Tick,ex3Pred4Tick">
             <h2>2. Prediction Activity</h2>
+            <div class="step-box">
+                <p><strong>Code Preview:</strong> Use this snippet to guide your predictions.</p>
+                <pre><code>scores = []
+for counter in range(5):
+    score = int(input("Score: "))
+    scores.append(score)
+
+for value in scores:
+    if value &gt;= 50:
+        pass_count = pass_count + 1</code></pre>
+            </div>
             <div class="question-block">
                 <p>Which loop type is most appropriate for traversing every value in a list?</p>
                 <div class="question-input question-input--stacked">
@@ -288,15 +299,15 @@ D: print("Highest:", highest)</code></pre>
                 <li>Print the pass count and highest score after traversal</li>
             </ul>
             <div id="example3-modify-parsons" class="parsons-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <div id="e3m4" class="draggable" draggable="true" ondragstart="drag(event)">for value in scores:</div>
-                <div id="e3m1" class="draggable" draggable="true" ondragstart="drag(event)">scores = []</div>
-                <div id="e3m8" class="draggable" draggable="true" ondragstart="drag(event)">print(&quot;Passes:&quot;, pass_count)</div>
-                <div id="e3m2" class="draggable" draggable="true" ondragstart="drag(event)">for counter in range(6):</div>
-                <div id="e3m9" class="draggable" draggable="true" ondragstart="drag(event)">print(&quot;Highest:&quot;, highest)</div>
-                <div id="e3m6" class="draggable" draggable="true" ondragstart="drag(event)">pass_count = pass_count + 1</div>
-                <div id="e3m3" class="draggable" draggable="true" ondragstart="drag(event)">scores.append(int(input(&quot;Score: &quot;)))</div>
-                <div id="e3m7" class="draggable" draggable="true" ondragstart="drag(event)">if value &gt; highest: highest = value</div>
-                <div id="e3m5" class="draggable" draggable="true" ondragstart="drag(event)">if value &gt;= 50:</div>
+                <div id="e3m4" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">for value in scores:</div>
+                <div id="e3m1" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">scores = []</div>
+                <div id="e3m8" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print(&quot;Passes:&quot;, pass_count)</div>
+                <div id="e3m2" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">for counter in range(6):</div>
+                <div id="e3m9" class="draggable parsons-indent-0" draggable="true" ondragstart="drag(event)">print(&quot;Highest:&quot;, highest)</div>
+                <div id="e3m6" class="draggable parsons-indent-2" draggable="true" ondragstart="drag(event)">pass_count = pass_count + 1</div>
+                <div id="e3m3" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">scores.append(int(input(&quot;Score: &quot;)))</div>
+                <div id="e3m7" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">if value &gt; highest: highest = value</div>
+                <div id="e3m5" class="draggable parsons-indent-1" draggable="true" ondragstart="drag(event)">if value &gt;= 50:</div>
             </div>
             <button onclick="verifyParsons('example3-modify-parsons', ['e3m1', 'e3m2', 'e3m3', 'e3m4', 'e3m5', 'e3m6', 'e3m7', 'e3m8', 'e3m9'], 'ex3ModifyTick')">Verify Logic</button>
             <p id="ex3ModifyTick" class="result-feedback" role="status" aria-live="polite"></p>
