@@ -3194,13 +3194,11 @@ body.is-modal-open {
 }
 
 .draggable.parsons-indent-1 {
-  padding-left: calc(var(--space-3) + 18px);
-  border-left: 3px solid rgba(37, 99, 235, 0.35);
+  margin-left: 18px;
 }
 
 .draggable.parsons-indent-2 {
-  padding-left: calc(var(--space-3) + 34px);
-  border-left: 3px solid rgba(20, 184, 166, 0.45);
+  margin-left: 34px;
 }
 
 .draggable:hover {
